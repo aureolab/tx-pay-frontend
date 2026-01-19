@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { merchantsApi, transactionsApi, adminUsersApi, healthApi } from '../api/client';
+import { merchantsApi, transactionsApi, adminUsersApi, healthApi, type PaginatedResponse } from '../api/client';
+
+interface PaginationState {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+const defaultPagination: PaginationState = {
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPrevPage: false,
+};
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -12,32 +30,53 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Pagination state per tab
+  const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
+  const [transactionsPagination, setTransactionsPagination] = useState<PaginationState>(defaultPagination);
+  const [adminsPagination, setAdminsPagination] = useState<PaginationState>(defaultPagination);
+
   useEffect(() => {
     healthApi.check().then(res => setHealth(res.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
     loadData();
-  }, [tab]);
+  }, [tab, merchantsPagination.page, transactionsPagination.page, adminsPagination.page]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
     try {
       if (tab === 'merchants') {
-        const res = await merchantsApi.list();
-        setMerchants(res.data);
+        const res = await merchantsApi.list({ page: merchantsPagination.page, limit: merchantsPagination.limit });
+        const data = res.data as PaginatedResponse<any>;
+        setMerchants(data.data);
+        setMerchantsPagination(prev => ({ ...prev, ...data.meta }));
       } else if (tab === 'transactions') {
-        const res = await transactionsApi.list();
-        setTransactions(Array.isArray(res.data) ? res.data : res.data.data || []);
+        const res = await transactionsApi.list({ page: transactionsPagination.page, limit: transactionsPagination.limit });
+        const data = res.data as PaginatedResponse<any>;
+        setTransactions(data.data);
+        setTransactionsPagination(prev => ({ ...prev, ...data.meta }));
       } else if (tab === 'admins') {
-        const res = await adminUsersApi.list();
-        setAdmins(res.data);
+        const res = await adminUsersApi.list({ page: adminsPagination.page, limit: adminsPagination.limit });
+        const data = res.data as PaginatedResponse<any>;
+        setAdmins(data.data);
+        setAdminsPagination(prev => ({ ...prev, ...data.meta }));
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (tab === 'merchants') {
+      setMerchantsPagination(prev => ({ ...prev, page: newPage }));
+    } else if (tab === 'transactions') {
+      setTransactionsPagination(prev => ({ ...prev, page: newPage }));
+    } else if (tab === 'admins') {
+      setAdminsPagination(prev => ({ ...prev, page: newPage }));
     }
   };
 
@@ -102,7 +141,7 @@ export default function Dashboard() {
 
         {!loading && tab === 'merchants' && (
           <div>
-            <h2>Merchants ({merchants.length})</h2>
+            <h2>Merchants ({merchantsPagination.total} total)</h2>
             <table style={styles.table}>
               <thead>
                 <tr>
@@ -142,12 +181,33 @@ export default function Dashboard() {
               </tbody>
             </table>
             {merchants.length === 0 && <p>No merchants found</p>}
+            {merchantsPagination.totalPages > 1 && (
+              <div style={styles.pagination}>
+                <button
+                  onClick={() => handlePageChange(merchantsPagination.page - 1)}
+                  disabled={!merchantsPagination.hasPrevPage}
+                  style={styles.paginationBtn}
+                >
+                  Previous
+                </button>
+                <span style={styles.paginationInfo}>
+                  Page {merchantsPagination.page} of {merchantsPagination.totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(merchantsPagination.page + 1)}
+                  disabled={!merchantsPagination.hasNextPage}
+                  style={styles.paginationBtn}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {!loading && tab === 'transactions' && (
           <div>
-            <h2>Transactions ({transactions.length})</h2>
+            <h2>Transactions ({transactionsPagination.total} total)</h2>
             <table style={styles.table}>
               <thead>
                 <tr>
@@ -171,9 +231,11 @@ export default function Dashboard() {
                     <td>
                       <span style={{
                         ...styles.badge,
-                        background: t.status === 'CAPTURED' ? '#4caf50' :
+                        background: t.status === 'APPROVED' ? '#4caf50' :
                           t.status === 'PENDING' ? '#ff9800' :
-                            t.status === 'REFUNDED' ? '#9c27b0' : '#999'
+                          t.status === 'CREATED' ? '#2196f3' :
+                          t.status === 'EXPIRED' ? '#9e9e9e' :
+                            t.status === 'REFUNDED' ? '#9c27b0' : '#f44336'
                       }}>
                         {t.status}
                       </span>
@@ -191,7 +253,7 @@ export default function Dashboard() {
                           </button>
                         </>
                       )}
-                      {t.status === 'CAPTURED' && (
+                      {t.status === 'APPROVED' && (
                         <button onClick={() => handleTransactionAction(t._id, 'refund')} style={styles.actionBtn}>
                           Refund
                         </button>
@@ -202,12 +264,33 @@ export default function Dashboard() {
               </tbody>
             </table>
             {transactions.length === 0 && <p>No transactions found</p>}
+            {transactionsPagination.totalPages > 1 && (
+              <div style={styles.pagination}>
+                <button
+                  onClick={() => handlePageChange(transactionsPagination.page - 1)}
+                  disabled={!transactionsPagination.hasPrevPage}
+                  style={styles.paginationBtn}
+                >
+                  Previous
+                </button>
+                <span style={styles.paginationInfo}>
+                  Page {transactionsPagination.page} of {transactionsPagination.totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(transactionsPagination.page + 1)}
+                  disabled={!transactionsPagination.hasNextPage}
+                  style={styles.paginationBtn}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
 
         {!loading && tab === 'admins' && (
           <div>
-            <h2>Admin Users ({admins.length})</h2>
+            <h2>Admin Users ({adminsPagination.total} total)</h2>
             <table style={styles.table}>
               <thead>
                 <tr>
@@ -236,6 +319,27 @@ export default function Dashboard() {
               </tbody>
             </table>
             {admins.length === 0 && <p>No admin users found</p>}
+            {adminsPagination.totalPages > 1 && (
+              <div style={styles.pagination}>
+                <button
+                  onClick={() => handlePageChange(adminsPagination.page - 1)}
+                  disabled={!adminsPagination.hasPrevPage}
+                  style={styles.paginationBtn}
+                >
+                  Previous
+                </button>
+                <span style={styles.paginationInfo}>
+                  Page {adminsPagination.page} of {adminsPagination.totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(adminsPagination.page + 1)}
+                  disabled={!adminsPagination.hasNextPage}
+                  style={styles.paginationBtn}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -349,5 +453,29 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontSize: '12px',
     marginRight: '4px',
+  },
+  pagination: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '16px',
+    marginTop: '20px',
+    padding: '16px',
+    background: 'white',
+    borderRadius: '8px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  paginationBtn: {
+    background: '#007bff',
+    color: 'white',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '14px',
+  },
+  paginationInfo: {
+    fontSize: '14px',
+    color: '#666',
   },
 };

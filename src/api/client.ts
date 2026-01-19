@@ -37,9 +37,28 @@ export const authApi = {
   getProfile: () => client.get('/auth/profile'),
 };
 
+// Pagination types
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
 // Admin Users
 export const adminUsersApi = {
-  list: () => client.get('/admin-users'),
+  list: (params?: PaginationParams) =>
+    client.get('/admin-users', { params }),
   get: (id: string) => client.get(`/admin-users/${id}`),
   create: (data: any) => client.post('/admin-users', data),
   update: (id: string, data: any) => client.patch(`/admin-users/${id}`, data),
@@ -48,7 +67,8 @@ export const adminUsersApi = {
 
 // Merchants
 export const merchantsApi = {
-  list: () => client.get('/merchants'),
+  list: (params?: PaginationParams) =>
+    client.get('/merchants', { params }),
   get: (id: string) => client.get(`/merchants/${id}`),
   create: (data: any) => client.post('/merchants', data),
   update: (id: string, data: any) => client.patch(`/merchants/${id}`, data),
@@ -59,7 +79,8 @@ export const merchantsApi = {
 
 // Transactions
 export const transactionsApi = {
-  list: () => client.get('/transactions'),
+  list: (params?: PaginationParams) =>
+    client.get('/transactions', { params }),
   get: (id: string) => client.get(`/transactions/${id}`),
   create: (data: any) => client.post('/transactions', data),
   capture: (id: string) => client.post(`/transactions/${id}/capture`),
