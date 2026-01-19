@@ -1,6 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { merchantsApi, transactionsApi, adminUsersApi, healthApi, type PaginatedResponse } from '../api/client';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { AlertCircle, ChevronLeft, ChevronRight, Database, LogOut } from 'lucide-react';
 
 interface PaginationState {
   page: number;
@@ -20,9 +46,71 @@ const defaultPagination: PaginationState = {
   hasPrevPage: false,
 };
 
+function TableSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[...Array(5)].map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ))}
+    </div>
+  );
+}
+
+function PaginationControls({
+  pagination,
+  onPageChange,
+}: {
+  pagination: PaginationState;
+  onPageChange: (page: number) => void;
+}) {
+  if (pagination.totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-center gap-4 mt-4 p-4 bg-card rounded-lg border">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(pagination.page - 1)}
+        disabled={!pagination.hasPrevPage}
+      >
+        <ChevronLeft className="h-4 w-4 mr-1" />
+        Previous
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        Page {pagination.page} of {pagination.totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(pagination.page + 1)}
+        disabled={!pagination.hasNextPage}
+      >
+        Next
+        <ChevronRight className="h-4 w-4 ml-1" />
+      </Button>
+    </div>
+  );
+}
+
+function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case 'ACTIVE':
+    case 'APPROVED':
+      return 'default';
+    case 'PENDING':
+    case 'CREATED':
+      return 'secondary';
+    case 'EXPIRED':
+    case 'INACTIVE':
+      return 'outline';
+    default:
+      return 'destructive';
+  }
+}
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState<'merchants' | 'transactions' | 'admins'>('merchants');
+  const [tab, setTab] = useState<string>('merchants');
   const [merchants, setMerchants] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
@@ -30,7 +118,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Pagination state per tab
   const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
   const [transactionsPagination, setTransactionsPagination] = useState<PaginationState>(defaultPagination);
   const [adminsPagination, setAdminsPagination] = useState<PaginationState>(defaultPagination);
@@ -81,12 +168,11 @@ export default function Dashboard() {
   };
 
   const handleDeleteMerchant = async (id: string) => {
-    if (!confirm('Delete this merchant?')) return;
     try {
       await merchantsApi.delete(id);
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Delete failed');
+      setError(err.response?.data?.message || 'Delete failed');
     }
   };
 
@@ -97,385 +183,275 @@ export default function Dashboard() {
       else if (action === 'void') await transactionsApi.void(id);
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.message || `${action} failed`);
+      setError(err.response?.data?.message || `${action} failed`);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.logo}>Tx Pay Admin</h1>
-        <div style={styles.userInfo}>
-          <span>{user?.full_name || user?.email}</span>
-          <span style={styles.healthBadge}>
-            DB: {health?.details?.database?.status || 'checking...'}
-          </span>
-          <button onClick={logout} style={styles.logoutBtn}>Logout</button>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="bg-card border-b px-6 py-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <h1 className="text-xl font-bold">Tx Pay Admin</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              {user?.full_name || user?.email}
+            </span>
+            <Badge variant="outline" className="gap-1">
+              <Database className="h-3 w-3" />
+              {health?.details?.database?.status || 'checking...'}
+            </Badge>
+            <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
-      <nav style={styles.nav}>
-        <button
-          onClick={() => setTab('merchants')}
-          style={{ ...styles.navBtn, ...(tab === 'merchants' ? styles.navBtnActive : {}) }}
-        >
-          Merchants
-        </button>
-        <button
-          onClick={() => setTab('transactions')}
-          style={{ ...styles.navBtn, ...(tab === 'transactions' ? styles.navBtnActive : {}) }}
-        >
-          Transactions
-        </button>
-        <button
-          onClick={() => setTab('admins')}
-          style={{ ...styles.navBtn, ...(tab === 'admins' ? styles.navBtnActive : {}) }}
-        >
-          Admin Users
-        </button>
-      </nav>
-
-      <main style={styles.main}>
-        {error && <div style={styles.error}>{error}</div>}
-        {loading && <div style={styles.loading}>Loading...</div>}
-
-        {!loading && tab === 'merchants' && (
-          <div>
-            <h2>Merchants ({merchantsPagination.total} total)</h2>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Legal Name</th>
-                  <th>Tax ID</th>
-                  <th>Status</th>
-                  <th>Payment Methods</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {merchants.map((m) => (
-                  <tr key={m._id}>
-                    <td>{m.profile?.fantasy_name}</td>
-                    <td>{m.profile?.legal_name}</td>
-                    <td>{m.profile?.tax_id}</td>
-                    <td>
-                      <span style={{
-                        ...styles.badge,
-                        background: m.status === 'ACTIVE' ? '#4caf50' : '#ff9800'
-                      }}>
-                        {m.status}
-                      </span>
-                    </td>
-                    <td>{m.enabled_payment_methods?.join(', ')}</td>
-                    <td>
-                      <button
-                        onClick={() => handleDeleteMerchant(m._id)}
-                        style={styles.deleteBtn}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {merchants.length === 0 && <p>No merchants found</p>}
-            {merchantsPagination.totalPages > 1 && (
-              <div style={styles.pagination}>
-                <button
-                  onClick={() => handlePageChange(merchantsPagination.page - 1)}
-                  disabled={!merchantsPagination.hasPrevPage}
-                  style={styles.paginationBtn}
-                >
-                  Previous
-                </button>
-                <span style={styles.paginationInfo}>
-                  Page {merchantsPagination.page} of {merchantsPagination.totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(merchantsPagination.page + 1)}
-                  disabled={!merchantsPagination.hasNextPage}
-                  style={styles.paginationBtn}
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto p-6">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
-        {!loading && tab === 'transactions' && (
-          <div>
-            <h2>Transactions ({transactionsPagination.total} total)</h2>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Amount</th>
-                  <th>Currency</th>
-                  <th>Status</th>
-                  <th>Payment Method</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((t) => (
-                  <tr key={t._id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-                      {t._id?.slice(-8)}
-                    </td>
-                    <td>{t.financials?.amount_gross?.toLocaleString()}</td>
-                    <td>{t.financials?.currency}</td>
-                    <td>
-                      <span style={{
-                        ...styles.badge,
-                        background: t.status === 'APPROVED' ? '#4caf50' :
-                          t.status === 'PENDING' ? '#ff9800' :
-                          t.status === 'CREATED' ? '#2196f3' :
-                          t.status === 'EXPIRED' ? '#9e9e9e' :
-                            t.status === 'REFUNDED' ? '#9c27b0' : '#f44336'
-                      }}>
-                        {t.status}
-                      </span>
-                    </td>
-                    <td>{t.payment_method}</td>
-                    <td>{new Date(t.createdAt).toLocaleString()}</td>
-                    <td>
-                      {t.status === 'PENDING' && (
-                        <>
-                          <button onClick={() => handleTransactionAction(t._id, 'capture')} style={styles.actionBtn}>
-                            Capture
-                          </button>
-                          <button onClick={() => handleTransactionAction(t._id, 'void')} style={styles.actionBtn}>
-                            Void
-                          </button>
-                        </>
+        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="merchants">Merchants</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="admins">Admin Users</TabsTrigger>
+          </TabsList>
+
+          {/* Merchants Tab */}
+          <TabsContent value="merchants" className="space-y-4">
+            <h2 className="text-lg font-semibold">
+              Merchants ({merchantsPagination.total} total)
+            </h2>
+            {loading ? (
+              <TableSkeleton />
+            ) : (
+              <>
+                <div className="rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Legal Name</TableHead>
+                        <TableHead>Tax ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payment Methods</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {merchants.map((m) => (
+                        <TableRow key={m._id}>
+                          <TableCell className="font-medium">
+                            {m.profile?.fantasy_name}
+                          </TableCell>
+                          <TableCell>{m.profile?.legal_name}</TableCell>
+                          <TableCell>{m.profile?.tax_id}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(m.status)}>
+                              {m.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {m.enabled_payment_methods?.join(', ')}
+                          </TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Merchant</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this merchant? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMerchant(m._id)}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {merchants.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            No merchants found
+                          </TableCell>
+                        </TableRow>
                       )}
-                      {t.status === 'APPROVED' && (
-                        <button onClick={() => handleTransactionAction(t._id, 'refund')} style={styles.actionBtn}>
-                          Refund
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {transactions.length === 0 && <p>No transactions found</p>}
-            {transactionsPagination.totalPages > 1 && (
-              <div style={styles.pagination}>
-                <button
-                  onClick={() => handlePageChange(transactionsPagination.page - 1)}
-                  disabled={!transactionsPagination.hasPrevPage}
-                  style={styles.paginationBtn}
-                >
-                  Previous
-                </button>
-                <span style={styles.paginationInfo}>
-                  Page {transactionsPagination.page} of {transactionsPagination.totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(transactionsPagination.page + 1)}
-                  disabled={!transactionsPagination.hasNextPage}
-                  style={styles.paginationBtn}
-                >
-                  Next
-                </button>
-              </div>
+                    </TableBody>
+                  </Table>
+                </div>
+                <PaginationControls
+                  pagination={merchantsPagination}
+                  onPageChange={handlePageChange}
+                />
+              </>
             )}
-          </div>
-        )}
+          </TabsContent>
 
-        {!loading && tab === 'admins' && (
-          <div>
-            <h2>Admin Users ({adminsPagination.total} total)</h2>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Roles</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {admins.map((a) => (
-                  <tr key={a._id}>
-                    <td>{a.full_name}</td>
-                    <td>{a.email}</td>
-                    <td>{a.roles?.join(', ')}</td>
-                    <td>
-                      <span style={{
-                        ...styles.badge,
-                        background: a.active ? '#4caf50' : '#f44336'
-                      }}>
-                        {a.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {admins.length === 0 && <p>No admin users found</p>}
-            {adminsPagination.totalPages > 1 && (
-              <div style={styles.pagination}>
-                <button
-                  onClick={() => handlePageChange(adminsPagination.page - 1)}
-                  disabled={!adminsPagination.hasPrevPage}
-                  style={styles.paginationBtn}
-                >
-                  Previous
-                </button>
-                <span style={styles.paginationInfo}>
-                  Page {adminsPagination.page} of {adminsPagination.totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(adminsPagination.page + 1)}
-                  disabled={!adminsPagination.hasNextPage}
-                  style={styles.paginationBtn}
-                >
-                  Next
-                </button>
-              </div>
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-4">
+            <h2 className="text-lg font-semibold">
+              Transactions ({transactionsPagination.total} total)
+            </h2>
+            {loading ? (
+              <TableSkeleton />
+            ) : (
+              <>
+                <div className="rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Currency</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Payment Method</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((t) => (
+                        <TableRow key={t._id}>
+                          <TableCell className="font-mono text-xs">
+                            {t._id?.slice(-8)}
+                          </TableCell>
+                          <TableCell>
+                            {t.financials?.amount_gross?.toLocaleString()}
+                          </TableCell>
+                          <TableCell>{t.financials?.currency}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(t.status)}>
+                              {t.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{t.payment_method}</TableCell>
+                          <TableCell>
+                            {new Date(t.createdAt).toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              {t.status === 'PENDING' && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleTransactionAction(t._id, 'capture')}
+                                  >
+                                    Capture
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleTransactionAction(t._id, 'void')}
+                                  >
+                                    Void
+                                  </Button>
+                                </>
+                              )}
+                              {t.status === 'APPROVED' && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleTransactionAction(t._id, 'refund')}
+                                >
+                                  Refund
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {transactions.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                            No transactions found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <PaginationControls
+                  pagination={transactionsPagination}
+                  onPageChange={handlePageChange}
+                />
+              </>
             )}
-          </div>
-        )}
+          </TabsContent>
+
+          {/* Admin Users Tab */}
+          <TabsContent value="admins" className="space-y-4">
+            <h2 className="text-lg font-semibold">
+              Admin Users ({adminsPagination.total} total)
+            </h2>
+            {loading ? (
+              <TableSkeleton />
+            ) : (
+              <>
+                <div className="rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Roles</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {admins.map((a) => (
+                        <TableRow key={a._id}>
+                          <TableCell className="font-medium">
+                            {a.full_name}
+                          </TableCell>
+                          <TableCell>{a.email}</TableCell>
+                          <TableCell>{a.roles?.join(', ')}</TableCell>
+                          <TableCell>
+                            <Badge variant={a.active ? 'default' : 'destructive'}>
+                              {a.active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {admins.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                            No admin users found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <PaginationControls
+                  pagination={adminsPagination}
+                  onPageChange={handlePageChange}
+                />
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    minHeight: '100vh',
-    background: '#f5f5f5',
-  },
-  header: {
-    background: '#1a1a2e',
-    color: 'white',
-    padding: '16px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  logo: {
-    margin: 0,
-    fontSize: '24px',
-  },
-  userInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-  },
-  healthBadge: {
-    background: '#4caf50',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-  },
-  logoutBtn: {
-    background: 'transparent',
-    border: '1px solid white',
-    color: 'white',
-    padding: '8px 16px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  },
-  nav: {
-    background: 'white',
-    padding: '0 24px',
-    display: 'flex',
-    gap: '0',
-    borderBottom: '1px solid #ddd',
-  },
-  navBtn: {
-    padding: '16px 24px',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '14px',
-    borderBottom: '3px solid transparent',
-  },
-  navBtnActive: {
-    borderBottomColor: '#007bff',
-    color: '#007bff',
-    fontWeight: 'bold',
-  },
-  main: {
-    padding: '24px',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  error: {
-    background: '#fee',
-    color: '#c00',
-    padding: '12px',
-    borderRadius: '4px',
-    marginBottom: '16px',
-  },
-  loading: {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#666',
-  },
-  table: {
-    width: '100%',
-    background: 'white',
-    borderCollapse: 'collapse',
-    borderRadius: '8px',
-    overflow: 'hidden',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-  badge: {
-    padding: '4px 8px',
-    borderRadius: '4px',
-    color: 'white',
-    fontSize: '12px',
-    fontWeight: 'bold',
-  },
-  deleteBtn: {
-    background: '#f44336',
-    color: 'white',
-    border: 'none',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-  },
-  actionBtn: {
-    background: '#007bff',
-    color: 'white',
-    border: 'none',
-    padding: '6px 12px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    marginRight: '4px',
-  },
-  pagination: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: '16px',
-    marginTop: '20px',
-    padding: '16px',
-    background: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  },
-  paginationBtn: {
-    background: '#007bff',
-    color: 'white',
-    border: 'none',
-    padding: '8px 16px',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '14px',
-  },
-  paginationInfo: {
-    fontSize: '14px',
-    color: '#666',
-  },
-};
