@@ -22,8 +22,12 @@ RUN npm run build
 # Production stage
 FROM nginx:alpine
 
-# Copy nginx config template
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+# Copy nginx config template (not to templates dir to avoid envsubst issues)
+COPY nginx.conf.template /etc/nginx/conf.d/default.conf
+
+# Copy startup script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -32,7 +36,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 ENV PORT=80
 
 # Expose port
-EXPOSE $PORT
+EXPOSE 80
 
-# nginx:alpine image automatically runs envsubst on templates in /etc/nginx/templates/
-# and outputs to /etc/nginx/conf.d/, then starts nginx
+# Start with custom script
+CMD ["/start.sh"]
