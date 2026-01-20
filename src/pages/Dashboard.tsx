@@ -42,7 +42,6 @@ import { AlertCircle, ChevronLeft, ChevronRight, Database, LogOut, Plus, Eye, Pe
 const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
 const MerchantStatuses = ['ACTIVE', 'BLOCKED', 'REVIEW', 'INACTIVE'] as const;
 const PaymentMethods = ['CREDIT', 'DEBIT', 'PREPAID', 'QR', 'PAYMENT_LINK', 'VITA_WALLET', 'WEBPAY'] as const;
-const TransactionStatuses = ['CREATED', 'PENDING', 'APPROVED', 'REJECTED', 'VOIDED', 'REFUNDED', 'EXPIRED'] as const;
 
 interface PaginationState {
   page: number;
