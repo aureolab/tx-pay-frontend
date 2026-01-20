@@ -82,7 +82,10 @@ export const transactionsApi = {
   list: (params?: PaginationParams) =>
     client.get('/transactions', { params }),
   get: (id: string) => client.get(`/transactions/${id}`),
-  create: (data: any) => client.post('/transactions', data),
+  create: (data: any, merchantId?: string) =>
+    client.post('/transactions', data, {
+      headers: merchantId ? { 'X-Merchant-Id': merchantId } : {},
+    }),
   capture: (id: string) => client.post(`/transactions/${id}/capture`),
   refund: (id: string) => client.post(`/transactions/${id}/refund`),
   void: (id: string) => client.post(`/transactions/${id}/void`),
