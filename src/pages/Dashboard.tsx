@@ -1030,7 +1030,8 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
     }
   };
 
-  const checkoutUrl = result?.gateway_result?.checkout_url || result?.gateway_result?.url;
+  const checkoutUrl = result?.gateway_result?.checkout_url
+    || result?.gateway_result?.authorization_payload_result?.started_transaction?.redirect_endpoint;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
