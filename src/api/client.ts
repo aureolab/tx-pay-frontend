@@ -70,6 +70,7 @@ export const merchantsApi = {
   list: (params?: PaginationParams) =>
     client.get('/merchants', { params }),
   get: (id: string) => client.get(`/merchants/${id}`),
+  getSecret: (id: string) => client.get<string>(`/merchants/${id}/secret`),
   create: (data: any) => client.post('/merchants', data),
   update: (id: string, data: any) => client.patch(`/merchants/${id}`, data),
   delete: (id: string) => client.delete(`/merchants/${id}`),

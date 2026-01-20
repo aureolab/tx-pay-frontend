@@ -35,8 +35,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { AlertCircle, ChevronLeft, ChevronRight, Database, LogOut, Plus, Eye, Pencil, Trash2, CreditCard } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Database, LogOut, Plus, Eye, EyeOff, Pencil, Trash2, CreditCard } from 'lucide-react';
 
 // Enums from backend
 const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
@@ -563,14 +571,15 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 gap-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>{isEdit ? 'Edit Merchant' : 'Create Merchant'}</DialogTitle>
           <DialogDescription>
             {isEdit ? 'Update merchant information.' : 'Add a new merchant to the payment platform.'}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <ScrollArea className="max-h-[calc(90vh-100px)]">
+        <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-4">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -652,16 +661,19 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
           {isEdit && (
             <div className="space-y-2">
               <Label htmlFor="merchant-status">Status</Label>
-              <select
-                id="merchant-status"
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
-                {MerchantStatuses.map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MerchantStatuses.map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -698,16 +710,19 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                   <div key={index} className="flex gap-2 items-end p-2 bg-muted rounded">
                     <div className="flex-1">
                       <Label className="text-xs">Method</Label>
-                      <select
+                      <Select
                         value={rule.method}
-                        onChange={(e) => updatePricingRule(index, 'method', e.target.value)}
-                        className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                        onValueChange={(value) => updatePricingRule(index, 'method', value)}
                       >
-                        <option value="">Select...</option>
-                        {PaymentMethods.map(m => (
-                          <option key={m} value={m}>{m}</option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PaymentMethods.map(m => (
+                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="w-20">
                       <Label className="text-xs">Fixed</Label>
@@ -813,24 +828,76 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
             </Button>
           </DialogFooter>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 }
 
 function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [showSecret, setShowSecret] = useState(false);
+  const [secretKey, setSecretKey] = useState<string | null>(null);
+  const [loadingSecret, setLoadingSecret] = useState(false);
+  const [visibleSensitiveFields, setVisibleSensitiveFields] = useState<Set<string>>(new Set());
+
+  // Reset state when dialog closes or item changes
+  useEffect(() => {
+    if (!open) {
+      setShowSecret(false);
+      setSecretKey(null);
+      setVisibleSensitiveFields(new Set());
+    }
+  }, [open, item?._id]);
+
+  const toggleSensitiveField = (fieldKey: string) => {
+    setVisibleSensitiveFields(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(fieldKey)) {
+        newSet.delete(fieldKey);
+      } else {
+        newSet.add(fieldKey);
+      }
+      return newSet;
+    });
+  };
+
+  const handleToggleSecret = async () => {
+    if (showSecret) {
+      setShowSecret(false);
+      return;
+    }
+
+    if (secretKey) {
+      setShowSecret(true);
+      return;
+    }
+
+    // Fetch secret from API
+    setLoadingSecret(true);
+    try {
+      const res = await merchantsApi.getSecret(item._id);
+      setSecretKey(res.data);
+      setShowSecret(true);
+    } catch (err) {
+      console.error('Failed to fetch secret:', err);
+    } finally {
+      setLoadingSecret(false);
+    }
+  };
+
   if (!item) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Merchant Details</DialogTitle>
           <DialogDescription>
             Complete information for {item.profile?.fantasy_name}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4">
+        <ScrollArea className="max-h-[calc(90vh-100px)] px-6 pb-6">
+        <div className="grid gap-4 pt-4">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -884,7 +951,27 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
               </div>
               <div>
                 <Label className="text-muted-foreground text-xs">Secret Key</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.integration?.secret || '••••••••'}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-sm bg-muted p-2 rounded break-all flex-1">
+                    {showSecret && secretKey ? secretKey : '••••••••••••••••••••••••'}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleToggleSecret}
+                    disabled={loadingSecret}
+                    className="shrink-0"
+                  >
+                    {loadingSecret ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : showSecret ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -935,10 +1022,43 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
           {item.acquirer_configs?.length > 0 && (
             <div className="border-t pt-4">
               <Label className="text-muted-foreground text-xs">Acquirer Configurations</Label>
-              <div className="space-y-2 mt-2">
+              <div className="space-y-3 mt-2">
                 {item.acquirer_configs.map((config: any, idx: number) => (
-                  <div key={idx} className="bg-muted p-2 rounded text-sm">
-                    <p><span className="text-muted-foreground">Provider:</span> {config.provider}</p>
+                  <div key={idx} className="bg-muted p-3 rounded text-sm space-y-2">
+                    <p className="font-medium">{config.provider}</p>
+                    {config.config && Object.keys(config.config).length > 0 && (
+                      <div className="grid gap-1 pl-2 border-l-2 border-border">
+                        {Object.entries(config.config).map(([key, value]) => {
+                          const isSensitive = /secret|key|password|token/i.test(key);
+                          const fieldKey = `${idx}-${key}`;
+                          const isVisible = visibleSensitiveFields.has(fieldKey);
+                          const displayValue = isSensitive && !isVisible
+                            ? '••••••••••••'
+                            : String(value);
+                          return (
+                            <div key={key} className="flex items-center gap-2">
+                              <span className="text-muted-foreground shrink-0">{key}:</span>
+                              <span className="font-mono break-all flex-1">{displayValue}</span>
+                              {isSensitive && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleSensitiveField(fieldKey)}
+                                  className="shrink-0 h-6 w-6 p-0"
+                                >
+                                  {isVisible ? (
+                                    <EyeOff className="h-3 w-3" />
+                                  ) : (
+                                    <Eye className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -963,6 +1083,7 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
             </div>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -1124,31 +1245,37 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
               </div>
               <div className="space-y-2">
                 <Label htmlFor="tx-currency">Currency</Label>
-                <select
-                  id="tx-currency"
+                <Select
                   value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
                 >
-                  <option value="CLP">CLP</option>
-                  <option value="USD">USD</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CLP">CLP</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tx-method">Payment Method *</Label>
-              <select
-                id="tx-method"
+              <Select
                 value={formData.payment_method}
-                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
               >
-                <option value="PAYMENT_LINK">Payment Link</option>
-                <option value="QR">QR Code</option>
-                <option value="WEBPAY">Webpay</option>
-                <option value="VITA_WALLET">Vita Wallet</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PAYMENT_LINK">Payment Link</SelectItem>
+                  <SelectItem value="QR">QR Code</SelectItem>
+                  <SelectItem value="WEBPAY">Webpay</SelectItem>
+                  <SelectItem value="VITA_WALLET">Vita Wallet</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -1184,14 +1311,15 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>Transaction Details</DialogTitle>
           <DialogDescription>
             Transaction ID: {item._id}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4">
+        <ScrollArea className="max-h-[calc(90vh-100px)] px-6 pb-6">
+        <div className="grid gap-4 pt-4">
           {/* Status & Payment Method */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -1245,14 +1373,14 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
           <div className="border-t pt-4">
             <Label className="text-muted-foreground text-xs">References</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
-              <div>
+              <div className="min-w-0">
                 <Label className="text-muted-foreground text-xs">Merchant ID</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded">{item.merchant_id || '-'}</p>
+                <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.merchant_id || '-'}</p>
               </div>
               {item.terminal_id && (
-                <div>
+                <div className="min-w-0">
                   <Label className="text-muted-foreground text-xs">Terminal ID</Label>
-                  <p className="font-mono text-sm bg-muted p-2 rounded">{item.terminal_id}</p>
+                  <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.terminal_id}</p>
                 </div>
               )}
             </div>
@@ -1267,9 +1395,9 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
                 <p className="font-medium">{item.user_context?.is_guest ? 'Yes' : 'No'}</p>
               </div>
               {item.user_context?.psp_user_id && (
-                <div>
+                <div className="min-w-0">
                   <Label className="text-muted-foreground text-xs">PSP User ID</Label>
-                  <p className="font-mono text-sm">{item.user_context.psp_user_id}</p>
+                  <p className="font-mono text-sm break-all">{item.user_context.psp_user_id}</p>
                 </div>
               )}
             </div>
@@ -1287,9 +1415,11 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
           {item.gateway_result && Object.keys(item.gateway_result).length > 0 && (
             <div className="border-t pt-4">
               <Label className="text-muted-foreground text-xs">Gateway Result</Label>
-              <pre className="mt-2 bg-muted p-2 rounded text-xs overflow-auto max-h-40">
-                {JSON.stringify(item.gateway_result, null, 2)}
-              </pre>
+              <ScrollArea className="mt-2 h-40 rounded-md border bg-muted">
+                <pre className="p-3 text-xs whitespace-pre-wrap break-all">
+                  {JSON.stringify(item.gateway_result, null, 2)}
+                </pre>
+              </ScrollArea>
             </div>
           )}
 
@@ -1313,6 +1443,7 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
             </div>
           </div>
         </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
