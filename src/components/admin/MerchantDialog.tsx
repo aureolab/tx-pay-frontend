@@ -60,6 +60,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
     contact_email: '',
     status: 'REVIEW' as string,
     enabled_payment_methods: [] as string[],
+    payment_link_timeout_minutes: 15,
   });
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [acquirerConfigs, setAcquirerConfigs] = useState<AcquirerConfig[]>([]);
@@ -85,6 +86,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
         contact_email: item.profile?.contact_email || '',
         status: item.status || 'REVIEW',
         enabled_payment_methods: item.enabled_payment_methods || [],
+        payment_link_timeout_minutes: item.payment_link_timeout_minutes ?? 15,
       });
       if (item.pricing_rules?.fees?.length > 0) {
         setPricingRules(item.pricing_rules.fees.map((f: any) => ({
@@ -113,6 +115,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
         contact_email: '',
         status: 'REVIEW',
         enabled_payment_methods: [],
+        payment_link_timeout_minutes: 15,
       });
       setPricingRules([]);
       setAcquirerConfigs([]);
@@ -216,6 +219,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
         enabled_payment_methods: formData.enabled_payment_methods,
         pricing_rules: validPricingRules,
         acquirer_configs: validAcquirerConfigs,
+        payment_link_timeout_minutes: formData.payment_link_timeout_minutes,
       };
 
       if (!isEdit) {
@@ -374,6 +378,23 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
                 required
                 className={inputClass}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="merchant-timeout" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.merchant.paymentLinkTimeout')}
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="merchant-timeout"
+                  type="number"
+                  min={1}
+                  value={formData.payment_link_timeout_minutes}
+                  onChange={(e) => setFormData({ ...formData, payment_link_timeout_minutes: parseInt(e.target.value) || 15 })}
+                  className={`w-32 ${inputClass}`}
+                />
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">{t('dialogs.merchant.minutes')}</span>
+              </div>
             </div>
 
             {isEdit && (

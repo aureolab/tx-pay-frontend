@@ -242,7 +242,9 @@
       "placeholderTaxId": "12.345.678-9",
       "placeholderMcc": "5411",
       "placeholderEmail": "contact@store.com",
-      "placeholderProvider": "e.g., transbank, vita"
+      "placeholderProvider": "e.g., transbank, vita",
+      "paymentLinkTimeout": "Payment Link Timeout",
+      "minutes": "minutes"
     },
     "partnerUser": {
       "createTitle": "Create User",
