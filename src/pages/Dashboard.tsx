@@ -60,7 +60,7 @@ import {
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState<string>('merchants');
+  const [tab, setTab] = useState<string>('partners');
   const [merchants, setMerchants] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
@@ -227,7 +227,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-sky-50/50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-sky-50/50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
       {/* Decorative background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 dark:from-blue-500/5 dark:to-indigo-600/5 rounded-full blur-3xl" />
@@ -256,7 +256,7 @@ export default function Dashboard() {
       />
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         {error && (
           <Alert variant="destructive" className="mb-6 border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
             <AlertCircle className="h-4 w-4" />
@@ -266,6 +266,13 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <StatsCard
+            icon={Handshake}
+            iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
+            iconColorClass="text-amber-600 dark:text-amber-400"
+            label="Partners"
+            value={partnersPagination.total}
+          />
           <StatsCard
             icon={Store}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
@@ -281,13 +288,6 @@ export default function Dashboard() {
             value={transactionsPagination.total}
           />
           <StatsCard
-            icon={Handshake}
-            iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
-            iconColorClass="text-amber-600 dark:text-amber-400"
-            label="Partners"
-            value={partnersPagination.total}
-          />
-          <StatsCard
             icon={Users}
             iconBgClass="from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10"
             iconColorClass="text-purple-600 dark:text-purple-400"
@@ -298,6 +298,13 @@ export default function Dashboard() {
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl">
+            <TabsTrigger
+              value="partners"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <Handshake className="w-4 h-4 mr-2" />
+              Partners
+            </TabsTrigger>
             <TabsTrigger
               value="merchants"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
@@ -313,13 +320,6 @@ export default function Dashboard() {
               Transactions
             </TabsTrigger>
             <TabsTrigger
-              value="partners"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Handshake className="w-4 h-4 mr-2" />
-              Partners
-            </TabsTrigger>
-            <TabsTrigger
               value="admins"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
             >
@@ -327,6 +327,130 @@ export default function Dashboard() {
               Admin Users
             </TabsTrigger>
           </TabsList>
+
+          {/* Partners Tab */}
+          <TabsContent value="partners" className="space-y-4">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  Partners ({partnersPagination.total} total)
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData()}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={openCreatePartner}
+                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Partner
+                  </Button>
+                </div>
+              </div>
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>Fantasy Name</TableHead>
+                        <TableHead>Business Name</TableHead>
+                        <TableHead>Contact Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {partners.map((p) => {
+                        const statusCfg = getStatusConfig(p.status);
+                        return (
+                          <TableRow key={p._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
+                            <TableCell className="font-medium text-zinc-900 dark:text-white">
+                              {p.fantasy_name}
+                            </TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.business_name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_email}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_phone || '-'}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusCfg.variant} className={statusCfg.className}>
+                                {statusCfg.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedPartner(p)}
+                                  title="View details"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditPartner(p)}
+                                  title="Edit partner"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Partner</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete &quot;{p.fantasy_name}&quot;? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeletePartner(p._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {partners.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
+                            No partners found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                  <PaginationControls
+                    pagination={partnersPagination}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
+            </div>
+          </TabsContent>
 
           {/* Merchants Tab */}
           <TabsContent value="merchants" className="space-y-4">
@@ -581,130 +705,6 @@ export default function Dashboard() {
                   </Table>
                   <PaginationControls
                     pagination={transactionsPagination}
-                    onPageChange={handlePageChange}
-                  />
-                </>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Partners Tab */}
-          <TabsContent value="partners" className="space-y-4">
-            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                <h3 className="font-semibold text-zinc-900 dark:text-white">
-                  Partners ({partnersPagination.total} total)
-                </h3>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => loadData()}
-                    className="gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={openCreatePartner}
-                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create Partner
-                  </Button>
-                </div>
-              </div>
-              {loading ? (
-                <TableSkeleton />
-              ) : (
-                <>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead>Fantasy Name</TableHead>
-                        <TableHead>Business Name</TableHead>
-                        <TableHead>Contact Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {partners.map((p) => {
-                        const statusCfg = getStatusConfig(p.status);
-                        return (
-                          <TableRow key={p._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
-                            <TableCell className="font-medium text-zinc-900 dark:text-white">
-                              {p.fantasy_name}
-                            </TableCell>
-                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.business_name}</TableCell>
-                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_email}</TableCell>
-                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_phone || '-'}</TableCell>
-                            <TableCell>
-                              <Badge variant={statusCfg.variant} className={statusCfg.className}>
-                                {statusCfg.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex gap-1 justify-end">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedPartner(p)}
-                                  title="View details"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openEditPartner(p)}
-                                  title="Edit partner"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Partner</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete &quot;{p.fantasy_name}&quot;? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDeletePartner(p._id)}
-                                        className="bg-red-500 hover:bg-red-600 text-white"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {partners.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
-                            No partners found
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                  <PaginationControls
-                    pagination={partnersPagination}
                     onPageChange={handlePageChange}
                   />
                 </>
