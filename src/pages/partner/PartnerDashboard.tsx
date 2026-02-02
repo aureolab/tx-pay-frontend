@@ -4,10 +4,12 @@ import { usePartnerAuth } from '../../context/PartnerAuthContext';
 import {
   partnerMerchantsApi,
   partnerTransactionsApi,
+  partnerPortalUsersApi,
 } from '../../api/partnerClient';
 import type {
   PartnerMerchant,
   PartnerTransaction,
+  PartnerClientUser,
 } from '../../types/partner.types';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
@@ -26,6 +28,10 @@ import { DashboardFooter } from '@/components/shared/DashboardFooter';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { PartnerCreateTransactionDialog } from '@/components/partner/PartnerCreateTransactionDialog';
+import { PartnerMerchantDetailDialog } from '@/components/partner/PartnerMerchantDetailDialog';
+import { PartnerTransactionDetailDialog } from '@/components/partner/PartnerTransactionDetailDialog';
+import { PartnerClientUserDialog } from '@/components/partner/PartnerClientUserDialog';
+import { PartnerChangePasswordDialog } from '@/components/partner/PartnerChangePasswordDialog';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +46,17 @@ import {
 } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
   Building2,
   Store,
   CreditCard,
@@ -48,6 +65,11 @@ import {
   AlertCircle,
   RefreshCw,
   Sparkles,
+  Eye,
+  Users,
+  Pencil,
+  KeyRound,
+  Trash2,
 } from 'lucide-react';
 
 export default function PartnerDashboard() {
@@ -65,7 +87,9 @@ export default function PartnerDashboard() {
   // Data states
   const [merchants, setMerchants] = useState<PartnerMerchant[]>([]);
   const [transactions, setTransactions] = useState<PartnerTransaction[]>([]);
+  const [clientUsers, setClientUsers] = useState<PartnerClientUser[]>([]);
   const [meta, setMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
+  const [usersMeta, setUsersMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
   // UI states
   const [loading, setLoading] = useState(true);
@@ -74,6 +98,17 @@ export default function PartnerDashboard() {
   // Dialog states
   const [createTxDialogOpen, setCreateTxDialogOpen] = useState(false);
   const [selectedMerchantForTx, setSelectedMerchantForTx] = useState<PartnerMerchant | null>(null);
+
+  // Detail dialog states
+  const [selectedMerchant, setSelectedMerchant] = useState<PartnerMerchant | null>(null);
+  const [merchantDetailOpen, setMerchantDetailOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<PartnerTransaction | null>(null);
+  const [transactionDetailOpen, setTransactionDetailOpen] = useState(false);
+
+  // User management dialog states
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<PartnerClientUser | null>(null);
+  const [changePasswordUser, setChangePasswordUser] = useState<PartnerClientUser | null>(null);
 
   // Merchant options for transaction filter
   const merchantOptions = useMemo(
@@ -123,35 +158,76 @@ export default function PartnerDashboard() {
     }
   }, [t]);
 
+  // Fetch client users
+  const fetchClientUsers = useCallback(async (pageNum: number = 1) => {
+    if (!isPartnerType) return;
+    try {
+      const res = await partnerPortalUsersApi.list({ page: pageNum, limit: 10 });
+      setClientUsers(res.data.data);
+      setUsersMeta(res.data.meta);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('partner:errors.loadUsers'));
+    }
+  }, [isPartnerType, t]);
+
   // Load data based on active tab and filters
   useEffect(() => {
+    let cancelled = false;
     const loadData = async () => {
       setLoading(true);
       setError('');
       if (tab === 'merchants') {
         await fetchMerchants(page);
       } else if (tab === 'transactions') {
+        // Load merchants in background for filter dropdown if not yet loaded
+        if (merchants.length === 0) {
+          partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }).then((res) => {
+            if (!cancelled) setMerchants(res.data.data);
+          }).catch(() => {});
+        }
         const merchantFilter = filters.merchant;
         await fetchTransactions(page, merchantFilter);
+      } else if (tab === 'users') {
+        // Load merchants in background for user dialog if not yet loaded
+        if (merchants.length === 0) {
+          partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }).then((res) => {
+            if (!cancelled) setMerchants(res.data.data);
+          }).catch(() => {});
+        }
+        await fetchClientUsers(page);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     };
     loadData();
-  }, [tab, page, JSON.stringify(filters), fetchMerchants, fetchTransactions]);
-
-  // Load merchants once for the transaction merchant filter
-  useEffect(() => {
-    if (merchants.length === 0) {
-      partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }).then((res) => {
-        setMerchants(res.data.data);
-      }).catch(() => {});
-    }
-  }, []);
+    return () => { cancelled = true; };
+  }, [tab, page, JSON.stringify(filters), fetchMerchants, fetchTransactions, fetchClientUsers]);
 
   // Open create transaction dialog
   const openCreateTxDialog = (merchant: PartnerMerchant) => {
     setSelectedMerchantForTx(merchant);
     setCreateTxDialogOpen(true);
+  };
+
+  // Open merchant detail dialog
+  const openMerchantDetail = (merchant: PartnerMerchant) => {
+    setSelectedMerchant(merchant);
+    setMerchantDetailOpen(true);
+  };
+
+  // Open transaction detail dialog
+  const openTransactionDetail = (tx: PartnerTransaction) => {
+    setSelectedTransaction(tx);
+    setTransactionDetailOpen(true);
+  };
+
+  // Delete client user
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await partnerPortalUsersApi.delete(userId);
+      fetchClientUsers(page);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('partner:dialogs.deleteUser.error'));
+    }
   };
 
   // Stats calculations
@@ -170,6 +246,15 @@ export default function PartnerDashboard() {
     totalPages: meta.totalPages,
     hasNextPage: meta.hasNextPage,
     hasPrevPage: meta.hasPrevPage,
+  };
+
+  const usersPagination: PaginationState = {
+    page,
+    limit: 10,
+    total: usersMeta.total,
+    totalPages: usersMeta.totalPages,
+    hasNextPage: usersMeta.hasNextPage,
+    hasPrevPage: usersMeta.hasPrevPage,
   };
 
   if (loading && merchants.length === 0 && transactions.length === 0) {
@@ -229,7 +314,7 @@ export default function PartnerDashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className={`grid grid-cols-1 md:grid-cols-3 ${isPartnerType ? 'lg:grid-cols-4' : ''} gap-4 mb-8`}>
           <StatsCard
             icon={Store}
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
@@ -251,6 +336,15 @@ export default function PartnerDashboard() {
             label={t('partner:stats.totalTransactions')}
             value={tab === 'transactions' ? meta.total : '-'}
           />
+          {isPartnerType && (
+            <StatsCard
+              icon={Users}
+              iconBgClass="from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10"
+              iconColorClass="text-purple-600 dark:text-purple-400"
+              label={t('partner:stats.totalUsers')}
+              value={tab === 'users' ? usersMeta.total : '-'}
+            />
+          )}
         </div>
 
         {/* Tabs */}
@@ -270,6 +364,15 @@ export default function PartnerDashboard() {
               <CreditCard className="w-4 h-4 mr-2" />
               {t('partner:tabs.transactions')}
             </TabsTrigger>
+            {isPartnerType && (
+              <TabsTrigger
+                value="users"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                {t('partner:tabs.users')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Merchants Tab */}
@@ -316,7 +419,11 @@ export default function PartnerDashboard() {
                     merchants.map((merchant) => {
                       const statusCfg = getStatusConfig(merchant.status);
                       return (
-                        <TableRow key={merchant._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
+                        <TableRow
+                          key={merchant._id}
+                          className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10 cursor-pointer"
+                          onClick={() => openMerchantDetail(merchant)}
+                        >
                           <TableCell className="font-medium">{merchant.profile.fantasy_name}</TableCell>
                           <TableCell className="text-zinc-600 dark:text-zinc-400">
                             {merchant.profile.legal_name}
@@ -341,15 +448,26 @@ export default function PartnerDashboard() {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              onClick={() => openCreateTxDialog(merchant)}
-                              disabled={merchant.status !== 'ACTIVE'}
-                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
-                            >
-                              <Plus className="w-4 h-4 mr-1" />
-                              {t('partner:merchants.newTransaction')}
-                            </Button>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); openMerchantDetail(merchant); }}
+                                title={t('partner:merchants.viewDetails')}
+                                className="h-8 w-8 p-0 border-zinc-200 dark:border-zinc-700"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); openCreateTxDialog(merchant); }}
+                                disabled={merchant.status !== 'ACTIVE'}
+                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                {t('partner:merchants.newTransaction')}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -410,7 +528,11 @@ export default function PartnerDashboard() {
                       const statusCfg = getStatusConfig(tx.status);
                       const amount = getDecimalValue(tx.financials.amount_gross);
                       return (
-                        <TableRow key={tx._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
+                        <TableRow
+                          key={tx._id}
+                          className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10 cursor-pointer"
+                          onClick={() => openTransactionDetail(tx)}
+                        >
                           <TableCell className="font-mono text-xs">
                             {tx._id.slice(-8)}
                           </TableCell>
@@ -446,6 +568,143 @@ export default function PartnerDashboard() {
               />
             </div>
           </TabsContent>
+
+          {/* Users Tab (only for PARTNER type) */}
+          {isPartnerType && (
+            <TabsContent value="users" className="space-y-4">
+              <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+                <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                  <h3 className="font-semibold text-zinc-900 dark:text-white">{t('partner:users.title')}</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchClientUsers(page)}
+                      className="gap-2"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => { setEditingUser(null); setCreateUserDialogOpen(true); }}
+                      className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t('partner:users.create')}
+                    </Button>
+                  </div>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>{t('partner:users.columns.name')}</TableHead>
+                      <TableHead>{t('partner:users.columns.email')}</TableHead>
+                      <TableHead>{t('partner:users.columns.status')}</TableHead>
+                      <TableHead>{t('partner:users.columns.merchants')}</TableHead>
+                      <TableHead className="text-right">{t('partner:users.columns.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {clientUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
+                          {t('partner:users.noResults')}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      clientUsers.map((user) => {
+                        const statusCfg = getStatusConfig(user.status);
+                        return (
+                          <TableRow key={user._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
+                            <TableCell className="font-medium">{user.name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{user.email}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusCfg.variant} className={statusCfg.className}>
+                                {statusCfg.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {user.assigned_merchants.slice(0, 2).map((mid) => (
+                                  <Badge key={mid} variant="outline" className="text-xs">
+                                    {getMerchantName(mid)}
+                                  </Badge>
+                                ))}
+                                {user.assigned_merchants.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{user.assigned_merchants.length - 2}
+                                  </Badge>
+                                )}
+                                {user.assigned_merchants.length === 0 && (
+                                  <span className="text-zinc-400 text-xs">{t('partner:dialogs.common.none')}</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => { setEditingUser(user); setCreateUserDialogOpen(true); }}
+                                  title={t('partner:dialogs.common.update')}
+                                  className="h-7 w-7 p-0"
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setChangePasswordUser(user)}
+                                  title={t('partner:dialogs.changePassword.title')}
+                                  className="h-7 w-7 p-0"
+                                >
+                                  <KeyRound className="h-3 w-3" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>{t('partner:dialogs.deleteUser.title')}</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {t('partner:dialogs.deleteUser.message', { name: user.name })}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>{t('partner:dialogs.common.cancel')}</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteUser(user._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        {t('partner:dialogs.deleteUser.confirm')}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+
+                <PaginationControls
+                  pagination={usersPagination}
+                  onPageChange={setPage}
+                />
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 
@@ -456,6 +715,47 @@ export default function PartnerDashboard() {
         onOpenChange={setCreateTxDialogOpen}
         onSuccess={() => fetchTransactions(1, filters.merchant)}
       />
+
+      {/* Merchant Detail Dialog */}
+      <PartnerMerchantDetailDialog
+        merchant={selectedMerchant}
+        open={merchantDetailOpen}
+        onOpenChange={(open) => {
+          setMerchantDetailOpen(open);
+          if (!open) setSelectedMerchant(null);
+        }}
+      />
+
+      {/* Transaction Detail Dialog */}
+      <PartnerTransactionDetailDialog
+        transaction={selectedTransaction}
+        merchantName={selectedTransaction ? getMerchantName(selectedTransaction.merchant_id) : undefined}
+        open={transactionDetailOpen}
+        onOpenChange={(open) => {
+          setTransactionDetailOpen(open);
+          if (!open) setSelectedTransaction(null);
+        }}
+      />
+
+      {/* User Management Dialogs (PARTNER type only) */}
+      {isPartnerType && (
+        <>
+          <PartnerClientUserDialog
+            open={createUserDialogOpen}
+            onOpenChange={setCreateUserDialogOpen}
+            onSuccess={() => fetchClientUsers(page)}
+            item={editingUser}
+            merchants={merchants}
+          />
+          <PartnerChangePasswordDialog
+            open={!!changePasswordUser}
+            onOpenChange={(open) => { if (!open) setChangePasswordUser(null); }}
+            onSuccess={() => fetchClientUsers(page)}
+            userId={changePasswordUser?._id || ''}
+            userName={changePasswordUser?.name || changePasswordUser?.email || ''}
+          />
+        </>
+      )}
 
       {/* Footer */}
       <DashboardFooter text={t('partner:footer', { year: new Date().getFullYear() })} />

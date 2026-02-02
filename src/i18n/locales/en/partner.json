@@ -5,11 +5,13 @@
   "stats": {
     "totalMerchants": "Total Merchants",
     "activeMerchants": "Active Merchants",
-    "totalTransactions": "Total Transactions"
+    "totalTransactions": "Total Transactions",
+    "totalUsers": "Client Users"
   },
   "tabs": {
     "merchants": "Merchants",
-    "transactions": "Transactions"
+    "transactions": "Transactions",
+    "users": "Users"
   },
   "access": {
     "full": "Full Access",
@@ -26,7 +28,8 @@
       "actions": "Actions"
     },
     "noResults": "No assigned merchants",
-    "newTransaction": "New Transaction"
+    "newTransaction": "New Transaction",
+    "viewDetails": "View Details"
   },
   "transactions": {
     "title": "My Transactions",
@@ -40,6 +43,18 @@
     },
     "noResults": "No transactions"
   },
+  "users": {
+    "title": "Client Users",
+    "create": "New User",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "merchants": "Assigned Merchants",
+      "actions": "Actions"
+    },
+    "noResults": "No client users yet"
+  },
   "filters": {
     "status": "Status",
     "search": "Search",
@@ -52,7 +67,98 @@
   },
   "errors": {
     "loadMerchants": "Failed to load merchants",
-    "loadTransactions": "Failed to load transactions"
+    "loadTransactions": "Failed to load transactions",
+    "loadUsers": "Failed to load users"
+  },
+  "dialogs": {
+    "common": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "creating": "Creating...",
+      "create": "Create",
+      "update": "Update",
+      "required": "Required",
+      "yes": "Yes",
+      "no": "No",
+      "none": "None",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At"
+    },
+    "merchantDetail": {
+      "title": "Merchant Details",
+      "description": "Details for {{name}}",
+      "fantasyName": "Fantasy Name",
+      "legalName": "Legal Name",
+      "taxId": "Tax ID",
+      "mcc": "MCC",
+      "contactEmail": "Contact Email",
+      "status": "Status",
+      "merchantId": "Merchant ID",
+      "publicKey": "Public Key",
+      "apiIntegration": "API Integration",
+      "enabledPaymentMethods": "Enabled Payment Methods",
+      "pricingRules": "Pricing Rules",
+      "method": "Method: ",
+      "fixed": "Fixed: ",
+      "percentage": "Percentage: ",
+      "settings": "Settings",
+      "paymentLinkTimeout": "Payment link expires after {{minutes}} minutes"
+    },
+    "transactionDetail": {
+      "title": "Transaction Details",
+      "description": "Transaction {{id}}",
+      "status": "Status",
+      "paymentMethod": "Payment Method",
+      "financialDetails": "Financial Details",
+      "grossAmount": "Gross Amount",
+      "netAmount": "Net Amount",
+      "currency": "Currency",
+      "feeFixed": "Fee (fixed): ",
+      "feePercentage": "Fee (%): ",
+      "references": "References",
+      "merchantId": "Merchant ID",
+      "merchantName": "Merchant",
+      "terminalId": "Terminal ID",
+      "externalReference": "External Reference",
+      "callbackUrl": "Callback URL",
+      "expiresAt": "Expires At"
+    },
+    "createUser": {
+      "title": "Create Client User",
+      "description": "Create a new client user with restricted access to specific merchants",
+      "name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "assignedMerchants": "Assigned Merchants",
+      "assignedMerchantsHint": "Select which merchants this user can access",
+      "placeholderName": "Enter full name",
+      "placeholderEmail": "user@example.com",
+      "placeholderPassword": "Minimum 8 characters",
+      "createError": "Failed to create user"
+    },
+    "editUser": {
+      "title": "Edit Client User",
+      "description": "Update settings for {{name}}",
+      "status": "Status",
+      "updateError": "Failed to update user"
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Set a new password for {{name}}",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "placeholderPassword": "Enter new password",
+      "placeholderConfirm": "Confirm new password",
+      "mismatch": "Passwords do not match",
+      "success": "Password changed successfully",
+      "error": "Failed to change password"
+    },
+    "deleteUser": {
+      "title": "Delete User",
+      "message": "Are you sure you want to delete {{name}}? This action cannot be undone.",
+      "confirm": "Delete",
+      "error": "Failed to delete user"
+    }
   },
   "footer": "\u00a9 {{year}} TX Pay Partner Portal. All rights reserved."
 }

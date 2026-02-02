@@ -38,6 +38,9 @@ export interface PartnerProfileResponse {
   assignedMerchants: string[];
 }
 
+// Decimal type from MongoDB
+type MongoDecimal = number | { $numberDecimal: string };
+
 // Merchant for Partner portal
 export interface PartnerMerchant {
   _id: string;
@@ -47,9 +50,27 @@ export interface PartnerMerchant {
     fantasy_name: string;
     legal_name: string;
     tax_id?: string;
+    mcc?: string;
     contact_email?: string;
   };
   enabled_payment_methods: string[];
+  // Optional fields returned by getOne detail endpoint
+  integration?: {
+    public_key: string;
+  };
+  pricing_rules?: {
+    fees: Array<{
+      method: string;
+      fixed: MongoDecimal;
+      percentage: MongoDecimal;
+    }>;
+  };
+  bank_accounts?: Array<{
+    bank_name: string;
+    account_type: string;
+    currency: string;
+  }>;
+  payment_link_timeout_minutes?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,15 +79,21 @@ export interface PartnerMerchant {
 export interface PartnerTransaction {
   _id: string;
   merchant_id: string;
+  terminal_id?: string;
   status: string;
   payment_method: string;
   financials: {
-    amount_gross: number | { $numberDecimal: string };
-    amount_net?: number | { $numberDecimal: string };
+    amount_gross: MongoDecimal;
+    amount_net?: MongoDecimal;
     currency: string;
+    fee_snapshot?: {
+      fixed: MongoDecimal;
+      percentage: MongoDecimal;
+    };
   };
   external_reference?: string;
   callback_url?: string;
+  expires_at?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -78,4 +105,30 @@ export interface CreateTransactionRequest {
   payment_method: string;
   callback_url?: string;
   external_reference?: string;
+}
+
+// Partner-managed client user (from partner portal user management)
+export interface PartnerClientUser {
+  _id: string;
+  partner_id: string;
+  name: string;
+  email: string;
+  type: PartnerUserType;
+  status: PartnerUserStatus;
+  assigned_merchants: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePartnerClientUserRequest {
+  name: string;
+  email: string;
+  password: string;
+  assigned_merchants: string[];
+}
+
+export interface UpdatePartnerClientUserRequest {
+  name?: string;
+  status?: PartnerUserStatus;
+  assigned_merchants?: string[];
 }

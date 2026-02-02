@@ -5,6 +5,9 @@ import type {
   PartnerMerchant,
   PartnerTransaction,
   CreateTransactionRequest,
+  PartnerClientUser,
+  CreatePartnerClientUserRequest,
+  UpdatePartnerClientUserRequest,
 } from '../types/partner.types';
 import type { PaginatedResponse, PaginationParams } from './client';
 
@@ -100,4 +103,25 @@ export const partnerTransactionsApi = {
         headers: { 'X-Merchant-Id': merchantId },
       },
     ),
+};
+
+// Partner Portal User Management API
+// Backend dependency: requires /partner-portal/users endpoints with Partner JWT auth
+// These endpoints are restricted to PARTNER-type users only
+export const partnerPortalUsersApi = {
+  list: (params?: PaginationParams) =>
+    partnerClient.get<PaginatedResponse<PartnerClientUser>>(
+      '/partner-portal/users',
+      { params }
+    ),
+  getOne: (id: string) =>
+    partnerClient.get<PartnerClientUser>(`/partner-portal/users/${id}`),
+  create: (data: CreatePartnerClientUserRequest) =>
+    partnerClient.post('/partner-portal/users', data),
+  update: (id: string, data: UpdatePartnerClientUserRequest) =>
+    partnerClient.patch(`/partner-portal/users/${id}`, data),
+  changePassword: (id: string, data: { new_password: string }) =>
+    partnerClient.post(`/partner-portal/users/${id}/password`, data),
+  delete: (id: string) =>
+    partnerClient.delete(`/partner-portal/users/${id}`),
 };

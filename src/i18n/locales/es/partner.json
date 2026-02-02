@@ -5,11 +5,13 @@
   "stats": {
     "totalMerchants": "Total Comercios",
     "activeMerchants": "Comercios Activos",
-    "totalTransactions": "Total Transacciones"
+    "totalTransactions": "Total Transacciones",
+    "totalUsers": "Usuarios Cliente"
   },
   "tabs": {
     "merchants": "Comercios",
-    "transactions": "Transacciones"
+    "transactions": "Transacciones",
+    "users": "Usuarios"
   },
   "access": {
     "full": "Acceso Completo",
@@ -20,13 +22,14 @@
     "refresh": "Actualizar",
     "columns": {
       "name": "Nombre",
-      "legalName": "Razon Social",
+      "legalName": "Razón Social",
       "status": "Estado",
-      "paymentMethods": "Metodos de Pago",
+      "paymentMethods": "Métodos de Pago",
       "actions": "Acciones"
     },
     "noResults": "No tienes comercios asignados",
-    "newTransaction": "Nueva Transaccion"
+    "newTransaction": "Nueva Transacción",
+    "viewDetails": "Ver Detalles"
   },
   "transactions": {
     "title": "Mis Transacciones",
@@ -34,25 +37,128 @@
       "id": "ID",
       "amount": "Monto",
       "status": "Estado",
-      "method": "Metodo",
+      "method": "Método",
       "merchant": "Comercio",
       "date": "Fecha"
     },
     "noResults": "No hay transacciones"
   },
+  "users": {
+    "title": "Usuarios Cliente",
+    "create": "Nuevo Usuario",
+    "columns": {
+      "name": "Nombre",
+      "email": "Email",
+      "status": "Estado",
+      "merchants": "Comercios Asignados",
+      "actions": "Acciones"
+    },
+    "noResults": "No hay usuarios cliente aún"
+  },
   "filters": {
     "status": "Estado",
     "search": "Buscar",
-    "method": "Metodo",
+    "method": "Método",
     "merchant": "Comercio",
     "from": "Desde",
     "to": "Hasta",
-    "nameOrLegalName": "Nombre o razon social...",
+    "nameOrLegalName": "Nombre o razón social...",
     "allMerchants": "Todos los comercios"
   },
   "errors": {
     "loadMerchants": "Error al cargar comercios",
-    "loadTransactions": "Error al cargar transacciones"
+    "loadTransactions": "Error al cargar transacciones",
+    "loadUsers": "Error al cargar usuarios"
+  },
+  "dialogs": {
+    "common": {
+      "cancel": "Cancelar",
+      "saving": "Guardando...",
+      "creating": "Creando...",
+      "create": "Crear",
+      "update": "Actualizar",
+      "required": "Requerido",
+      "yes": "Sí",
+      "no": "No",
+      "none": "Ninguno",
+      "createdAt": "Fecha de Creación",
+      "updatedAt": "Última Actualización"
+    },
+    "merchantDetail": {
+      "title": "Detalles del Comercio",
+      "description": "Detalles de {{name}}",
+      "fantasyName": "Nombre de Fantasía",
+      "legalName": "Razón Social",
+      "taxId": "RUT",
+      "mcc": "MCC",
+      "contactEmail": "Email de Contacto",
+      "status": "Estado",
+      "merchantId": "ID del Comercio",
+      "publicKey": "Llave Pública",
+      "apiIntegration": "Integración API",
+      "enabledPaymentMethods": "Métodos de Pago Habilitados",
+      "pricingRules": "Reglas de Precio",
+      "method": "Método: ",
+      "fixed": "Fijo: ",
+      "percentage": "Porcentaje: ",
+      "settings": "Configuración",
+      "paymentLinkTimeout": "El link de pago expira después de {{minutes}} minutos"
+    },
+    "transactionDetail": {
+      "title": "Detalles de Transacción",
+      "description": "Transacción {{id}}",
+      "status": "Estado",
+      "paymentMethod": "Método de Pago",
+      "financialDetails": "Detalles Financieros",
+      "grossAmount": "Monto Bruto",
+      "netAmount": "Monto Neto",
+      "currency": "Moneda",
+      "feeFixed": "Comisión (fija): ",
+      "feePercentage": "Comisión (%): ",
+      "references": "Referencias",
+      "merchantId": "ID del Comercio",
+      "merchantName": "Comercio",
+      "terminalId": "ID del Terminal",
+      "externalReference": "Referencia Externa",
+      "callbackUrl": "URL de Callback",
+      "expiresAt": "Expira"
+    },
+    "createUser": {
+      "title": "Crear Usuario Cliente",
+      "description": "Crea un nuevo usuario cliente con acceso restringido a comercios específicos",
+      "name": "Nombre Completo",
+      "email": "Email",
+      "password": "Contraseña",
+      "assignedMerchants": "Comercios Asignados",
+      "assignedMerchantsHint": "Selecciona a qué comercios puede acceder este usuario",
+      "placeholderName": "Ingresa nombre completo",
+      "placeholderEmail": "usuario@ejemplo.com",
+      "placeholderPassword": "Mínimo 8 caracteres",
+      "createError": "Error al crear usuario"
+    },
+    "editUser": {
+      "title": "Editar Usuario Cliente",
+      "description": "Actualizar configuración de {{name}}",
+      "status": "Estado",
+      "updateError": "Error al actualizar usuario"
+    },
+    "changePassword": {
+      "title": "Cambiar Contraseña",
+      "description": "Establecer nueva contraseña para {{name}}",
+      "newPassword": "Nueva Contraseña",
+      "confirmPassword": "Confirmar Contraseña",
+      "placeholderPassword": "Ingresa nueva contraseña",
+      "placeholderConfirm": "Confirma la nueva contraseña",
+      "mismatch": "Las contraseñas no coinciden",
+      "success": "Contraseña cambiada exitosamente",
+      "error": "Error al cambiar contraseña"
+    },
+    "deleteUser": {
+      "title": "Eliminar Usuario",
+      "message": "¿Estás seguro de eliminar a {{name}}? Esta acción no se puede deshacer.",
+      "confirm": "Eliminar",
+      "error": "Error al eliminar usuario"
+    }
   },
   "footer": "\u00a9 {{year}} TX Pay Portal Partner. Todos los derechos reservados."
 }
