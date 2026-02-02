@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { partnerUsersApi } from '../../api/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,6 +34,7 @@ interface PartnerUserDialogProps {
 }
 
 export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partnerId, partnerMerchants = [] }: PartnerUserDialogProps) {
+  const { t } = useTranslation('admin');
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -107,80 +109,100 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
-      setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} user`);
+      setError(err.response?.data?.message || t(isEdit ? 'dialogs.partnerUser.updateError' : 'dialogs.partnerUser.createError'));
     } finally {
       setLoading(false);
     }
   };
 
+  const inputClass = "h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-colors placeholder:text-zinc-400";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <UserPlus className="w-4 h-4 text-white" />
+      <DialogContent className="max-w-md bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-amber-900/5 dark:shadow-amber-900/20 p-0 gap-0 overflow-hidden">
+        {/* Decorative top accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
+
+        <DialogHeader className="px-6 pt-5 pb-0">
+          <DialogTitle className="flex items-center gap-3 text-lg">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+              <UserPlus className="w-4.5 h-4.5 text-white" />
             </div>
-            {isEdit ? 'Edit User' : 'Create User'}
+            <span className="text-zinc-900 dark:text-zinc-50">
+              {isEdit ? t('dialogs.partnerUser.editTitle') : t('dialogs.partnerUser.createTitle')}
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            {isEdit ? 'Update partner user information.' : 'Add a new user to this partner.'}
+          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
+            {isEdit ? t('dialogs.partnerUser.editDescription') : t('dialogs.partnerUser.createDescription')}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
           {error && (
-            <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
+            <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-sm">{error}</AlertDescription>
             </Alert>
           )}
-          <div className="space-y-2">
-            <Label htmlFor="pu-name">Name *</Label>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pu-name" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+              {t('dialogs.partnerUser.name')} {t('dialogs.common.required')}
+            </Label>
             <Input
               id="pu-name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="User Name"
+              placeholder={t('dialogs.partnerUser.placeholderName')}
               required
-              className="h-11"
+              className={inputClass}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="pu-email">Email *</Label>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pu-email" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+              {t('dialogs.partnerUser.email')} {t('dialogs.common.required')}
+            </Label>
             <Input
               id="pu-email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="user@partner.com"
+              placeholder={t('dialogs.partnerUser.placeholderEmail')}
               required={!isEdit}
               disabled={isEdit}
-              className="h-11"
+              className={`${inputClass} disabled:opacity-60`}
             />
           </div>
+
           {!isEdit && (
-            <div className="space-y-2">
-              <Label htmlFor="pu-password">Password *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="pu-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.partnerUser.password')} {t('dialogs.common.required')}
+              </Label>
               <Input
                 id="pu-password"
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Min. 8 characters"
+                placeholder={t('dialogs.partnerUser.placeholderPassword')}
                 required
                 minLength={8}
-                className="h-11"
+                className={inputClass}
               />
             </div>
           )}
-          <div className="space-y-2">
-            <Label>Type *</Label>
+
+          <div className="space-y-1.5">
+            <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+              {t('dialogs.partnerUser.type')} {t('dialogs.common.required')}
+            </Label>
             <Select
               value={formData.type}
               onValueChange={(value) => setFormData({ ...formData, type: value })}
             >
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Select type" />
+              <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                <SelectValue placeholder={t('dialogs.partnerUser.selectType')} />
               </SelectTrigger>
               <SelectContent>
                 {PartnerUserTypes.map(type => (
@@ -188,43 +210,53 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-zinc-500">
-              {formData.type === 'PARTNER' ? 'Full access to all partner merchants' : 'Access only to assigned merchants'}
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 pl-0.5">
+              {formData.type === 'PARTNER' ? t('dialogs.partnerUser.typePartnerHint') : t('dialogs.partnerUser.typeClientHint')}
             </p>
           </div>
+
           {formData.type === 'CLIENT' && partnerMerchants.length > 0 && (
             <div className="space-y-2">
-              <Label>Assigned Merchants</Label>
-              <div className="flex flex-wrap gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg min-h-[44px]">
-                {partnerMerchants.map((m: any) => (
-                  <Badge
-                    key={m._id}
-                    variant={formData.assigned_merchants.includes(m._id) ? 'default' : 'outline'}
-                    className={`cursor-pointer transition-all ${
-                      formData.assigned_merchants.includes(m._id)
-                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
-                        : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                    }`}
-                    onClick={() => handleMerchantToggle(m._id)}
-                  >
-                    {m.profile?.fantasy_name || m._id}
-                  </Badge>
-                ))}
+              <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.partnerUser.assignedMerchants')}
+              </Label>
+              <div className="flex flex-wrap gap-1.5 p-3 bg-zinc-50/80 dark:bg-zinc-800/30 border border-zinc-200/80 dark:border-zinc-700/50 rounded-lg min-h-[44px]">
+                {partnerMerchants.map((m: any) => {
+                  const isSelected = formData.assigned_merchants.includes(m._id);
+                  return (
+                    <Badge
+                      key={m._id}
+                      variant={isSelected ? 'default' : 'outline'}
+                      className={`cursor-pointer transition-all duration-150 select-none ${
+                        isSelected
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500/25 shadow-sm shadow-amber-500/10'
+                          : 'bg-white dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-amber-300 dark:hover:border-amber-600 hover:text-amber-600 dark:hover:text-amber-400'
+                      }`}
+                      onClick={() => handleMerchantToggle(m._id)}
+                    >
+                      {m.profile?.fantasy_name || m._id}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           )}
+
           {formData.type === 'CLIENT' && partnerMerchants.length === 0 && (
-            <p className="text-sm text-zinc-500">No merchants available for assignment</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 pl-0.5">{t('dialogs.partnerUser.noMerchants')}</p>
           )}
+
           {isEdit && (
-            <div className="space-y-2">
-              <Label>Status</Label>
+            <div className="space-y-1.5">
+              <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.partnerUser.status')}
+              </Label>
               <Select
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select status" />
+                <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                  <SelectValue placeholder={t('dialogs.common.selectStatus')} />
                 </SelectTrigger>
                 <SelectContent>
                   {PartnerUserStatuses.map(status => (
@@ -234,21 +266,30 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
               </Select>
             </div>
           )}
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+
+          {/* Footer */}
+          <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 -mx-6 px-6 -mb-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            >
+              {t('dialogs.common.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20 hover:shadow-amber-500/30 transition-all duration-200 min-w-[90px]"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>{t('dialogs.common.saving')}</span>
                 </div>
-              ) : (isEdit ? 'Update' : 'Create')}
+              ) : (
+                isEdit ? t('dialogs.common.update') : t('dialogs.common.create')
+              )}
             </Button>
           </DialogFooter>
         </form>

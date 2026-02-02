@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { transactionsApi } from '../../api/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,7 @@ interface CreateTransactionDialogProps {
 }
 
 export function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: CreateTransactionDialogProps) {
+  const { t, i18n } = useTranslation('admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -76,47 +78,59 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
       setResult(res.data);
       onSuccess();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create transaction');
+      setError(err.response?.data?.message || t('dialogs.createTransaction.createError'));
     } finally {
       setLoading(false);
     }
   };
 
+  const locale = i18n.language?.startsWith('es') ? 'es' : 'en';
+  const inputClass = "h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-blue-500 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-colors placeholder:text-zinc-400";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <CreditCard className="w-4 h-4 text-white" />
+      <DialogContent className="max-w-lg bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden">
+        {/* Decorative top accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
+
+        <DialogHeader className="px-6 pt-5 pb-0">
+          <DialogTitle className="flex items-center gap-3 text-lg">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+              <CreditCard className="w-4.5 h-4.5 text-white" />
             </div>
-            Create Transaction
+            <span className="text-zinc-900 dark:text-zinc-50">
+              {t('dialogs.createTransaction.title')}
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            Create a payment link or QR for{' '}
+          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
+            {t('dialogs.createTransaction.description')}{' '}
             <span className="font-medium text-zinc-900 dark:text-white">{merchant?.profile?.fantasy_name}</span>
           </DialogDescription>
         </DialogHeader>
 
         {result ? (
-          <TransactionSuccessView
-            result={result}
-            gradientClass="from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-            locale="en"
-            onClose={() => onOpenChange(false)}
-          />
+          <div className="px-6 pb-6 pt-4">
+            <TransactionSuccessView
+              result={result}
+              gradientClass="from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              locale={locale}
+              onClose={() => onOpenChange(false)}
+            />
+          </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
             {error && (
-              <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
+              <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tx-amount">Amount *</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="tx-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  {t('dialogs.createTransaction.amount')} {t('dialogs.common.required')}
+                </Label>
                 <Input
                   id="tx-amount"
                   type="number"
@@ -124,19 +138,21 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                   min="1"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder="10000"
+                  placeholder={t('dialogs.createTransaction.placeholderAmount')}
                   required
-                  className="h-11"
+                  className={inputClass}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="tx-currency">Currency</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="tx-currency" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  {t('dialogs.createTransaction.currency')}
+                </Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(value) => setFormData({ ...formData, currency: value })}
                 >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select currency" />
+                  <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                    <SelectValue placeholder={t('dialogs.createTransaction.selectCurrency')} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="CLP">CLP</SelectItem>
@@ -146,14 +162,16 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tx-method">Payment Method *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="tx-method" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.createTransaction.paymentMethod')} {t('dialogs.common.required')}
+              </Label>
               <Select
                 value={formData.payment_method}
                 onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
               >
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select payment method" />
+                <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                  <SelectValue placeholder={t('dialogs.createTransaction.selectMethod')} />
                 </SelectTrigger>
                 <SelectContent>
                   {merchant?.enabled_payment_methods?.length > 0
@@ -163,44 +181,52 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                         </SelectItem>
                       ))
                     : <>
-                        <SelectItem value="PAYMENT_LINK">Payment Link</SelectItem>
-                        <SelectItem value="QR">QR Code</SelectItem>
-                        <SelectItem value="WEBPAY">Webpay</SelectItem>
-                        <SelectItem value="VITA_WALLET">Vita Wallet</SelectItem>
+                        <SelectItem value="PAYMENT_LINK">{getPaymentMethodLabel('PAYMENT_LINK')}</SelectItem>
+                        <SelectItem value="QR">{getPaymentMethodLabel('QR')}</SelectItem>
+                        <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
+                        <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
                       </>
                   }
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tx-callback">Callback URL (optional)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="tx-callback" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.createTransaction.callbackUrl')}
+              </Label>
               <Input
                 id="tx-callback"
                 type="url"
                 value={formData.callback_url}
                 onChange={(e) => setFormData({ ...formData, callback_url: e.target.value })}
-                placeholder="https://your-site.com/callback"
-                className="h-11"
+                placeholder={t('dialogs.createTransaction.placeholderCallback')}
+                className={inputClass}
               />
             </div>
 
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+            {/* Footer */}
+            <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 -mx-6 px-6 -mb-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+              >
+                {t('dialogs.common.cancel')}
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 min-w-[90px]"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating...
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{t('dialogs.common.creating')}</span>
                   </div>
                 ) : (
-                  'Create Transaction'
+                  t('dialogs.createTransaction.submit')
                 )}
               </Button>
             </DialogFooter>

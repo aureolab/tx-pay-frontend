@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { partnerUsersApi, merchantsApi, type PaginatedResponse } from '../../api/client';
 import { type PaginationState, defaultPagination } from '@/types/dashboard.types';
 import { getStatusConfig } from '@/lib/constants';
@@ -57,6 +58,7 @@ interface PartnerDetailDialogProps {
 }
 
 export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailDialogProps) {
+  const { t } = useTranslation('admin');
   const [innerTab, setInnerTab] = useState('users');
 
   // Users state
@@ -158,44 +160,50 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                <Handshake className="w-4 h-4 text-white" />
+        <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-amber-900/5 dark:shadow-amber-900/20 p-0 gap-0 overflow-hidden">
+          {/* Decorative top accent */}
+          <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600" />
+
+          <DialogHeader className="px-6 pt-5 pb-0">
+            <DialogTitle className="flex items-center gap-3 text-lg">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+                <Handshake className="w-4.5 h-4.5 text-white" />
               </div>
-              Partner Details
+              <span className="text-zinc-900 dark:text-zinc-50">
+                {t('dialogs.partnerDetail.title')}
+              </span>
             </DialogTitle>
-            <DialogDescription>
-              Complete information for {item.fantasy_name}
+            <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
+              {t('dialogs.partnerDetail.description', { name: item.fantasy_name })}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="max-h-[calc(90vh-100px)] px-6 pb-6">
-            <div className="grid gap-4 pt-4">
+
+          <ScrollArea className="max-h-[calc(90vh-100px)]">
+            <div className="px-6 pb-6 pt-4 grid gap-4">
               {/* Partner Info */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Fantasy Name</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white">{item.fantasy_name || '-'}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.fantasyName')}</Label>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.fantasy_name || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Business Name</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white">{item.business_name || '-'}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.businessName')}</Label>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.business_name || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Tax ID</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white">{item.tax_id || '-'}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.taxId')}</Label>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.tax_id || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Contact Name</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white">{item.contact_name || '-'}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.contactName')}</Label>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.contact_name || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Contact Email</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white">{item.contact_email || '-'}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.contactEmail')}</Label>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.contact_email || '-'}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Status</Label>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.status')}</Label>
                   <div className="mt-1">
                     <Badge variant={statusConfig.variant} className={statusConfig.className}>
                       {statusConfig.label}
@@ -205,27 +213,27 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
               </div>
 
               {/* IDs & Timestamps */}
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 grid grid-cols-3 gap-4">
+              <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4 grid grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Partner ID</Label>
-                  <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item._id}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.partnerId')}</Label>
+                  <p className="font-mono text-sm bg-zinc-50/80 dark:bg-zinc-800/50 p-2 rounded-lg mt-0.5">{item._id}</p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Created At</Label>
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.common.createdAt')}</Label>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-0.5">
                     {item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Updated At</Label>
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.common.updatedAt')}</Label>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-0.5">
                     {item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}
                   </p>
                 </div>
               </div>
 
               {/* Inner Tabs */}
-              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                 <Tabs value={innerTab} onValueChange={setInnerTab}>
                   <TabsList className="bg-zinc-100 dark:bg-zinc-800 p-1 rounded-lg">
                     <TabsTrigger
@@ -233,14 +241,14 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                       className="data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 rounded-md px-4"
                     >
                       <Users className="w-4 h-4 mr-2" />
-                      Users
+                      {t('dialogs.partnerDetail.usersTab')}
                     </TabsTrigger>
                     <TabsTrigger
                       value="merchants"
                       className="data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 rounded-md px-4"
                     >
                       <Store className="w-4 h-4 mr-2" />
-                      Merchants
+                      {t('dialogs.partnerDetail.merchantsTab')}
                     </TabsTrigger>
                   </TabsList>
 
@@ -248,15 +256,15 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                   <TabsContent value="users" className="mt-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        Partner Users ({usersPagination.total})
+                        {t('dialogs.partnerDetail.partnerUsers', { count: usersPagination.total })}
                       </h4>
                       <Button
                         size="sm"
                         onClick={openCreateUser}
-                        className="gap-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+                        className="gap-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-sm shadow-amber-500/15"
                       >
                         <Plus className="h-3 w-3" />
-                        Create User
+                        {t('dialogs.partnerDetail.createUser')}
                       </Button>
                     </div>
                     {usersLoading ? (
@@ -266,11 +274,11 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                         <Table>
                           <TableHeader>
                             <TableRow className="hover:bg-transparent">
-                              <TableHead>Name</TableHead>
-                              <TableHead>Email</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right">Actions</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.columns.name')}</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.columns.email')}</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.columns.type')}</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.columns.status')}</TableHead>
+                              <TableHead className="text-right">{t('dialogs.partnerDetail.columns.actions')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -296,8 +304,8 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                                         variant="outline"
                                         size="sm"
                                         onClick={() => openEditUser(u)}
-                                        title="Edit user"
-                                        className="h-7 w-7 p-0"
+                                        title={t('dialogs.partnerDetail.editUser')}
+                                        className="h-7 w-7 p-0 border-zinc-200 dark:border-zinc-700"
                                       >
                                         <Pencil className="h-3 w-3" />
                                       </Button>
@@ -305,8 +313,8 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setChangePasswordUser(u)}
-                                        title="Change password"
-                                        className="h-7 w-7 p-0"
+                                        title={t('dialogs.partnerDetail.changePassword')}
+                                        className="h-7 w-7 p-0 border-zinc-200 dark:border-zinc-700"
                                       >
                                         <KeyRound className="h-3 w-3" />
                                       </Button>
@@ -320,20 +328,20 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                                             <Trash2 className="h-3 w-3" />
                                           </Button>
                                         </AlertDialogTrigger>
-                                        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                                        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80">
                                           <AlertDialogHeader>
-                                            <AlertDialogTitle>Delete User</AlertDialogTitle>
+                                            <AlertDialogTitle>{t('dialogs.partnerDetail.deleteUser')}</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              Are you sure you want to delete &quot;{u.name || u.email}&quot;? This action cannot be undone.
+                                              {t('dialogs.partnerDetail.deleteUserMessage', { name: u.name || u.email })}
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogCancel className="border-zinc-200 dark:border-zinc-700">{t('dialogs.common.cancel')}</AlertDialogCancel>
                                             <AlertDialogAction
                                               onClick={() => handleDeleteUser(u._id)}
                                               className="bg-red-500 hover:bg-red-600 text-white"
                                             >
-                                              Delete
+                                              {t('dialogs.common.delete')}
                                             </AlertDialogAction>
                                           </AlertDialogFooter>
                                         </AlertDialogContent>
@@ -346,7 +354,7 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                             {users.length === 0 && (
                               <TableRow>
                                 <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
-                                  No users found
+                                  {t('dialogs.partnerDetail.noUsers')}
                                 </TableCell>
                               </TableRow>
                             )}
@@ -364,15 +372,15 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                   <TabsContent value="merchants" className="mt-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                        Merchants ({merchantsPagination.total})
+                        {t('dialogs.partnerDetail.merchantsCount', { count: merchantsPagination.total })}
                       </h4>
                       <Button
                         size="sm"
                         onClick={() => setMerchantDialogOpen(true)}
-                        className="gap-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+                        className="gap-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-sm shadow-amber-500/15"
                       >
                         <Plus className="h-3 w-3" />
-                        Create Merchant
+                        {t('dialogs.partnerDetail.createMerchant')}
                       </Button>
                     </div>
                     {merchantsLoading ? (
@@ -382,10 +390,10 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                         <Table>
                           <TableHeader>
                             <TableRow className="hover:bg-transparent">
-                              <TableHead>Fantasy Name</TableHead>
-                              <TableHead>Legal Name</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead className="text-right">Actions</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.merchantColumns.fantasyName')}</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.merchantColumns.legalName')}</TableHead>
+                              <TableHead>{t('dialogs.partnerDetail.merchantColumns.status')}</TableHead>
+                              <TableHead className="text-right">{t('dialogs.partnerDetail.merchantColumns.actions')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -409,8 +417,8 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setSelectedMerchant(m)}
-                                      title="View details"
-                                      className="h-7 w-7 p-0"
+                                      title={t('dialogs.partnerDetail.viewDetails')}
+                                      className="h-7 w-7 p-0 border-zinc-200 dark:border-zinc-700"
                                     >
                                       <Eye className="h-3 w-3" />
                                     </Button>
@@ -421,7 +429,7 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                             {merchants.length === 0 && (
                               <TableRow>
                                 <TableCell colSpan={4} className="text-center text-zinc-500 py-8">
-                                  No merchants found
+                                  {t('dialogs.partnerDetail.noMerchants')}
                                 </TableCell>
                               </TableRow>
                             )}
