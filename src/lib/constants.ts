@@ -3,6 +3,9 @@ import type { StatusConfig } from '@/types/dashboard.types';
 export const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
 export const MerchantStatuses = ['ACTIVE', 'BLOCKED', 'REVIEW', 'INACTIVE'] as const;
 export const PaymentMethods = ['CREDIT', 'DEBIT', 'PREPAID', 'QR', 'PAYMENT_LINK', 'VITA_WALLET', 'WEBPAY'] as const;
+export const PartnerStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
+export const PartnerUserTypes = ['PARTNER', 'CLIENT'] as const;
+export const PartnerUserStatuses = ['ACTIVE', 'INACTIVE'] as const;
 
 const STATUS_STYLES: Record<string, { variant: StatusConfig['variant']; className: string }> = {
   APPROVED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
@@ -17,6 +20,7 @@ const STATUS_STYLES: Record<string, { variant: StatusConfig['variant']; classNam
   BLOCKED: { variant: 'destructive', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
   REVIEW: { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
   INACTIVE: { variant: 'outline', className: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20' },
+  SUSPENDED: { variant: 'destructive', className: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
 };
 
 const STATUS_LABELS: Record<string, { en: string; es: string }> = {
@@ -32,6 +36,7 @@ const STATUS_LABELS: Record<string, { en: string; es: string }> = {
   BLOCKED: { en: 'Blocked', es: 'Bloqueado' },
   REVIEW: { en: 'Review', es: 'En revision' },
   INACTIVE: { en: 'Inactive', es: 'Inactivo' },
+  SUSPENDED: { en: 'Suspended', es: 'Suspendido' },
 };
 
 export function getStatusConfig(status: string, locale: 'en' | 'es' = 'en'): StatusConfig {

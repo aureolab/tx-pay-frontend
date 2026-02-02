@@ -121,8 +121,8 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
                 <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item._id}</p>
               </div>
               <div>
-                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Parent Client ID</Label>
-                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item.parent_client_id || '-'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Owner (Partner ID)</Label>
+                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item.owner || '-'}</p>
               </div>
             </div>
           </div>

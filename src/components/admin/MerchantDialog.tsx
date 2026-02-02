@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { merchantsApi } from '../../api/client';
+import { merchantsApi, partnersApi } from '../../api/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ interface MerchantDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   item?: any;
+  defaultOwner?: string;
 }
 
 interface PricingRule {
@@ -42,12 +43,14 @@ interface AcquirerConfig {
   config: string;
 }
 
-export function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogProps) {
+export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwner }: MerchantDialogProps) {
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [partners, setPartners] = useState<any[]>([]);
+  const [loadingPartners, setLoadingPartners] = useState(false);
   const [formData, setFormData] = useState({
-    parent_client_id: '',
+    owner: '',
     fantasy_name: '',
     legal_name: '',
     tax_id: '',
@@ -60,9 +63,19 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item }: Merchant
   const [acquirerConfigs, setAcquirerConfigs] = useState<AcquirerConfig[]>([]);
 
   useEffect(() => {
+    if (open && !isEdit && !defaultOwner) {
+      setLoadingPartners(true);
+      partnersApi.list({ page: 1, limit: 100 })
+        .then((res) => setPartners(res.data.data || []))
+        .catch(() => setPartners([]))
+        .finally(() => setLoadingPartners(false));
+    }
+  }, [open, isEdit, defaultOwner]);
+
+  useEffect(() => {
     if (item) {
       setFormData({
-        parent_client_id: item.parent_client_id || '',
+        owner: item.owner || '',
         fantasy_name: item.profile?.fantasy_name || '',
         legal_name: item.profile?.legal_name || '',
         tax_id: item.profile?.tax_id || '',
@@ -90,7 +103,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item }: Merchant
       }
     } else {
       setFormData({
-        parent_client_id: '',
+        owner: defaultOwner || '',
         fantasy_name: '',
         legal_name: '',
         tax_id: '',
@@ -204,7 +217,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item }: Merchant
       };
 
       if (!isEdit) {
-        payload.parent_client_id = formData.parent_client_id;
+        payload.owner = formData.owner;
       } else {
         payload.status = formData.status;
       }
@@ -248,15 +261,33 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item }: Merchant
 
           {!isEdit && (
             <div className="space-y-2">
-              <Label htmlFor="merchant-parent">Parent Client ID *</Label>
-              <Input
-                id="merchant-parent"
-                value={formData.parent_client_id}
-                onChange={(e) => setFormData({ ...formData, parent_client_id: e.target.value })}
-                placeholder="MongoDB ObjectId"
-                required
-                className="h-11"
-              />
+              <Label htmlFor="merchant-owner">Owner (Partner) *</Label>
+              {defaultOwner ? (
+                <Input
+                  value={defaultOwner}
+                  disabled
+                  className="h-11 font-mono text-sm"
+                />
+              ) : (
+                <Select
+                  value={formData.owner}
+                  onValueChange={(value) => setFormData({ ...formData, owner: value })}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder={loadingPartners ? 'Loading partners...' : 'Select a partner'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {partners.map((p) => (
+                      <SelectItem key={p._id} value={p._id}>
+                        {p.fantasy_name} — {p.contact_email}
+                      </SelectItem>
+                    ))}
+                    {partners.length === 0 && !loadingPartners && (
+                      <SelectItem value="" disabled>No partners found</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
 

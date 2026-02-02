@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { merchantsApi, transactionsApi, adminUsersApi, healthApi, type PaginatedResponse } from '../api/client';
+import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, healthApi, type PaginatedResponse } from '../api/client';
 import { type PaginationState, defaultPagination } from '@/types/dashboard.types';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
 
@@ -16,6 +16,8 @@ import { MerchantDialog } from '@/components/admin/MerchantDialog';
 import { MerchantDetailDialog } from '@/components/admin/MerchantDetailDialog';
 import { CreateTransactionDialog } from '@/components/admin/CreateTransactionDialog';
 import { TransactionDetailDialog } from '@/components/admin/TransactionDetailDialog';
+import { PartnerDialog } from '@/components/admin/PartnerDialog';
+import { PartnerDetailDialog } from '@/components/admin/PartnerDetailDialog';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +45,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertCircle,
   Database,
+  Handshake,
   Plus,
   Eye,
   Pencil,
@@ -66,14 +69,21 @@ export default function Dashboard() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [partners, setPartners] = useState<any[]>([]);
+
   const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
   const [transactionsPagination, setTransactionsPagination] = useState<PaginationState>(defaultPagination);
   const [adminsPagination, setAdminsPagination] = useState<PaginationState>(defaultPagination);
+  const [partnersPagination, setPartnersPagination] = useState<PaginationState>(defaultPagination);
 
   // Dialog states
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<any>(null);
   const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
+
+  const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
+  const [editingPartner, setEditingPartner] = useState<any>(null);
+  const [selectedPartner, setSelectedPartner] = useState<any>(null);
 
   const [merchantDialogOpen, setMerchantDialogOpen] = useState(false);
   const [editingMerchant, setEditingMerchant] = useState<any>(null);
@@ -88,7 +98,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadData();
-  }, [tab, merchantsPagination.page, transactionsPagination.page, adminsPagination.page]);
+  }, [tab, merchantsPagination.page, transactionsPagination.page, adminsPagination.page, partnersPagination.page]);
 
   const loadData = async () => {
     setLoading(true);
@@ -109,6 +119,11 @@ export default function Dashboard() {
         const data = res.data as PaginatedResponse<any>;
         setAdmins(data.data);
         setAdminsPagination(prev => ({ ...prev, ...data.meta }));
+      } else if (tab === 'partners') {
+        const res = await partnersApi.list({ page: partnersPagination.page, limit: partnersPagination.limit });
+        const data = res.data as PaginatedResponse<any>;
+        setPartners(data.data);
+        setPartnersPagination(prev => ({ ...prev, ...data.meta }));
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
@@ -125,6 +140,8 @@ export default function Dashboard() {
       setTransactionsPagination(prev => ({ ...prev, page: newPage }));
     } else if (tab === 'admins') {
       setAdminsPagination(prev => ({ ...prev, page: newPage }));
+    } else if (tab === 'partners') {
+      setPartnersPagination(prev => ({ ...prev, page: newPage }));
     }
   };
 
@@ -165,6 +182,25 @@ export default function Dashboard() {
   const openEditAdmin = (admin: any) => {
     setEditingAdmin(admin);
     setAdminDialogOpen(true);
+  };
+
+  const handleDeletePartner = async (id: string) => {
+    try {
+      await partnersApi.delete(id);
+      loadData();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Delete failed');
+    }
+  };
+
+  const openCreatePartner = () => {
+    setEditingPartner(null);
+    setPartnerDialogOpen(true);
+  };
+
+  const openEditPartner = (partner: any) => {
+    setEditingPartner(partner);
+    setPartnerDialogOpen(true);
   };
 
   const openCreateMerchant = () => {
@@ -229,7 +265,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <StatsCard
             icon={Store}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
@@ -243,6 +279,13 @@ export default function Dashboard() {
             iconColorClass="text-emerald-600 dark:text-emerald-400"
             label="Transactions"
             value={transactionsPagination.total}
+          />
+          <StatsCard
+            icon={Handshake}
+            iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
+            iconColorClass="text-amber-600 dark:text-amber-400"
+            label="Partners"
+            value={partnersPagination.total}
           />
           <StatsCard
             icon={Users}
@@ -268,6 +311,13 @@ export default function Dashboard() {
             >
               <CreditCard className="w-4 h-4 mr-2" />
               Transactions
+            </TabsTrigger>
+            <TabsTrigger
+              value="partners"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <Handshake className="w-4 h-4 mr-2" />
+              Partners
             </TabsTrigger>
             <TabsTrigger
               value="admins"
@@ -538,6 +588,130 @@ export default function Dashboard() {
             </div>
           </TabsContent>
 
+          {/* Partners Tab */}
+          <TabsContent value="partners" className="space-y-4">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  Partners ({partnersPagination.total} total)
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData()}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={openCreatePartner}
+                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Partner
+                  </Button>
+                </div>
+              </div>
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>Fantasy Name</TableHead>
+                        <TableHead>Business Name</TableHead>
+                        <TableHead>Contact Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {partners.map((p) => {
+                        const statusCfg = getStatusConfig(p.status);
+                        return (
+                          <TableRow key={p._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
+                            <TableCell className="font-medium text-zinc-900 dark:text-white">
+                              {p.fantasy_name}
+                            </TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.business_name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_email}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_phone || '-'}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusCfg.variant} className={statusCfg.className}>
+                                {statusCfg.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedPartner(p)}
+                                  title="View details"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditPartner(p)}
+                                  title="Edit partner"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Partner</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete &quot;{p.fantasy_name}&quot;? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeletePartner(p._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {partners.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
+                            No partners found
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                  <PaginationControls
+                    pagination={partnersPagination}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Admin Users Tab */}
           <TabsContent value="admins" className="space-y-4">
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
@@ -693,6 +867,19 @@ export default function Dashboard() {
         item={selectedMerchant}
         open={!!selectedMerchant}
         onOpenChange={(open) => !open && setSelectedMerchant(null)}
+      />
+
+      {/* Partner Dialogs */}
+      <PartnerDialog
+        open={partnerDialogOpen}
+        onOpenChange={setPartnerDialogOpen}
+        onSuccess={loadData}
+        item={editingPartner}
+      />
+      <PartnerDetailDialog
+        item={selectedPartner}
+        open={!!selectedPartner}
+        onOpenChange={(open) => !open && setSelectedPartner(null)}
       />
 
       {/* Transaction Dialogs */}

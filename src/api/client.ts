@@ -92,6 +92,30 @@ export const transactionsApi = {
   void: (id: string) => client.post(`/transactions/${id}/void`),
 };
 
+// Partners
+export const partnersApi = {
+  list: (params?: PaginationParams) =>
+    client.get('/partners', { params }),
+  get: (id: string) => client.get(`/partners/${id}`),
+  create: (data: any) => client.post('/partners', data),
+  update: (id: string, data: any) => client.patch(`/partners/${id}`, data),
+  delete: (id: string) => client.delete(`/partners/${id}`),
+};
+
+// Partner Users
+export const partnerUsersApi = {
+  list: (params?: PaginationParams) =>
+    client.get('/partner-users', { params }),
+  listByPartner: (partnerId: string, params?: PaginationParams) =>
+    client.get(`/partner-users/by-partner/${partnerId}`, { params }),
+  get: (id: string) => client.get(`/partner-users/${id}`),
+  create: (data: any) => client.post('/partner-users', data),
+  update: (id: string, data: any) => client.patch(`/partner-users/${id}`, data),
+  changePassword: (id: string, data: { new_password: string }) =>
+    client.post(`/partner-users/${id}/password`, data),
+  delete: (id: string) => client.delete(`/partner-users/${id}`),
+};
+
 // Health
 export const healthApi = {
   check: () => client.get('/health'),
