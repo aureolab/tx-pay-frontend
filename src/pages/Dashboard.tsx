@@ -44,7 +44,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { AlertCircle, ChevronLeft, ChevronRight, Database, LogOut, Plus, Eye, EyeOff, Pencil, Trash2, CreditCard } from 'lucide-react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Database,
+  LogOut,
+  Plus,
+  Eye,
+  EyeOff,
+  Pencil,
+  Trash2,
+  CreditCard,
+  ShieldCheck,
+  Store,
+  TrendingUp,
+  Users,
+  ExternalLink,
+  RefreshCw,
+} from 'lucide-react';
 
 // Enums from backend
 const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
@@ -69,11 +87,45 @@ const defaultPagination: PaginationState = {
   hasPrevPage: false,
 };
 
+// Status badge with semantic colors
+function getStatusConfig(status: string): {
+  variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  className: string;
+  label: string;
+} {
+  const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className: string; label: string }> = {
+    APPROVED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', label: 'Approved' },
+    CAPTURED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', label: 'Captured' },
+    PENDING: { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', label: 'Pending' },
+    CREATED: { variant: 'secondary', className: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', label: 'Created' },
+    EXPIRED: { variant: 'destructive', className: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20', label: 'Expired' },
+    REJECTED: { variant: 'destructive', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20', label: 'Rejected' },
+    VOIDED: { variant: 'destructive', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20', label: 'Voided' },
+    REFUNDED: { variant: 'outline', className: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20', label: 'Refunded' },
+    ACTIVE: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', label: 'Active' },
+    BLOCKED: { variant: 'destructive', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20', label: 'Blocked' },
+    REVIEW: { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', label: 'Review' },
+    INACTIVE: { variant: 'outline', className: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20', label: 'Inactive' },
+  };
+  return configs[status] || { variant: 'outline', className: '', label: status };
+}
+
+// Payment method labels
+const paymentMethodLabels: Record<string, string> = {
+  PAYMENT_LINK: 'Payment Link',
+  QR: 'QR Code',
+  CREDIT: 'Credit',
+  DEBIT: 'Debit',
+  PREPAID: 'Prepaid',
+  VITA_WALLET: 'Vita Wallet',
+  WEBPAY: 'Webpay',
+};
+
 function TableSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 p-6">
       {[...Array(5)].map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full" />
+        <Skeleton key={i} className="h-12 w-full rounded-lg" />
       ))}
     </div>
   );
@@ -89,47 +141,35 @@ function PaginationControls({
   if (pagination.totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-4 p-4 bg-card rounded-lg border">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(pagination.page - 1)}
-        disabled={!pagination.hasPrevPage}
-      >
-        <ChevronLeft className="h-4 w-4 mr-1" />
-        Previous
-      </Button>
-      <span className="text-sm text-muted-foreground">
-        Page {pagination.page} of {pagination.totalPages}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(pagination.page + 1)}
-        disabled={!pagination.hasNextPage}
-      >
-        Next
-        <ChevronRight className="h-4 w-4 ml-1" />
-      </Button>
+    <div className="flex items-center justify-between px-4 py-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
+      </p>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(pagination.page - 1)}
+          disabled={!pagination.hasPrevPage}
+          className="h-8"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-sm text-zinc-600 dark:text-zinc-400 min-w-[100px] text-center">
+          Page {pagination.page} of {pagination.totalPages}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(pagination.page + 1)}
+          disabled={!pagination.hasNextPage}
+          className="h-8"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
-}
-
-function getStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  switch (status) {
-    case 'ACTIVE':
-    case 'APPROVED':
-      return 'default';
-    case 'PENDING':
-    case 'CREATED':
-    case 'REVIEW':
-      return 'secondary';
-    case 'EXPIRED':
-    case 'INACTIVE':
-      return 'outline';
-    default:
-      return 'destructive';
-  }
 }
 
 // ==================== ADMIN USER DIALOGS ====================
@@ -211,16 +251,21 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit Admin User' : 'Create Admin User'}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+            {isEdit ? 'Edit Admin User' : 'Create Admin User'}
+          </DialogTitle>
           <DialogDescription>
             {isEdit ? 'Update administrator information.' : 'Add a new administrator to the system.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -233,6 +278,7 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
               placeholder="John Doe"
               required
+              className="h-11"
             />
           </div>
           <div className="space-y-2">
@@ -245,6 +291,7 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
               placeholder="admin@example.com"
               required={!isEdit}
               disabled={isEdit}
+              className="h-11"
             />
           </div>
           <div className="space-y-2">
@@ -259,6 +306,7 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
               placeholder="••••••••"
               required={!isEdit}
               minLength={6}
+              className="h-11"
             />
           </div>
           <div className="space-y-2">
@@ -268,7 +316,11 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
                 <Badge
                   key={role}
                   variant={formData.roles.includes(role) ? 'default' : 'outline'}
-                  className="cursor-pointer"
+                  className={`cursor-pointer transition-all ${
+                    formData.roles.includes(role)
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
                   onClick={() => handleRoleToggle(role)}
                 >
                   {role}
@@ -286,12 +338,21 @@ function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogPro
             />
             <Label htmlFor="admin-active">Active</Label>
           </div>
-          <DialogFooter>
+          <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </div>
+              ) : (isEdit ? 'Update' : 'Create')}
             </Button>
           </DialogFooter>
         </form>
@@ -305,9 +366,14 @@ function AdminDetailDialog({ item, open, onOpenChange }: { item: any; open: bool
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader>
-          <DialogTitle>Admin User Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <Users className="w-4 h-4 text-white" />
+            </div>
+            Admin User Details
+          </DialogTitle>
           <DialogDescription>
             Information for {item.full_name || item.email}
           </DialogDescription>
@@ -315,45 +381,47 @@ function AdminDetailDialog({ item, open, onOpenChange }: { item: any; open: bool
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Full Name</Label>
-              <p className="font-medium">{item.full_name || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Full Name</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.full_name || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Email</Label>
-              <p className="font-medium">{item.email}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Email</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.email}</p>
             </div>
           </div>
 
-          <div className="border-t pt-4 grid grid-cols-2 gap-4">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Status</Label>
-              <Badge variant={item.active ? 'default' : 'destructive'}>
-                {item.active ? 'Active' : 'Inactive'}
-              </Badge>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Status</Label>
+              <div className="mt-1">
+                <Badge variant={getStatusConfig(item.active ? 'ACTIVE' : 'INACTIVE').variant} className={getStatusConfig(item.active ? 'ACTIVE' : 'INACTIVE').className}>
+                  {item.active ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Roles</Label>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Roles</Label>
               <div className="flex flex-wrap gap-1 mt-1">
                 {item.roles?.length > 0 ? item.roles.map((role: string) => (
-                  <Badge key={role} variant="outline">{role}</Badge>
-                )) : <span className="text-muted-foreground">No roles</span>}
+                  <Badge key={role} variant="outline" className="text-xs">{role}</Badge>
+                )) : <span className="text-zinc-500">No roles</span>}
               </div>
             </div>
           </div>
 
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">User ID</Label>
-            <p className="font-mono text-sm bg-muted p-2 rounded mt-1">{item._id}</p>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">User ID</Label>
+            <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg mt-1">{item._id}</p>
           </div>
 
-          <div className="border-t pt-4 grid grid-cols-2 gap-4">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Created At</Label>
-              <p className="text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Created At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Updated At</Label>
-              <p className="text-sm">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Updated At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
             </div>
           </div>
         </div>
@@ -411,7 +479,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
         status: item.status || 'REVIEW',
         enabled_payment_methods: item.enabled_payment_methods || [],
       });
-      // Load existing pricing rules
       if (item.pricing_rules?.fees?.length > 0) {
         setPricingRules(item.pricing_rules.fees.map((f: any) => ({
           method: f.method || '',
@@ -421,7 +488,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
       } else {
         setPricingRules([]);
       }
-      // Load existing acquirer configs
       if (item.acquirer_configs?.length > 0) {
         setAcquirerConfigs(item.acquirer_configs.map((c: any) => ({
           provider: c.provider || '',
@@ -456,7 +522,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
     }));
   };
 
-  // Pricing Rules handlers
   const addPricingRule = () => {
     setPricingRules(prev => [...prev, { method: '', fixed: '0', percentage: '0' }]);
   };
@@ -471,7 +536,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
     ));
   };
 
-  // Acquirer Configs handlers
   const addAcquirerConfig = () => {
     setAcquirerConfigs(prev => [...prev, { provider: '', config: '{}' }]);
   };
@@ -511,7 +575,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
     setLoading(true);
     setError('');
     try {
-      // Build pricing rules payload
       const validPricingRules = pricingRules
         .filter(r => r.method)
         .map(r => ({
@@ -520,7 +583,6 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
           percentage: parseFloat(r.percentage) || 0,
         }));
 
-      // Build acquirer configs payload
       const validAcquirerConfigs = acquirerConfigs
         .filter(c => c.provider)
         .map(c => {
@@ -571,9 +633,14 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0 gap-0">
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 gap-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{isEdit ? 'Edit Merchant' : 'Create Merchant'}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <Store className="w-4 h-4 text-white" />
+            </div>
+            {isEdit ? 'Edit Merchant' : 'Create Merchant'}
+          </DialogTitle>
           <DialogDescription>
             {isEdit ? 'Update merchant information.' : 'Add a new merchant to the payment platform.'}
           </DialogDescription>
@@ -581,7 +648,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
         <ScrollArea className="max-h-[calc(90vh-100px)]">
         <form onSubmit={handleSubmit} className="space-y-4 p-6 pt-4">
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -596,6 +663,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 onChange={(e) => setFormData({ ...formData, parent_client_id: e.target.value })}
                 placeholder="MongoDB ObjectId"
                 required
+                className="h-11"
               />
             </div>
           )}
@@ -609,6 +677,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 onChange={(e) => setFormData({ ...formData, fantasy_name: e.target.value })}
                 placeholder="My Store"
                 required
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
@@ -619,6 +688,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
                 placeholder="My Store SpA"
                 required
+                className="h-11"
               />
             </div>
           </div>
@@ -632,6 +702,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
                 placeholder="12.345.678-9"
                 required
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
@@ -642,6 +713,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 onChange={(e) => setFormData({ ...formData, mcc: e.target.value })}
                 placeholder="5411"
                 required
+                className="h-11"
               />
             </div>
           </div>
@@ -655,6 +727,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
               onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
               placeholder="contact@store.com"
               required
+              className="h-11"
             />
           </div>
 
@@ -665,7 +738,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 value={formData.status}
                 onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -684,30 +757,34 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                 <Badge
                   key={method}
                   variant={formData.enabled_payment_methods.includes(method) ? 'default' : 'outline'}
-                  className="cursor-pointer"
+                  className={`cursor-pointer transition-all ${
+                    formData.enabled_payment_methods.includes(method)
+                      ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20'
+                      : 'hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
                   onClick={() => handlePaymentMethodToggle(method)}
                 >
-                  {method}
+                  {paymentMethodLabels[method] || method}
                 </Badge>
               ))}
             </div>
           </div>
 
           {/* Pricing Rules Section */}
-          <div className="space-y-2 border-t pt-4">
+          <div className="space-y-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
             <div className="flex items-center justify-between">
               <Label>Pricing Rules</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addPricingRule}>
-                <Plus className="h-3 w-3 mr-1" />
+              <Button type="button" variant="outline" size="sm" onClick={addPricingRule} className="gap-1">
+                <Plus className="h-3 w-3" />
                 Add Rule
               </Button>
             </div>
             {pricingRules.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pricing rules configured</p>
+              <p className="text-sm text-zinc-500">No pricing rules configured</p>
             ) : (
               <div className="space-y-2">
                 {pricingRules.map((rule, index) => (
-                  <div key={index} className="flex gap-2 items-end p-2 bg-muted rounded">
+                  <div key={index} className="flex gap-2 items-end p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
                     <div className="flex-1">
                       <Label className="text-xs">Method</Label>
                       <Select
@@ -719,7 +796,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                         </SelectTrigger>
                         <SelectContent>
                           {PaymentMethods.map(m => (
-                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                            <SelectItem key={m} value={m}>{paymentMethodLabels[m] || m}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -749,7 +826,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                       variant="ghost"
                       size="sm"
                       onClick={() => removePricingRule(index)}
-                      className="h-8 w-8 p-0 text-destructive"
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -760,30 +837,30 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
           </div>
 
           {/* Acquirer Configs Section */}
-          <div className="space-y-2 border-t pt-4">
+          <div className="space-y-2 border-t border-zinc-200 dark:border-zinc-800 pt-4">
             <div className="flex items-center justify-between">
               <Label>Acquirer Configurations</Label>
               <div className="flex gap-1">
-                <Button type="button" variant="outline" size="sm" onClick={addVitaWalletConfig}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <Button type="button" variant="outline" size="sm" onClick={addVitaWalletConfig} className="gap-1">
+                  <Plus className="h-3 w-3" />
                   VITA
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={addTbkConfig}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <Button type="button" variant="outline" size="sm" onClick={addTbkConfig} className="gap-1">
+                  <Plus className="h-3 w-3" />
                   TBK
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={addAcquirerConfig}>
-                  <Plus className="h-3 w-3 mr-1" />
+                <Button type="button" variant="outline" size="sm" onClick={addAcquirerConfig} className="gap-1">
+                  <Plus className="h-3 w-3" />
                   Other
                 </Button>
               </div>
             </div>
             {acquirerConfigs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No acquirer configurations</p>
+              <p className="text-sm text-zinc-500">No acquirer configurations</p>
             ) : (
               <div className="space-y-2">
                 {acquirerConfigs.map((config, index) => (
-                  <div key={index} className="p-2 bg-muted rounded space-y-2">
+                  <div key={index} className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg space-y-2">
                     <div className="flex gap-2 items-center">
                       <div className="flex-1">
                         <Label className="text-xs">Provider</Label>
@@ -799,7 +876,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                         variant="ghost"
                         size="sm"
                         onClick={() => removeAcquirerConfig(index)}
-                        className="h-8 w-8 p-0 text-destructive mt-4"
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 mt-4"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -810,7 +887,7 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
                         value={config.config}
                         onChange={(e) => updateAcquirerConfig(index, 'config', e.target.value)}
                         placeholder='{"key": "value"}'
-                        className="w-full rounded-md border border-input bg-background px-2 py-1 text-sm font-mono min-h-[60px]"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm font-mono min-h-[60px]"
                       />
                     </div>
                   </div>
@@ -819,12 +896,21 @@ function MerchantDialog({ open, onOpenChange, onSuccess, item }: MerchantDialogP
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </div>
+              ) : (isEdit ? 'Update' : 'Create')}
             </Button>
           </DialogFooter>
         </form>
@@ -840,7 +926,6 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
   const [loadingSecret, setLoadingSecret] = useState(false);
   const [visibleSensitiveFields, setVisibleSensitiveFields] = useState<Set<string>>(new Set());
 
-  // Reset state when dialog closes or item changes
   useEffect(() => {
     if (!open) {
       setShowSecret(false);
@@ -872,7 +957,6 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
       return;
     }
 
-    // Fetch secret from API
     setLoadingSecret(true);
     try {
       const res = await merchantsApi.getSecret(item._id);
@@ -886,12 +970,18 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
   };
 
   if (!item) return null;
+  const statusConfig = getStatusConfig(item.status);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Merchant Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <Store className="w-4 h-4 text-white" />
+            </div>
+            Merchant Details
+          </DialogTitle>
           <DialogDescription>
             Complete information for {item.profile?.fantasy_name}
           </DialogDescription>
@@ -901,58 +991,60 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Fantasy Name</Label>
-              <p className="font-medium">{item.profile?.fantasy_name || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Fantasy Name</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.profile?.fantasy_name || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Legal Name</Label>
-              <p className="font-medium">{item.profile?.legal_name || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Legal Name</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.profile?.legal_name || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Tax ID</Label>
-              <p className="font-medium">{item.profile?.tax_id || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Tax ID</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.profile?.tax_id || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">MCC</Label>
-              <p className="font-medium">{item.profile?.mcc || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">MCC</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.profile?.mcc || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Contact Email</Label>
-              <p className="font-medium">{item.profile?.contact_email || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Contact Email</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{item.profile?.contact_email || '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Status</Label>
-              <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Status</Label>
+              <div className="mt-1">
+                <Badge variant={statusConfig.variant} className={statusConfig.className}>{statusConfig.label}</Badge>
+              </div>
             </div>
           </div>
 
           {/* IDs */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">IDs</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">IDs</Label>
             <div className="grid gap-2 mt-2">
               <div>
-                <Label className="text-muted-foreground text-xs">Merchant ID</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded">{item._id}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Merchant ID</Label>
+                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item._id}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Parent Client ID</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded">{item.parent_client_id || '-'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Parent Client ID</Label>
+                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{item.parent_client_id || '-'}</p>
               </div>
             </div>
           </div>
 
           {/* Integration Keys */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">API Integration</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">API Integration</Label>
             <div className="grid gap-2 mt-2">
               <div>
-                <Label className="text-muted-foreground text-xs">Public Key</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.integration?.public_key || '-'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Public Key</Label>
+                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg break-all">{item.integration?.public_key || '-'}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Secret Key</Label>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Secret Key</Label>
                 <div className="flex items-center gap-2">
-                  <p className="font-mono text-sm bg-muted p-2 rounded break-all flex-1">
+                  <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg break-all flex-1">
                     {showSecret && secretKey ? secretKey : '••••••••••••••••••••••••'}
                   </p>
                   <Button
@@ -977,25 +1069,25 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
           </div>
 
           {/* Payment Methods */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">Enabled Payment Methods</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Enabled Payment Methods</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {item.enabled_payment_methods?.length > 0 ? item.enabled_payment_methods.map((method: string) => (
-                <Badge key={method} variant="outline">{method}</Badge>
-              )) : <span className="text-muted-foreground">None</span>}
+                <Badge key={method} variant="outline" className="text-xs">{paymentMethodLabels[method] || method}</Badge>
+              )) : <span className="text-zinc-500">None</span>}
             </div>
           </div>
 
           {/* Bank Accounts */}
           {item.bank_accounts?.length > 0 && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Bank Accounts</Label>
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Bank Accounts</Label>
               <div className="space-y-2 mt-2">
                 {item.bank_accounts.map((account: any, idx: number) => (
-                  <div key={idx} className="bg-muted p-2 rounded text-sm">
-                    <p><span className="text-muted-foreground">Bank:</span> {account.bank_name}</p>
-                    <p><span className="text-muted-foreground">Type:</span> {account.account_type}</p>
-                    <p><span className="text-muted-foreground">Currency:</span> {account.currency}</p>
+                  <div key={idx} className="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg text-sm">
+                    <p><span className="text-zinc-500">Bank:</span> {account.bank_name}</p>
+                    <p><span className="text-zinc-500">Type:</span> {account.account_type}</p>
+                    <p><span className="text-zinc-500">Currency:</span> {account.currency}</p>
                   </div>
                 ))}
               </div>
@@ -1004,14 +1096,14 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
 
           {/* Pricing Rules */}
           {item.pricing_rules?.fees?.length > 0 && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Pricing Rules</Label>
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Pricing Rules</Label>
               <div className="space-y-2 mt-2">
                 {item.pricing_rules.fees.map((fee: any, idx: number) => (
-                  <div key={idx} className="bg-muted p-2 rounded text-sm">
-                    <p><span className="text-muted-foreground">Method:</span> {fee.method}</p>
-                    <p><span className="text-muted-foreground">Fixed:</span> {fee.fixed?.$numberDecimal || fee.fixed || 0}</p>
-                    <p><span className="text-muted-foreground">Percentage:</span> {fee.percentage?.$numberDecimal || fee.percentage || 0}%</p>
+                  <div key={idx} className="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg text-sm">
+                    <p><span className="text-zinc-500">Method:</span> {paymentMethodLabels[fee.method] || fee.method}</p>
+                    <p><span className="text-zinc-500">Fixed:</span> {fee.fixed?.$numberDecimal || fee.fixed || 0}</p>
+                    <p><span className="text-zinc-500">Percentage:</span> {fee.percentage?.$numberDecimal || fee.percentage || 0}%</p>
                   </div>
                 ))}
               </div>
@@ -1020,14 +1112,14 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
 
           {/* Acquirer Configs */}
           {item.acquirer_configs?.length > 0 && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Acquirer Configurations</Label>
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Acquirer Configurations</Label>
               <div className="space-y-3 mt-2">
                 {item.acquirer_configs.map((config: any, idx: number) => (
-                  <div key={idx} className="bg-muted p-3 rounded text-sm space-y-2">
-                    <p className="font-medium">{config.provider}</p>
+                  <div key={idx} className="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg text-sm space-y-2">
+                    <p className="font-medium text-zinc-900 dark:text-white">{config.provider}</p>
                     {config.config && Object.keys(config.config).length > 0 && (
-                      <div className="grid gap-1 pl-2 border-l-2 border-border">
+                      <div className="grid gap-1 pl-3 border-l-2 border-blue-500/30">
                         {Object.entries(config.config).map(([key, value]) => {
                           const isSensitive = /secret|key|password|token/i.test(key);
                           const fieldKey = `${idx}-${key}`;
@@ -1037,7 +1129,7 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
                             : String(value);
                           return (
                             <div key={key} className="flex items-center gap-2">
-                              <span className="text-muted-foreground shrink-0">{key}:</span>
+                              <span className="text-zinc-500 shrink-0">{key}:</span>
                               <span className="font-mono break-all flex-1">{displayValue}</span>
                               {isSensitive && (
                                 <Button
@@ -1066,20 +1158,20 @@ function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: b
           )}
 
           {/* Settings */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">Settings</Label>
-            <p className="text-sm mt-1">Payment Link Timeout: {item.payment_link_timeout_minutes || 15} minutes</p>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Settings</Label>
+            <p className="text-sm mt-1 text-zinc-700 dark:text-zinc-300">Payment Link Timeout: {item.payment_link_timeout_minutes || 15} minutes</p>
           </div>
 
           {/* Timestamps */}
-          <div className="border-t pt-4 grid grid-cols-2 gap-4">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Created At</Label>
-              <p className="text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Created At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Updated At</Label>
-              <p className="text-sm">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Updated At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
             </div>
           </div>
         </div>
@@ -1140,7 +1232,6 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
         callback_url: formData.callback_url || undefined,
       };
 
-      // Pass merchant._id as header for admin users
       const res = await transactionsApi.create(payload, merchant._id);
       setResult(res.data);
       onSuccess();
@@ -1158,36 +1249,50 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
     navigator.clipboard.writeText(text);
   };
 
+  const resultStatusConfig = result ? getStatusConfig(result.status) : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader>
-          <DialogTitle>Create Transaction</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <CreditCard className="w-4 h-4 text-white" />
+            </div>
+            Create Transaction
+          </DialogTitle>
           <DialogDescription>
-            Create a payment link or QR for {merchant?.profile?.fantasy_name}
+            Create a payment link or QR for{' '}
+            <span className="font-medium text-zinc-900 dark:text-white">{merchant?.profile?.fantasy_name}</span>
           </DialogDescription>
         </DialogHeader>
 
         {result ? (
           <div className="space-y-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>Transaction created successfully!</AlertDescription>
-            </Alert>
-
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs">Transaction ID</Label>
-              <p className="font-mono text-sm bg-muted p-2 rounded">{result._id}</p>
+            <div className="text-center py-2">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-1">
+                Transaction Created
+              </h3>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-muted-foreground text-xs">Status</Label>
-              <Badge variant={getStatusVariant(result.status)}>{result.status}</Badge>
+            <div className="space-y-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Transaction ID</p>
+              <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg">{result._id}</p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">Status</p>
+              <Badge variant={resultStatusConfig?.variant} className={resultStatusConfig?.className}>
+                {resultStatusConfig?.label}
+              </Badge>
             </div>
 
             {checkoutUrl && (
               <div className="space-y-2">
-                <Label className="text-muted-foreground text-xs">Payment Link</Label>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Payment Link</p>
                 <div className="flex gap-2">
                   <Input
                     value={checkoutUrl}
@@ -1205,17 +1310,17 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
                 </div>
                 <Button
                   type="button"
-                  variant="default"
-                  className="w-full"
+                  className="w-full gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                   onClick={() => window.open(checkoutUrl, '_blank')}
                 >
+                  <ExternalLink className="w-4 h-4" />
                   Open Payment Page
                 </Button>
               </div>
             )}
 
-            <DialogFooter>
-              <Button type="button" onClick={() => onOpenChange(false)}>
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
             </DialogFooter>
@@ -1223,7 +1328,7 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -1241,6 +1346,7 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   placeholder="10000"
                   required
+                  className="h-11"
                 />
               </div>
               <div className="space-y-2">
@@ -1249,7 +1355,7 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
                   value={formData.currency}
                   onValueChange={(value) => setFormData({ ...formData, currency: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1266,14 +1372,23 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
                 value={formData.payment_method}
                 onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PAYMENT_LINK">Payment Link</SelectItem>
-                  <SelectItem value="QR">QR Code</SelectItem>
-                  <SelectItem value="WEBPAY">Webpay</SelectItem>
-                  <SelectItem value="VITA_WALLET">Vita Wallet</SelectItem>
+                  {merchant?.enabled_payment_methods?.length > 0
+                    ? merchant.enabled_payment_methods.map((method: string) => (
+                        <SelectItem key={method} value={method}>
+                          {paymentMethodLabels[method] || method}
+                        </SelectItem>
+                      ))
+                    : <>
+                        <SelectItem value="PAYMENT_LINK">Payment Link</SelectItem>
+                        <SelectItem value="QR">QR Code</SelectItem>
+                        <SelectItem value="WEBPAY">Webpay</SelectItem>
+                        <SelectItem value="VITA_WALLET">Vita Wallet</SelectItem>
+                      </>
+                  }
                 </SelectContent>
               </Select>
             </div>
@@ -1286,15 +1401,27 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
                 value={formData.callback_url}
                 onChange={(e) => setFormData({ ...formData, callback_url: e.target.value })}
                 placeholder="https://your-site.com/callback"
+                className="h-11"
               />
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Transaction'}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Creating...
+                  </div>
+                ) : (
+                  'Create Transaction'
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -1308,12 +1435,18 @@ function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: Cr
 
 function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
   if (!item) return null;
+  const statusConfig = getStatusConfig(item.status);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 gap-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Transaction Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <CreditCard className="w-4 h-4 text-white" />
+            </div>
+            Transaction Details
+          </DialogTitle>
           <DialogDescription>
             Transaction ID: {item._id}
           </DialogDescription>
@@ -1323,22 +1456,24 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
           {/* Status & Payment Method */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Status</Label>
-              <Badge variant={getStatusVariant(item.status)}>{item.status}</Badge>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Status</Label>
+              <div className="mt-1">
+                <Badge variant={statusConfig.variant} className={statusConfig.className}>{statusConfig.label}</Badge>
+              </div>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Payment Method</Label>
-              <p className="font-medium">{item.payment_method || '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Payment Method</Label>
+              <p className="font-medium text-zinc-900 dark:text-white">{paymentMethodLabels[item.payment_method] || item.payment_method || '-'}</p>
             </div>
           </div>
 
           {/* Financials */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">Financial Details</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Financial Details</Label>
             <div className="grid grid-cols-3 gap-4 mt-2">
               <div>
-                <Label className="text-muted-foreground text-xs">Gross Amount</Label>
-                <p className="font-medium text-lg">
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Gross Amount</Label>
+                <p className="font-semibold text-lg text-zinc-900 dark:text-white">
                   {item.financials?.currency} {
                     item.financials?.amount_gross?.$numberDecimal ||
                     item.financials?.amount_gross?.toLocaleString() ||
@@ -1347,8 +1482,8 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Net Amount</Label>
-                <p className="font-medium">
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Net Amount</Label>
+                <p className="font-medium text-zinc-900 dark:text-white">
                   {item.financials?.currency} {
                     item.financials?.amount_net?.$numberDecimal ||
                     item.financials?.amount_net?.toLocaleString() ||
@@ -1357,46 +1492,46 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
                 </p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Currency</Label>
-                <p className="font-medium">{item.financials?.currency || '-'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Currency</Label>
+                <p className="font-medium text-zinc-900 dark:text-white">{item.financials?.currency || '-'}</p>
               </div>
             </div>
             {item.financials?.fee_snapshot && (
-              <div className="mt-2 bg-muted p-2 rounded text-sm">
-                <p><span className="text-muted-foreground">Fee Fixed:</span> {item.financials.fee_snapshot.fixed?.$numberDecimal || item.financials.fee_snapshot.fixed || 0}</p>
-                <p><span className="text-muted-foreground">Fee Percentage:</span> {item.financials.fee_snapshot.percentage?.$numberDecimal || item.financials.fee_snapshot.percentage || 0}%</p>
+              <div className="mt-2 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-lg text-sm">
+                <p><span className="text-zinc-500">Fee Fixed:</span> {item.financials.fee_snapshot.fixed?.$numberDecimal || item.financials.fee_snapshot.fixed || 0}</p>
+                <p><span className="text-zinc-500">Fee Percentage:</span> {item.financials.fee_snapshot.percentage?.$numberDecimal || item.financials.fee_snapshot.percentage || 0}%</p>
               </div>
             )}
           </div>
 
           {/* IDs */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">References</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">References</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div className="min-w-0">
-                <Label className="text-muted-foreground text-xs">Merchant ID</Label>
-                <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.merchant_id || '-'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Merchant ID</Label>
+                <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg break-all">{item.merchant_id || '-'}</p>
               </div>
               {item.terminal_id && (
                 <div className="min-w-0">
-                  <Label className="text-muted-foreground text-xs">Terminal ID</Label>
-                  <p className="font-mono text-sm bg-muted p-2 rounded break-all">{item.terminal_id}</p>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Terminal ID</Label>
+                  <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg break-all">{item.terminal_id}</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* User Context */}
-          <div className="border-t pt-4">
-            <Label className="text-muted-foreground text-xs">User Context</Label>
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+            <Label className="text-zinc-500 dark:text-zinc-400 text-xs">User Context</Label>
             <div className="grid grid-cols-2 gap-4 mt-2">
               <div>
-                <Label className="text-muted-foreground text-xs">Is Guest</Label>
-                <p className="font-medium">{item.user_context?.is_guest ? 'Yes' : 'No'}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Is Guest</Label>
+                <p className="font-medium text-zinc-900 dark:text-white">{item.user_context?.is_guest ? 'Yes' : 'No'}</p>
               </div>
               {item.user_context?.psp_user_id && (
                 <div className="min-w-0">
-                  <Label className="text-muted-foreground text-xs">PSP User ID</Label>
+                  <Label className="text-zinc-500 dark:text-zinc-400 text-xs">PSP User ID</Label>
                   <p className="font-mono text-sm break-all">{item.user_context.psp_user_id}</p>
                 </div>
               )}
@@ -1405,17 +1540,17 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
 
           {/* Callback URL */}
           {item.callback_url && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Callback URL</Label>
-              <p className="font-mono text-sm bg-muted p-2 rounded break-all mt-1">{item.callback_url}</p>
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Callback URL</Label>
+              <p className="font-mono text-sm bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg break-all mt-1">{item.callback_url}</p>
             </div>
           )}
 
           {/* Gateway Result */}
           {item.gateway_result && Object.keys(item.gateway_result).length > 0 && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Gateway Result</Label>
-              <ScrollArea className="mt-2 h-40 rounded-md border bg-muted">
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Gateway Result</Label>
+              <ScrollArea className="mt-2 h-40 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
                 <pre className="p-3 text-xs whitespace-pre-wrap break-all">
                   {JSON.stringify(item.gateway_result, null, 2)}
                 </pre>
@@ -1425,21 +1560,21 @@ function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open
 
           {/* Expires At */}
           {item.expires_at && (
-            <div className="border-t pt-4">
-              <Label className="text-muted-foreground text-xs">Expires At</Label>
-              <p className="text-sm">{new Date(item.expires_at).toLocaleString()}</p>
+            <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4">
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Expires At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{new Date(item.expires_at).toLocaleString()}</p>
             </div>
           )}
 
           {/* Timestamps */}
-          <div className="border-t pt-4 grid grid-cols-2 gap-4">
+          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-muted-foreground text-xs">Created At</Label>
-              <p className="text-sm">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Created At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</p>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs">Updated At</Label>
-              <p className="text-sm">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
+              <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Updated At</Label>
+              <p className="text-sm text-zinc-700 dark:text-zinc-300">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</p>
             </div>
           </div>
         </div>
@@ -1459,6 +1594,7 @@ export default function Dashboard() {
   const [admins, setAdmins] = useState<any[]>([]);
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
@@ -1509,6 +1645,7 @@ export default function Dashboard() {
       setError(err.response?.data?.message || 'Failed to load data');
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -1571,371 +1708,543 @@ export default function Dashboard() {
     setMerchantDialogOpen(true);
   };
 
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-sky-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <ShieldCheck className="w-6 h-6 text-white" />
+          </div>
+          <p className="text-zinc-600 dark:text-zinc-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-sky-50/50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/10 to-indigo-500/10 dark:from-blue-500/5 dark:to-indigo-600/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 -left-32 w-80 h-80 bg-gradient-to-tr from-sky-400/10 to-blue-500/10 dark:from-sky-500/5 dark:to-blue-600/5 rounded-full blur-3xl" />
+      </div>
+
       {/* Header */}
-      <header className="bg-card border-b px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <h1 className="text-xl font-bold">Tx Pay Admin</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user?.full_name || user?.email}
-            </span>
-            <Badge variant="outline" className="gap-1">
-              <Database className="h-3 w-3" />
-              {health?.details?.database?.status || 'checking...'}
-            </Badge>
-            <ThemeToggle />
-            <Button variant="outline" size="sm" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+      <header className="relative z-10 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <ShieldCheck className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-semibold text-zinc-900 dark:text-white">TX Pay</span>
+                <span className="hidden sm:inline text-lg text-zinc-400 dark:text-zinc-500 ml-1">Admin</span>
+              </div>
+            </div>
+
+            {/* User info & actions */}
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-sm font-medium text-zinc-900 dark:text-white">
+                  {user?.full_name || user?.email}
+                </span>
+                <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {user?.email}
+                </span>
+              </div>
+              <Badge
+                variant="outline"
+                className="hidden md:flex gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+              >
+                <Database className="h-3 w-3" />
+                {health?.details?.database?.status || 'checking...'}
+              </Badge>
+              <ThemeToggle />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={logout}
+                className="gap-2 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <Alert variant="destructive" className="mb-4">
+          <Alert variant="destructive" className="mb-6 border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/50">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <Tabs value={tab} onValueChange={setTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="merchants">Merchants</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
-            <TabsTrigger value="admins">Admin Users</TabsTrigger>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 shadow-lg shadow-zinc-900/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10 flex items-center justify-center">
+                <Store className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">Merchants</p>
+                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{merchantsPagination.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 shadow-lg shadow-zinc-900/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">Transactions</p>
+                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{transactionsPagination.total}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 p-6 shadow-lg shadow-zinc-900/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10 flex items-center justify-center">
+                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">Admin Users</p>
+                <p className="text-2xl font-bold text-zinc-900 dark:text-white">{adminsPagination.total}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+          <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl">
+            <TabsTrigger
+              value="merchants"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <Store className="w-4 h-4 mr-2" />
+              Merchants
+            </TabsTrigger>
+            <TabsTrigger
+              value="transactions"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Transactions
+            </TabsTrigger>
+            <TabsTrigger
+              value="admins"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Admin Users
+            </TabsTrigger>
           </TabsList>
 
           {/* Merchants Tab */}
           <TabsContent value="merchants" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                Merchants ({merchantsPagination.total} total)
-              </h2>
-              <Button onClick={openCreateMerchant}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Merchant
-              </Button>
-            </div>
-            {loading ? (
-              <TableSkeleton />
-            ) : (
-              <>
-                <div className="rounded-lg border">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  Merchants ({merchantsPagination.total} total)
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData()}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={openCreateMerchant}
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Merchant
+                  </Button>
+                </div>
+              </div>
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <>
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="hover:bg-transparent">
                         <TableHead>Fantasy Name</TableHead>
                         <TableHead>Legal Name</TableHead>
                         <TableHead>Tax ID</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Payment Methods</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {merchants.map((m) => (
-                        <TableRow key={m._id}>
-                          <TableCell className="font-medium">
-                            {m.profile?.fantasy_name}
-                          </TableCell>
-                          <TableCell>{m.profile?.legal_name}</TableCell>
-                          <TableCell>{m.profile?.tax_id}</TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusVariant(m.status)}>
-                              {m.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {m.enabled_payment_methods?.slice(0, 2).map((method: string) => (
-                                <Badge key={method} variant="outline" className="text-xs">{method}</Badge>
-                              ))}
-                              {m.enabled_payment_methods?.length > 2 && (
-                                <Badge variant="outline" className="text-xs">+{m.enabled_payment_methods.length - 2}</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedMerchant(m)}
-                                title="View details"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditMerchant(m)}
-                                title="Edit merchant"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => setCreateTxMerchant(m)}
-                                title="Create transaction"
-                              >
-                                <CreditCard className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm">
-                                    Delete
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Merchant</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{m.profile?.fantasy_name}"? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteMerchant(m._id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {merchants.map((m) => {
+                        const statusConfig = getStatusConfig(m.status);
+                        return (
+                          <TableRow key={m._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
+                            <TableCell className="font-medium text-zinc-900 dark:text-white">
+                              {m.profile?.fantasy_name}
+                            </TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{m.profile?.legal_name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{m.profile?.tax_id}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                                {statusConfig.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {m.enabled_payment_methods?.slice(0, 2).map((method: string) => (
+                                  <Badge key={method} variant="outline" className="text-xs">{paymentMethodLabels[method] || method}</Badge>
+                                ))}
+                                {m.enabled_payment_methods?.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">+{m.enabled_payment_methods.length - 2}</Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedMerchant(m)}
+                                  title="View details"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditMerchant(m)}
+                                  title="Edit merchant"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setCreateTxMerchant(m)}
+                                  title="Create transaction"
+                                  className="h-8 w-8 p-0 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+                                >
+                                  <CreditCard className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Merchant</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{m.profile?.fantasy_name}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteMerchant(m._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {merchants.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
                             No merchants found
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
-                </div>
-                <PaginationControls
-                  pagination={merchantsPagination}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            )}
+                  <PaginationControls
+                    pagination={merchantsPagination}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
+            </div>
           </TabsContent>
 
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-4">
-            <h2 className="text-lg font-semibold">
-              Transactions ({transactionsPagination.total} total)
-            </h2>
-            {loading ? (
-              <TableSkeleton />
-            ) : (
-              <>
-                <div className="rounded-lg border">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  Transactions ({transactionsPagination.total} total)
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadData()}
+                  className="gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <>
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="hover:bg-transparent">
                         <TableHead>ID</TableHead>
                         <TableHead>Amount</TableHead>
                         <TableHead>Currency</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Payment Method</TableHead>
                         <TableHead>Created</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transactions.map((t) => (
-                        <TableRow key={t._id}>
-                          <TableCell className="font-mono text-xs">
-                            {t._id?.slice(-8)}
-                          </TableCell>
-                          <TableCell>
-                            {t.financials?.amount_gross?.$numberDecimal || t.financials?.amount_gross?.toLocaleString() || t.financials?.amount_gross}
-                          </TableCell>
-                          <TableCell>{t.financials?.currency}</TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusVariant(t.status)}>
-                              {t.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{t.payment_method}</TableCell>
-                          <TableCell>
-                            {new Date(t.createdAt).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedTransaction(t)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {t.status === 'PENDING' && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleTransactionAction(t._id, 'capture')}
-                                  >
-                                    Capture
-                                  </Button>
+                      {transactions.map((t) => {
+                        const statusConfig = getStatusConfig(t.status);
+                        return (
+                          <TableRow key={t._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
+                            <TableCell className="font-mono text-xs">
+                              {t._id?.slice(-8)}
+                            </TableCell>
+                            <TableCell className="font-semibold text-zinc-900 dark:text-white">
+                              {t.financials?.amount_gross?.$numberDecimal || t.financials?.amount_gross?.toLocaleString() || t.financials?.amount_gross}
+                            </TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{t.financials?.currency}</TableCell>
+                            <TableCell>
+                              <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                                {statusConfig.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {paymentMethodLabels[t.payment_method] || t.payment_method}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-zinc-500 dark:text-zinc-400 text-sm">
+                              {new Date(t.createdAt).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedTransaction(t)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {t.status === 'PENDING' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleTransactionAction(t._id, 'capture')}
+                                      className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white text-xs"
+                                    >
+                                      Capture
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleTransactionAction(t._id, 'void')}
+                                      className="h-8 text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-xs"
+                                    >
+                                      Void
+                                    </Button>
+                                  </>
+                                )}
+                                {t.status === 'APPROVED' && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleTransactionAction(t._id, 'void')}
+                                    onClick={() => handleTransactionAction(t._id, 'refund')}
+                                    className="h-8 text-purple-500 border-purple-200 dark:border-purple-900/50 hover:bg-purple-50 dark:hover:bg-purple-950/50 text-xs"
                                   >
-                                    Void
+                                    Refund
                                   </Button>
-                                </>
-                              )}
-                              {t.status === 'APPROVED' && (
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => handleTransactionAction(t._id, 'refund')}
-                                >
-                                  Refund
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {transactions.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
                             No transactions found
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
-                </div>
-                <PaginationControls
-                  pagination={transactionsPagination}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            )}
+                  <PaginationControls
+                    pagination={transactionsPagination}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
+            </div>
           </TabsContent>
 
           {/* Admin Users Tab */}
           <TabsContent value="admins" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">
-                Admin Users ({adminsPagination.total} total)
-              </h2>
-              <Button onClick={openCreateAdmin}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Admin
-              </Button>
-            </div>
-            {loading ? (
-              <TableSkeleton />
-            ) : (
-              <>
-                <div className="rounded-lg border">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  Admin Users ({adminsPagination.total} total)
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData()}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={openCreateAdmin}
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Admin
+                  </Button>
+                </div>
+              </div>
+              {loading ? (
+                <TableSkeleton />
+              ) : (
+                <>
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="hover:bg-transparent">
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Roles</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {admins.map((a) => (
-                        <TableRow key={a._id}>
-                          <TableCell className="font-medium">
-                            {a.full_name}
-                          </TableCell>
-                          <TableCell>{a.email}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {a.roles?.map((role: string) => (
-                                <Badge key={role} variant="outline" className="text-xs">{role}</Badge>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={a.active ? 'default' : 'destructive'}>
-                              {a.active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedAdmin(a)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditAdmin(a)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm">
-                                    Delete
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Admin User</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{a.full_name || a.email}"? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteAdmin(a._id)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {admins.map((a) => {
+                        const statusConfig = getStatusConfig(a.active ? 'ACTIVE' : 'INACTIVE');
+                        return (
+                          <TableRow key={a._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
+                            <TableCell className="font-medium text-zinc-900 dark:text-white">
+                              {a.full_name}
+                            </TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{a.email}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {a.roles?.map((role: string) => (
+                                  <Badge key={role} variant="outline" className="text-xs">{role}</Badge>
+                                ))}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                                {statusConfig.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedAdmin(a)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditAdmin(a)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Admin User</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{a.full_name || a.email}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteAdmin(a._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {admins.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
                             No admin users found
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
-                </div>
-                <PaginationControls
-                  pagination={adminsPagination}
-                  onPageChange={handlePageChange}
-                />
-              </>
-            )}
+                  <PaginationControls
+                    pagination={adminsPagination}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+            © {new Date().getFullYear()} TX Pay Admin Panel. All rights reserved.
+          </p>
+        </div>
+      </footer>
 
       {/* Admin Dialogs */}
       <AdminUserDialog
