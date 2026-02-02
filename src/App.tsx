@@ -26,13 +26,13 @@ function LoadingScreen() {
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  return user ? <>{children}</> : <Navigate to="/login" />;
+  return user ? <>{children}</> : <Navigate to="/admin/login" />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  return user ? <Navigate to="/" /> : <>{children}</>;
+  return user ? <Navigate to="/admin" /> : <>{children}</>;
 }
 
 // Partner route protection
@@ -56,9 +56,12 @@ function App() {
           <BrowserRouter>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
+                {/* Root redirect */}
+                <Route path="/" element={<Navigate to="/admin" replace />} />
+
                 {/* Admin Routes */}
                 <Route
-                  path="/login"
+                  path="/admin/login"
                   element={
                     <PublicRoute>
                       <Login />
@@ -66,7 +69,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/"
+                  path="/admin"
                   element={
                     <PrivateRoute>
                       <Dashboard />
