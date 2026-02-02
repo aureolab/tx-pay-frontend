@@ -6,13 +6,39 @@
     "partners": "Partners",
     "merchants": "Comercios",
     "transactions": "Transacciones",
-    "adminUsers": "Administradores"
+    "adminUsers": "Administradores",
+    "configuration": "Sistema"
   },
   "tabs": {
     "partners": "Partners",
     "merchants": "Comercios",
     "transactions": "Transacciones",
-    "admins": "Administradores"
+    "admins": "Administradores",
+    "configuration": "Configuracion"
+  },
+  "configuration": {
+    "title": "Configuracion del Sistema",
+    "description": "Gestionar configuraciones globales de la plataforma de pagos.",
+    "tax": {
+      "title": "Impuestos",
+      "ivaPercentage": "Porcentaje de IVA",
+      "ivaDescription": "Porcentaje de impuesto aplicado a todas las comisiones de los comercios."
+    },
+    "acquirers": {
+      "title": "Configuraciones de Adquirentes Base",
+      "description": "Credenciales por defecto de los proveedores de pago, usadas cuando un comercio no tiene configuracion propia.",
+      "provider": "Proveedor",
+      "config": "Configuracion (JSON)",
+      "add": "Agregar Proveedor",
+      "remove": "Eliminar",
+      "noDefaults": "Sin configuraciones de adquirentes por defecto.",
+      "selectProvider": "Seleccionar proveedor..."
+    },
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "saved": "Configuracion guardada exitosamente",
+    "error": "Error al guardar configuracion",
+    "loadError": "Error al cargar configuracion"
   },
   "partners": {
     "title": "Partners ({{total}} total)",

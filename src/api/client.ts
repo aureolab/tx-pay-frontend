@@ -124,3 +124,9 @@ export const partnerUsersApi = {
 export const healthApi = {
   check: () => client.get('/health'),
 };
+
+// System Configuration
+export const systemConfigApi = {
+  get: () => client.get('/system-config'),
+  update: (data: any) => client.patch('/system-config', data),
+};

@@ -6,13 +6,39 @@
     "partners": "Partners",
     "merchants": "Merchants",
     "transactions": "Transactions",
-    "adminUsers": "Admin Users"
+    "adminUsers": "Admin Users",
+    "configuration": "System"
   },
   "tabs": {
     "partners": "Partners",
     "merchants": "Merchants",
     "transactions": "Transactions",
-    "admins": "Admin Users"
+    "admins": "Admin Users",
+    "configuration": "Configuration"
+  },
+  "configuration": {
+    "title": "System Configuration",
+    "description": "Manage global settings for the payment platform.",
+    "tax": {
+      "title": "Tax Settings",
+      "ivaPercentage": "IVA Percentage",
+      "ivaDescription": "Tax percentage applied to all merchant fees."
+    },
+    "acquirers": {
+      "title": "Default Acquirer Configurations",
+      "description": "Default payment gateway credentials used when a merchant does not have its own configuration.",
+      "provider": "Provider",
+      "config": "Configuration (JSON)",
+      "add": "Add Provider",
+      "remove": "Remove",
+      "noDefaults": "No default acquirer configurations set.",
+      "selectProvider": "Select provider..."
+    },
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "saved": "Configuration saved successfully",
+    "error": "Error saving configuration",
+    "loadError": "Error loading configuration"
   },
   "partners": {
     "title": "Partners ({{total}} total)",

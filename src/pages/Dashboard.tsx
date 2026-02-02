@@ -30,6 +30,7 @@ import { CreateTransactionDialog } from '@/components/admin/CreateTransactionDia
 import { TransactionDetailDialog } from '@/components/admin/TransactionDetailDialog';
 import { PartnerDialog } from '@/components/admin/PartnerDialog';
 import { PartnerDetailDialog } from '@/components/admin/PartnerDetailDialog';
+import { SystemConfigTab } from '@/components/admin/SystemConfigTab';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +69,7 @@ import {
   TrendingUp,
   Users,
   RefreshCw,
+  Settings,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -334,7 +336,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <StatsCard
             icon={Handshake}
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
@@ -362,6 +364,13 @@ export default function Dashboard() {
             iconColorClass="text-purple-600 dark:text-purple-400"
             label={t('admin:stats.adminUsers')}
             value={tab === 'admins' ? meta.total : '-'}
+          />
+          <StatsCard
+            icon={Settings}
+            iconBgClass="from-zinc-500/20 to-slate-500/20 dark:from-zinc-500/10 dark:to-slate-500/10"
+            iconColorClass="text-zinc-600 dark:text-zinc-400"
+            label={t('admin:stats.configuration')}
+            value="-"
           />
         </div>
 
@@ -394,6 +403,13 @@ export default function Dashboard() {
             >
               <Users className="w-4 h-4 mr-2" />
               {t('admin:tabs.admins')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="configuration"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              {t('admin:tabs.configuration')}
             </TabsTrigger>
           </TabsList>
 
@@ -932,6 +948,11 @@ export default function Dashboard() {
                 </>
               )}
             </div>
+          </TabsContent>
+
+          {/* Configuration Tab */}
+          <TabsContent value="configuration" className="space-y-4">
+            <SystemConfigTab />
           </TabsContent>
         </Tabs>
       </main>
