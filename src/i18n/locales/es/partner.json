@@ -1,0 +1,58 @@
+{
+  "portal": "Partner",
+  "logout": "Salir",
+  "loadingDashboard": "Cargando dashboard...",
+  "stats": {
+    "totalMerchants": "Total Comercios",
+    "activeMerchants": "Comercios Activos",
+    "totalTransactions": "Total Transacciones"
+  },
+  "tabs": {
+    "merchants": "Comercios",
+    "transactions": "Transacciones"
+  },
+  "access": {
+    "full": "Acceso Completo",
+    "limited": "Acceso Limitado"
+  },
+  "merchants": {
+    "title": "Mis Comercios",
+    "refresh": "Actualizar",
+    "columns": {
+      "name": "Nombre",
+      "legalName": "Razon Social",
+      "status": "Estado",
+      "paymentMethods": "Metodos de Pago",
+      "actions": "Acciones"
+    },
+    "noResults": "No tienes comercios asignados",
+    "newTransaction": "Nueva Transaccion"
+  },
+  "transactions": {
+    "title": "Mis Transacciones",
+    "columns": {
+      "id": "ID",
+      "amount": "Monto",
+      "status": "Estado",
+      "method": "Metodo",
+      "merchant": "Comercio",
+      "date": "Fecha"
+    },
+    "noResults": "No hay transacciones"
+  },
+  "filters": {
+    "status": "Estado",
+    "search": "Buscar",
+    "method": "Metodo",
+    "merchant": "Comercio",
+    "from": "Desde",
+    "to": "Hasta",
+    "nameOrLegalName": "Nombre o razon social...",
+    "allMerchants": "Todos los comercios"
+  },
+  "errors": {
+    "loadMerchants": "Error al cargar comercios",
+    "loadTransactions": "Error al cargar transacciones"
+  },
+  "footer": "\u00a9 {{year}} TX Pay Portal Partner. Todos los derechos reservados."
+}

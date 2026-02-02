@@ -1,0 +1,29 @@
+{
+  "pagination": {
+    "showing": "Showing {{start}} to {{end}} of {{total}}",
+    "page": "Page {{page}} of {{totalPages}}"
+  },
+  "filters": {
+    "search": "Search...",
+    "clearFilters": "Clear",
+    "select": "Select",
+    "allStatuses": "All Statuses",
+    "allMethods": "All Methods",
+    "allCurrencies": "All Currencies",
+    "allRoles": "All Roles",
+    "allPartners": "All Partners",
+    "allMerchants": "All Merchants"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "close": "Close",
+    "confirm": "Confirm"
+  },
+  "table": {
+    "actions": "Actions",
+    "noResults": "No results found"
+  },
+  "copyright": "\u00a9 {{year}} TX Pay. All rights reserved."
+}

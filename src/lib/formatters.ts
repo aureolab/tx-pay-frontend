@@ -1,3 +1,5 @@
+import i18n from '@/i18n';
+
 export function getDecimalValue(value: number | { $numberDecimal: string }): number {
   if (typeof value === 'number') return value;
   if (value && typeof value === 'object' && '$numberDecimal' in value) {
@@ -6,16 +8,21 @@ export function getDecimalValue(value: number | { $numberDecimal: string }): num
   return 0;
 }
 
-export function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('es-CL', {
+function getIntlLocale(locale?: string): string {
+  const lang = locale || i18n.language || 'en';
+  return lang.startsWith('es') ? 'es-CL' : 'en-US';
+}
+
+export function formatCurrency(amount: number, currency: string, locale?: string): string {
+  return new Intl.NumberFormat(getIntlLocale(locale), {
     style: 'currency',
     currency: currency || 'CLP',
     minimumFractionDigits: currency === 'CLP' ? 0 : 2,
   }).format(amount);
 }
 
-export function formatDate(dateString: string): string {
-  return new Intl.DateTimeFormat('es-CL', {
+export function formatDate(dateString: string, locale?: string): string {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

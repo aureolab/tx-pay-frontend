@@ -1,0 +1,94 @@
+{
+  "portal": "Admin",
+  "logout": "Logout",
+  "loadingDashboard": "Loading dashboard...",
+  "stats": {
+    "partners": "Partners",
+    "merchants": "Merchants",
+    "transactions": "Transactions",
+    "adminUsers": "Admin Users"
+  },
+  "tabs": {
+    "partners": "Partners",
+    "merchants": "Merchants",
+    "transactions": "Transactions",
+    "admins": "Admin Users"
+  },
+  "partners": {
+    "title": "Partners ({{total}} total)",
+    "create": "Create Partner",
+    "columns": {
+      "fantasyName": "Fantasy Name",
+      "businessName": "Business Name",
+      "contactEmail": "Contact Email",
+      "phone": "Phone",
+      "status": "Status"
+    },
+    "noResults": "No partners found",
+    "deleteTitle": "Delete Partner",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+  },
+  "merchants": {
+    "title": "Merchants ({{total}} total)",
+    "create": "Create Merchant",
+    "columns": {
+      "fantasyName": "Fantasy Name",
+      "legalName": "Legal Name",
+      "partner": "Partner",
+      "taxId": "Tax ID",
+      "status": "Status",
+      "paymentMethods": "Payment Methods"
+    },
+    "noResults": "No merchants found",
+    "deleteTitle": "Delete Merchant",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+  },
+  "transactions": {
+    "title": "Transactions ({{total}} total)",
+    "columns": {
+      "id": "ID",
+      "amount": "Amount",
+      "currency": "Currency",
+      "status": "Status",
+      "paymentMethod": "Payment Method",
+      "created": "Created"
+    },
+    "noResults": "No transactions found",
+    "capture": "Capture",
+    "void": "Void",
+    "refund": "Refund"
+  },
+  "admins": {
+    "title": "Admin Users ({{total}} total)",
+    "create": "Create Admin",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "roles": "Roles",
+      "status": "Status"
+    },
+    "noResults": "No admin users found",
+    "deleteTitle": "Delete Admin User",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+  },
+  "filters": {
+    "status": "Status",
+    "search": "Search",
+    "method": "Method",
+    "partner": "Partner",
+    "currency": "Currency",
+    "role": "Role",
+    "from": "From",
+    "to": "To",
+    "nameOrEmail": "Name or email...",
+    "nameTaxId": "Name, tax ID...",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "deleteFailed": "Delete failed",
+    "actionFailed": "{{action}} failed"
+  },
+  "footer": "\u00a9 {{year}} TX Pay Admin Panel. All rights reserved."
+}

@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import type { StatusConfig } from '@/types/dashboard.types';
 
 export const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
@@ -6,6 +7,8 @@ export const PaymentMethods = ['CREDIT', 'DEBIT', 'PREPAID', 'QR', 'PAYMENT_LINK
 export const PartnerStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export const PartnerUserTypes = ['PARTNER', 'CLIENT'] as const;
 export const PartnerUserStatuses = ['ACTIVE', 'INACTIVE'] as const;
+export const TransactionStatuses = ['CREATED', 'PENDING', 'APPROVED', 'REJECTED', 'VOIDED', 'REFUNDED', 'EXPIRED'] as const;
+export const TransactionCurrencies = ['CLP', 'USD'] as const;
 
 const STATUS_STYLES: Record<string, { variant: StatusConfig['variant']; className: string }> = {
   APPROVED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
@@ -39,10 +42,15 @@ const STATUS_LABELS: Record<string, { en: string; es: string }> = {
   SUSPENDED: { en: 'Suspended', es: 'Suspendido' },
 };
 
-export function getStatusConfig(status: string, locale: 'en' | 'es' = 'en'): StatusConfig {
+function resolveLocale(locale?: 'en' | 'es'): 'en' | 'es' {
+  if (locale) return locale;
+  return i18n.language?.startsWith('es') ? 'es' : 'en';
+}
+
+export function getStatusConfig(status: string, locale?: 'en' | 'es'): StatusConfig {
   const style = STATUS_STYLES[status] || { variant: 'outline' as const, className: '' };
   const labels = STATUS_LABELS[status];
-  return { ...style, label: labels?.[locale] || status };
+  return { ...style, label: labels?.[resolveLocale(locale)] || status };
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, { en: string; es: string }> = {
@@ -55,6 +63,6 @@ const PAYMENT_METHOD_LABELS: Record<string, { en: string; es: string }> = {
   WEBPAY: { en: 'Webpay', es: 'Webpay' },
 };
 
-export function getPaymentMethodLabel(method: string, locale: 'en' | 'es' = 'en'): string {
-  return PAYMENT_METHOD_LABELS[method]?.[locale] || method;
+export function getPaymentMethodLabel(method: string, locale?: 'en' | 'es'): string {
+  return PAYMENT_METHOD_LABELS[method]?.[resolveLocale(locale)] || method;
 }

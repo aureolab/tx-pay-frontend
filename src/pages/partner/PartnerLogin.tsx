@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { usePartnerAuth } from '../../context/PartnerAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
 import { AlertCircle, Building2, ArrowRight, Sparkles } from 'lucide-react';
 
 export default function PartnerLogin() {
+  const { t, i18n } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -16,6 +19,12 @@ export default function PartnerLogin() {
   const [focused, setFocused] = useState<string | null>(null);
   const { login } = usePartnerAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!localStorage.getItem('i18nextLng')) {
+      i18n.changeLanguage('es');
+    }
+  }, [i18n]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,11 +34,13 @@ export default function PartnerLogin() {
       await login(email, password);
       navigate('/partner');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Credenciales inválidas');
+      setError(err.response?.data?.message || t('form.invalidCredentials'));
     } finally {
       setLoading(false);
     }
   };
+
+  const features = t('partner.features', { returnObjects: true }) as string[];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -52,8 +63,9 @@ export default function PartnerLogin() {
         />
       </div>
 
-      {/* Theme toggle */}
-      <div className="absolute top-6 right-6 z-10">
+      {/* Theme toggle + Language */}
+      <div className="absolute top-6 right-6 z-10 flex items-center gap-2">
+        <LanguageSwitcher />
         <ThemeToggle />
       </div>
 
@@ -72,22 +84,18 @@ export default function PartnerLogin() {
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6 leading-[1.1]">
-              Portal de{' '}
+              {t('partner.title').split(' ').slice(0, -1).join(' ')}{' '}
               <span className="bg-gradient-to-r from-amber-600 via-orange-500 to-yellow-500 dark:from-amber-400 dark:via-orange-400 dark:to-yellow-400 bg-clip-text text-transparent">
-                Partners
+                {t('partner.title').split(' ').slice(-1)[0]}
               </span>
             </h1>
 
             <p className="text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-12">
-              Gestiona tus comercios, monitorea transacciones y accede a reportes en tiempo real desde un solo lugar.
+              {t('partner.subtitle')}
             </p>
 
             <div className="space-y-4">
-              {[
-                'Visualización de transacciones en tiempo real',
-                'Gestión centralizada de comercios',
-                'Reportes y analíticas avanzadas',
-              ].map((feature, i) => (
+              {features.map((feature, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-3 text-zinc-700 dark:text-zinc-300"
@@ -121,7 +129,7 @@ export default function PartnerLogin() {
                 </span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                Portal de Partners
+                {t('partner.title')}
               </h1>
             </div>
 
@@ -129,10 +137,10 @@ export default function PartnerLogin() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl shadow-zinc-900/10 dark:shadow-black/30 p-8 sm:p-10">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
-                  Bienvenido
+                  {t('partner.welcome')}
                 </h2>
                 <p className="text-zinc-600 dark:text-zinc-400">
-                  Accede a tu panel de comercios
+                  {t('partner.accessPanel')}
                 </p>
               </div>
 
@@ -153,7 +161,7 @@ export default function PartnerLogin() {
                         : 'text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
-                    Correo electrónico
+                    {t('form.email')}
                   </Label>
                   <Input
                     id="email"
@@ -177,7 +185,7 @@ export default function PartnerLogin() {
                         : 'text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
-                    Contraseña
+                    {t('form.password')}
                   </Label>
                   <Input
                     id="password"
@@ -200,11 +208,11 @@ export default function PartnerLogin() {
                   {loading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Iniciando sesión...</span>
+                      <span>{t('form.signingIn')}</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span>Iniciar sesión</span>
+                      <span>{t('form.signIn')}</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
                     </div>
                   )}
@@ -213,12 +221,12 @@ export default function PartnerLogin() {
 
               <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-                  ¿Eres administrador?{' '}
+                  {t('links.isAdmin')}{' '}
                   <Link
                     to="/admin/login"
                     className="font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                   >
-                    Inicia sesión aquí
+                    {t('links.accessAdminPortal')}
                   </Link>
                 </p>
               </div>
@@ -226,7 +234,7 @@ export default function PartnerLogin() {
 
             {/* Footer */}
             <p className="mt-8 text-center text-xs text-zinc-500 dark:text-zinc-500">
-              © {new Date().getFullYear()} TX Pay. Todos los derechos reservados.
+              {t('common:copyright', { year: new Date().getFullYear() })}
             </p>
           </div>
         </div>

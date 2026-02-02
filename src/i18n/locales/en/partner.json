@@ -1,0 +1,58 @@
+{
+  "portal": "Partner",
+  "logout": "Logout",
+  "loadingDashboard": "Loading dashboard...",
+  "stats": {
+    "totalMerchants": "Total Merchants",
+    "activeMerchants": "Active Merchants",
+    "totalTransactions": "Total Transactions"
+  },
+  "tabs": {
+    "merchants": "Merchants",
+    "transactions": "Transactions"
+  },
+  "access": {
+    "full": "Full Access",
+    "limited": "Limited Access"
+  },
+  "merchants": {
+    "title": "My Merchants",
+    "refresh": "Refresh",
+    "columns": {
+      "name": "Name",
+      "legalName": "Legal Name",
+      "status": "Status",
+      "paymentMethods": "Payment Methods",
+      "actions": "Actions"
+    },
+    "noResults": "No assigned merchants",
+    "newTransaction": "New Transaction"
+  },
+  "transactions": {
+    "title": "My Transactions",
+    "columns": {
+      "id": "ID",
+      "amount": "Amount",
+      "status": "Status",
+      "method": "Method",
+      "merchant": "Merchant",
+      "date": "Date"
+    },
+    "noResults": "No transactions"
+  },
+  "filters": {
+    "status": "Status",
+    "search": "Search",
+    "method": "Method",
+    "merchant": "Merchant",
+    "from": "From",
+    "to": "To",
+    "nameOrLegalName": "Name or legal name...",
+    "allMerchants": "All Merchants"
+  },
+  "errors": {
+    "loadMerchants": "Failed to load merchants",
+    "loadTransactions": "Failed to load transactions"
+  },
+  "footer": "\u00a9 {{year}} TX Pay Partner Portal. All rights reserved."
+}

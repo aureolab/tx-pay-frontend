@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
 
 interface DashboardHeaderProps {
   portalName: string;
@@ -46,6 +47,7 @@ export function DashboardHeader({
               <span className="text-xs text-zinc-500 dark:text-zinc-400">{userEmail}</span>
             </div>
             {rightSlot}
+            <LanguageSwitcher />
             <ThemeToggle />
             <Button
               variant="outline"

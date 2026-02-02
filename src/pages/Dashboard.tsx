@@ -1,8 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, healthApi, type PaginatedResponse } from '../api/client';
-import { type PaginationState, defaultPagination } from '@/types/dashboard.types';
-import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
+import { type PaginationState } from '@/types/dashboard.types';
+import {
+  getStatusConfig,
+  getPaymentMethodLabel,
+  MerchantStatuses,
+  PartnerStatuses,
+  PaymentMethods,
+  AdminRoles,
+  TransactionStatuses,
+  TransactionCurrencies,
+} from '@/lib/constants';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { FilterBar, type FilterConfig } from '@/components/shared/FilterBar';
 
 import { DashboardHeader } from '@/components/shared/DashboardHeader';
 import { DashboardFooter } from '@/components/shared/DashboardFooter';
@@ -59,22 +71,29 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const { t, i18n } = useTranslation(['admin', 'common']);
   const { user, logout } = useAuth();
-  const [tab, setTab] = useState<string>('partners');
+  const { tab, page, filters, setTab, setPage, setFilter, clearFilters, hasFilters } = useUrlFilters({ defaultTab: 'partners' });
+
+  // Set default language to English for admin portal
+  useEffect(() => {
+    if (!localStorage.getItem('i18nextLng')) {
+      i18n.changeLanguage('en');
+    }
+  }, [i18n]);
+
   const [merchants, setMerchants] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [allPartners, setAllPartners] = useState<any[]>([]);
+
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [partners, setPartners] = useState<any[]>([]);
-
-  const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
-  const [transactionsPagination, setTransactionsPagination] = useState<PaginationState>(defaultPagination);
-  const [adminsPagination, setAdminsPagination] = useState<PaginationState>(defaultPagination);
-  const [partnersPagination, setPartnersPagination] = useState<PaginationState>(defaultPagination);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
   // Dialog states
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
@@ -92,57 +111,107 @@ export default function Dashboard() {
 
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
+  const partnerMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    allPartners.forEach((p) => {
+      map[p._id] = p.fantasy_name;
+    });
+    return map;
+  }, [allPartners]);
+
+  // Filter configurations per tab
+  const partnerOptions = useMemo(
+    () => allPartners.map((p) => ({ value: p._id, label: p.fantasy_name })),
+    [allPartners],
+  );
+
+  const filterConfigs: Record<string, FilterConfig[]> = useMemo(() => ({
+    partners: [
+      { key: 'status', label: t('admin:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: PartnerStatuses.map((s) => ({ value: s, label: getStatusConfig(s).label })) },
+      { key: 'search', label: t('admin:filters.search'), type: 'text', placeholder: t('admin:filters.nameOrEmail') },
+    ],
+    merchants: [
+      { key: 'status', label: t('admin:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: MerchantStatuses.map((s) => ({ value: s, label: getStatusConfig(s).label })) },
+      { key: 'owner', label: t('admin:filters.partner'), type: 'select', placeholder: t('common:filters.allPartners'), options: partnerOptions },
+      { key: 'payment_method', label: t('admin:filters.method'), type: 'select', placeholder: t('common:filters.allMethods'), options: PaymentMethods.map((m) => ({ value: m, label: getPaymentMethodLabel(m) })) },
+      { key: 'search', label: t('admin:filters.search'), type: 'text', placeholder: t('admin:filters.nameTaxId') },
+    ],
+    transactions: [
+      { key: 'status', label: t('admin:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: TransactionStatuses.map((s) => ({ value: s, label: getStatusConfig(s).label })) },
+      { key: 'payment_method', label: t('admin:filters.method'), type: 'select', placeholder: t('common:filters.allMethods'), options: PaymentMethods.map((m) => ({ value: m, label: getPaymentMethodLabel(m) })) },
+      { key: 'currency', label: t('admin:filters.currency'), type: 'select', placeholder: t('common:filters.allCurrencies'), options: TransactionCurrencies.map((c) => ({ value: c, label: c })) },
+      { key: 'dateFrom', label: t('admin:filters.from'), type: 'date' },
+      { key: 'dateTo', label: t('admin:filters.to'), type: 'date' },
+    ],
+    admins: [
+      { key: 'active', label: t('admin:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: [{ value: 'true', label: t('admin:filters.active') }, { value: 'false', label: t('admin:filters.inactive') }] },
+      { key: 'role', label: t('admin:filters.role'), type: 'select', placeholder: t('common:filters.allRoles'), options: AdminRoles.map((r) => ({ value: r, label: r })) },
+      { key: 'search', label: t('admin:filters.search'), type: 'text', placeholder: t('admin:filters.nameOrEmail') },
+    ],
+  }), [partnerOptions, t]);
+
   useEffect(() => {
     healthApi.check().then(res => setHealth(res.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
     loadData();
-  }, [tab, merchantsPagination.page, transactionsPagination.page, adminsPagination.page, partnersPagination.page]);
+  }, [tab, page, JSON.stringify(filters)]);
 
   const loadData = async () => {
     setLoading(true);
     setError('');
+    const params = { page, limit: 10, ...filters };
     try {
-      if (tab === 'merchants') {
-        const res = await merchantsApi.list({ page: merchantsPagination.page, limit: merchantsPagination.limit });
-        const data = res.data as PaginatedResponse<any>;
-        setMerchants(data.data);
-        setMerchantsPagination(prev => ({ ...prev, ...data.meta }));
-      } else if (tab === 'transactions') {
-        const res = await transactionsApi.list({ page: transactionsPagination.page, limit: transactionsPagination.limit });
-        const data = res.data as PaginatedResponse<any>;
-        setTransactions(data.data);
-        setTransactionsPagination(prev => ({ ...prev, ...data.meta }));
-      } else if (tab === 'admins') {
-        const res = await adminUsersApi.list({ page: adminsPagination.page, limit: adminsPagination.limit });
-        const data = res.data as PaginatedResponse<any>;
-        setAdmins(data.data);
-        setAdminsPagination(prev => ({ ...prev, ...data.meta }));
-      } else if (tab === 'partners') {
-        const res = await partnersApi.list({ page: partnersPagination.page, limit: partnersPagination.limit });
+      if (tab === 'partners') {
+        const res = await partnersApi.list(params);
         const data = res.data as PaginatedResponse<any>;
         setPartners(data.data);
-        setPartnersPagination(prev => ({ ...prev, ...data.meta }));
+        setMeta(data.meta);
+      } else if (tab === 'merchants') {
+        const [merchRes, partnersRes] = await Promise.all([
+          merchantsApi.list(params),
+          partnersApi.list({ limit: 100 }),
+        ]);
+        const data = merchRes.data as PaginatedResponse<any>;
+        setMerchants(data.data);
+        setMeta(data.meta);
+        setAllPartners((partnersRes.data as PaginatedResponse<any>).data);
+      } else if (tab === 'transactions') {
+        const res = await transactionsApi.list(params);
+        const data = res.data as PaginatedResponse<any>;
+        setTransactions(data.data);
+        setMeta(data.meta);
+      } else if (tab === 'admins') {
+        const res = await adminUsersApi.list(params);
+        const data = res.data as PaginatedResponse<any>;
+        setAdmins(data.data);
+        setMeta(data.meta);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load data');
+      setError(err.response?.data?.message || t('admin:errors.loadFailed'));
     } finally {
       setLoading(false);
       setInitialLoading(false);
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (tab === 'merchants') {
-      setMerchantsPagination(prev => ({ ...prev, page: newPage }));
-    } else if (tab === 'transactions') {
-      setTransactionsPagination(prev => ({ ...prev, page: newPage }));
-    } else if (tab === 'admins') {
-      setAdminsPagination(prev => ({ ...prev, page: newPage }));
-    } else if (tab === 'partners') {
-      setPartnersPagination(prev => ({ ...prev, page: newPage }));
+  // Load allPartners for the merchants filter dropdown when switching to merchants tab
+  useEffect(() => {
+    if (tab === 'merchants' && allPartners.length === 0) {
+      partnersApi.list({ limit: 100 }).then((res) => {
+        setAllPartners((res.data as PaginatedResponse<any>).data);
+      }).catch(() => {});
     }
+  }, [tab]);
+
+  const pagination: PaginationState = {
+    page,
+    limit: 10,
+    total: meta.total,
+    totalPages: meta.totalPages,
+    hasNextPage: meta.hasNextPage,
+    hasPrevPage: meta.hasPrevPage,
   };
 
   const handleDeleteMerchant = async (id: string) => {
@@ -150,7 +219,7 @@ export default function Dashboard() {
       await merchantsApi.delete(id);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Delete failed');
+      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -159,7 +228,7 @@ export default function Dashboard() {
       await adminUsersApi.delete(id);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Delete failed');
+      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -170,7 +239,7 @@ export default function Dashboard() {
       else if (action === 'void') await transactionsApi.void(id);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || `${action} failed`);
+      setError(err.response?.data?.message || t('admin:errors.actionFailed', { action }));
     }
   };
 
@@ -189,7 +258,7 @@ export default function Dashboard() {
       await partnersApi.delete(id);
       loadData();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Delete failed');
+      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -220,7 +289,7 @@ export default function Dashboard() {
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
             <ShieldCheck className="w-6 h-6 text-white" />
           </div>
-          <p className="text-zinc-600 dark:text-zinc-400">Loading dashboard...</p>
+          <p className="text-zinc-600 dark:text-zinc-400">{t('admin:loadingDashboard')}</p>
         </div>
       </div>
     );
@@ -236,14 +305,14 @@ export default function Dashboard() {
 
       {/* Header */}
       <DashboardHeader
-        portalName="Admin"
+        portalName={t('admin:portal')}
         icon={ShieldCheck}
         gradientClass="from-blue-500 to-indigo-600"
         shadowClass="shadow-blue-500/20"
         userName={user?.full_name || user?.email || ''}
         userEmail={user?.email || ''}
         onLogout={logout}
-        logoutLabel="Logout"
+        logoutLabel={t('admin:logout')}
         rightSlot={
           <Badge
             variant="outline"
@@ -270,29 +339,29 @@ export default function Dashboard() {
             icon={Handshake}
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
             iconColorClass="text-amber-600 dark:text-amber-400"
-            label="Partners"
-            value={partnersPagination.total}
+            label={t('admin:stats.partners')}
+            value={tab === 'partners' ? meta.total : '-'}
           />
           <StatsCard
             icon={Store}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
             iconColorClass="text-blue-600 dark:text-blue-400"
-            label="Merchants"
-            value={merchantsPagination.total}
+            label={t('admin:stats.merchants')}
+            value={tab === 'merchants' ? meta.total : '-'}
           />
           <StatsCard
             icon={TrendingUp}
             iconBgClass="from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10"
             iconColorClass="text-emerald-600 dark:text-emerald-400"
-            label="Transactions"
-            value={transactionsPagination.total}
+            label={t('admin:stats.transactions')}
+            value={tab === 'transactions' ? meta.total : '-'}
           />
           <StatsCard
             icon={Users}
             iconBgClass="from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10"
             iconColorClass="text-purple-600 dark:text-purple-400"
-            label="Admin Users"
-            value={adminsPagination.total}
+            label={t('admin:stats.adminUsers')}
+            value={tab === 'admins' ? meta.total : '-'}
           />
         </div>
 
@@ -303,28 +372,28 @@ export default function Dashboard() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
             >
               <Handshake className="w-4 h-4 mr-2" />
-              Partners
+              {t('admin:tabs.partners')}
             </TabsTrigger>
             <TabsTrigger
               value="merchants"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
             >
               <Store className="w-4 h-4 mr-2" />
-              Merchants
+              {t('admin:tabs.merchants')}
             </TabsTrigger>
             <TabsTrigger
               value="transactions"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Transactions
+              {t('admin:tabs.transactions')}
             </TabsTrigger>
             <TabsTrigger
               value="admins"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
             >
               <Users className="w-4 h-4 mr-2" />
-              Admin Users
+              {t('admin:tabs.admins')}
             </TabsTrigger>
           </TabsList>
 
@@ -333,7 +402,7 @@ export default function Dashboard() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">
-                  Partners ({partnersPagination.total} total)
+                  {t('admin:partners.title', { total: meta.total })}
                 </h3>
                 <div className="flex items-center gap-2">
                   <Button
@@ -350,10 +419,17 @@ export default function Dashboard() {
                     className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20"
                   >
                     <Plus className="h-4 w-4" />
-                    Create Partner
+                    {t('admin:partners.create')}
                   </Button>
                 </div>
               </div>
+              <FilterBar
+                config={filterConfigs.partners}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
               {loading ? (
                 <TableSkeleton />
               ) : (
@@ -361,12 +437,12 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead>Fantasy Name</TableHead>
-                        <TableHead>Business Name</TableHead>
-                        <TableHead>Contact Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('admin:partners.columns.fantasyName')}</TableHead>
+                        <TableHead>{t('admin:partners.columns.businessName')}</TableHead>
+                        <TableHead>{t('admin:partners.columns.contactEmail')}</TableHead>
+                        <TableHead>{t('admin:partners.columns.phone')}</TableHead>
+                        <TableHead>{t('admin:partners.columns.status')}</TableHead>
+                        <TableHead className="text-right">{t('common:table.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -391,7 +467,6 @@ export default function Dashboard() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setSelectedPartner(p)}
-                                  title="View details"
                                   className="h-8 w-8 p-0"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -400,7 +475,6 @@ export default function Dashboard() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => openEditPartner(p)}
-                                  title="Edit partner"
                                   className="h-8 w-8 p-0"
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -413,18 +487,18 @@ export default function Dashboard() {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Partner</AlertDialogTitle>
+                                      <AlertDialogTitle>{t('admin:partners.deleteTitle')}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete &quot;{p.fantasy_name}&quot;? This action cannot be undone.
+                                        {t('admin:partners.deleteMessage', { name: p.fantasy_name })}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() => handleDeletePartner(p._id)}
                                         className="bg-red-500 hover:bg-red-600 text-white"
                                       >
-                                        Delete
+                                        {t('common:buttons.delete')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -437,15 +511,15 @@ export default function Dashboard() {
                       {partners.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
-                            No partners found
+                            {t('admin:partners.noResults')}
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    pagination={partnersPagination}
-                    onPageChange={handlePageChange}
+                    pagination={pagination}
+                    onPageChange={setPage}
                   />
                 </>
               )}
@@ -457,7 +531,7 @@ export default function Dashboard() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">
-                  Merchants ({merchantsPagination.total} total)
+                  {t('admin:merchants.title', { total: meta.total })}
                 </h3>
                 <div className="flex items-center gap-2">
                   <Button
@@ -474,10 +548,17 @@ export default function Dashboard() {
                     className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20"
                   >
                     <Plus className="h-4 w-4" />
-                    Create Merchant
+                    {t('admin:merchants.create')}
                   </Button>
                 </div>
               </div>
+              <FilterBar
+                config={filterConfigs.merchants}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
               {loading ? (
                 <TableSkeleton />
               ) : (
@@ -485,12 +566,13 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead>Fantasy Name</TableHead>
-                        <TableHead>Legal Name</TableHead>
-                        <TableHead>Tax ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Payment Methods</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('admin:merchants.columns.fantasyName')}</TableHead>
+                        <TableHead>{t('admin:merchants.columns.legalName')}</TableHead>
+                        <TableHead>{t('admin:merchants.columns.partner')}</TableHead>
+                        <TableHead>{t('admin:merchants.columns.taxId')}</TableHead>
+                        <TableHead>{t('admin:merchants.columns.status')}</TableHead>
+                        <TableHead>{t('admin:merchants.columns.paymentMethods')}</TableHead>
+                        <TableHead className="text-right">{t('common:table.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -502,6 +584,9 @@ export default function Dashboard() {
                               {m.profile?.fantasy_name}
                             </TableCell>
                             <TableCell className="text-zinc-600 dark:text-zinc-400">{m.profile?.legal_name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">
+                              {partnerMap[m.owner] || m.owner?.slice?.(-6) || '-'}
+                            </TableCell>
                             <TableCell className="text-zinc-600 dark:text-zinc-400">{m.profile?.tax_id}</TableCell>
                             <TableCell>
                               <Badge variant={statusCfg.variant} className={statusCfg.className}>
@@ -524,7 +609,6 @@ export default function Dashboard() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setSelectedMerchant(m)}
-                                  title="View details"
                                   className="h-8 w-8 p-0"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -533,7 +617,6 @@ export default function Dashboard() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => openEditMerchant(m)}
-                                  title="Edit merchant"
                                   className="h-8 w-8 p-0"
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -541,7 +624,6 @@ export default function Dashboard() {
                                 <Button
                                   size="sm"
                                   onClick={() => setCreateTxMerchant(m)}
-                                  title="Create transaction"
                                   className="h-8 w-8 p-0 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                                 >
                                   <CreditCard className="h-4 w-4" />
@@ -554,18 +636,18 @@ export default function Dashboard() {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Merchant</AlertDialogTitle>
+                                      <AlertDialogTitle>{t('admin:merchants.deleteTitle')}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete "{m.profile?.fantasy_name}"? This action cannot be undone.
+                                        {t('admin:merchants.deleteMessage', { name: m.profile?.fantasy_name })}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() => handleDeleteMerchant(m._id)}
                                         className="bg-red-500 hover:bg-red-600 text-white"
                                       >
-                                        Delete
+                                        {t('common:buttons.delete')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -577,16 +659,16 @@ export default function Dashboard() {
                       })}
                       {merchants.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center text-zinc-500 py-8">
-                            No merchants found
+                          <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
+                            {t('admin:merchants.noResults')}
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    pagination={merchantsPagination}
-                    onPageChange={handlePageChange}
+                    pagination={pagination}
+                    onPageChange={setPage}
                   />
                 </>
               )}
@@ -598,7 +680,7 @@ export default function Dashboard() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">
-                  Transactions ({transactionsPagination.total} total)
+                  {t('admin:transactions.title', { total: meta.total })}
                 </h3>
                 <Button
                   variant="outline"
@@ -609,6 +691,13 @@ export default function Dashboard() {
                   <RefreshCw className="w-4 h-4" />
                 </Button>
               </div>
+              <FilterBar
+                config={filterConfigs.transactions}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
               {loading ? (
                 <TableSkeleton />
               ) : (
@@ -616,27 +705,27 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead>ID</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Currency</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Payment Method</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('admin:transactions.columns.id')}</TableHead>
+                        <TableHead>{t('admin:transactions.columns.amount')}</TableHead>
+                        <TableHead>{t('admin:transactions.columns.currency')}</TableHead>
+                        <TableHead>{t('admin:transactions.columns.status')}</TableHead>
+                        <TableHead>{t('admin:transactions.columns.paymentMethod')}</TableHead>
+                        <TableHead>{t('admin:transactions.columns.created')}</TableHead>
+                        <TableHead className="text-right">{t('common:table.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {transactions.map((t) => {
-                        const statusCfg = getStatusConfig(t.status);
+                      {transactions.map((tx) => {
+                        const statusCfg = getStatusConfig(tx.status);
                         return (
-                          <TableRow key={t._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
+                          <TableRow key={tx._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
                             <TableCell className="font-mono text-xs">
-                              {t._id?.slice(-8)}
+                              {tx._id?.slice(-8)}
                             </TableCell>
                             <TableCell className="font-semibold text-zinc-900 dark:text-white">
-                              {t.financials?.amount_gross?.$numberDecimal || t.financials?.amount_gross?.toLocaleString() || t.financials?.amount_gross}
+                              {tx.financials?.amount_gross?.$numberDecimal || tx.financials?.amount_gross?.toLocaleString() || tx.financials?.amount_gross}
                             </TableCell>
-                            <TableCell className="text-zinc-600 dark:text-zinc-400">{t.financials?.currency}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{tx.financials?.currency}</TableCell>
                             <TableCell>
                               <Badge variant={statusCfg.variant} className={statusCfg.className}>
                                 {statusCfg.label}
@@ -644,49 +733,49 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs">
-                                {getPaymentMethodLabel(t.payment_method)}
+                                {getPaymentMethodLabel(tx.payment_method)}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-zinc-500 dark:text-zinc-400 text-sm">
-                              {new Date(t.createdAt).toLocaleString()}
+                              {new Date(tx.createdAt).toLocaleString()}
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex gap-1 justify-end">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setSelectedTransaction(t)}
+                                  onClick={() => setSelectedTransaction(tx)}
                                   className="h-8 w-8 p-0"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                {t.status === 'PENDING' && (
+                                {tx.status === 'PENDING' && (
                                   <>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleTransactionAction(t._id, 'capture')}
+                                      onClick={() => handleTransactionAction(tx._id, 'capture')}
                                       className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white text-xs"
                                     >
-                                      Capture
+                                      {t('admin:transactions.capture')}
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => handleTransactionAction(t._id, 'void')}
+                                      onClick={() => handleTransactionAction(tx._id, 'void')}
                                       className="h-8 text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/50 text-xs"
                                     >
-                                      Void
+                                      {t('admin:transactions.void')}
                                     </Button>
                                   </>
                                 )}
-                                {t.status === 'APPROVED' && (
+                                {tx.status === 'APPROVED' && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handleTransactionAction(t._id, 'refund')}
+                                    onClick={() => handleTransactionAction(tx._id, 'refund')}
                                     className="h-8 text-purple-500 border-purple-200 dark:border-purple-900/50 hover:bg-purple-50 dark:hover:bg-purple-950/50 text-xs"
                                   >
-                                    Refund
+                                    {t('admin:transactions.refund')}
                                   </Button>
                                 )}
                               </div>
@@ -697,15 +786,15 @@ export default function Dashboard() {
                       {transactions.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
-                            No transactions found
+                            {t('admin:transactions.noResults')}
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    pagination={transactionsPagination}
-                    onPageChange={handlePageChange}
+                    pagination={pagination}
+                    onPageChange={setPage}
                   />
                 </>
               )}
@@ -717,7 +806,7 @@ export default function Dashboard() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">
-                  Admin Users ({adminsPagination.total} total)
+                  {t('admin:admins.title', { total: meta.total })}
                 </h3>
                 <div className="flex items-center gap-2">
                   <Button
@@ -734,10 +823,17 @@ export default function Dashboard() {
                     className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20"
                   >
                     <Plus className="h-4 w-4" />
-                    Create Admin
+                    {t('admin:admins.create')}
                   </Button>
                 </div>
               </div>
+              <FilterBar
+                config={filterConfigs.admins}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
               {loading ? (
                 <TableSkeleton />
               ) : (
@@ -745,11 +841,11 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead>{t('admin:admins.columns.name')}</TableHead>
+                        <TableHead>{t('admin:admins.columns.email')}</TableHead>
+                        <TableHead>{t('admin:admins.columns.roles')}</TableHead>
+                        <TableHead>{t('admin:admins.columns.status')}</TableHead>
+                        <TableHead className="text-right">{t('common:table.actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -799,18 +895,18 @@ export default function Dashboard() {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Admin User</AlertDialogTitle>
+                                      <AlertDialogTitle>{t('admin:admins.deleteTitle')}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete "{a.full_name || a.email}"? This action cannot be undone.
+                                        {t('admin:admins.deleteMessage', { name: a.full_name || a.email })}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() => handleDeleteAdmin(a._id)}
                                         className="bg-red-500 hover:bg-red-600 text-white"
                                       >
-                                        Delete
+                                        {t('common:buttons.delete')}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -823,15 +919,15 @@ export default function Dashboard() {
                       {admins.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center text-zinc-500 py-8">
-                            No admin users found
+                            {t('admin:admins.noResults')}
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                   <PaginationControls
-                    pagination={adminsPagination}
-                    onPageChange={handlePageChange}
+                    pagination={pagination}
+                    onPageChange={setPage}
                   />
                 </>
               )}
@@ -841,7 +937,7 @@ export default function Dashboard() {
       </main>
 
       {/* Footer */}
-      <DashboardFooter text={`\u00A9 ${new Date().getFullYear()} TX Pay Admin Panel. All rights reserved.`} />
+      <DashboardFooter text={t('admin:footer', { year: new Date().getFullYear() })} />
 
       {/* Admin Dialogs */}
       <AdminUserDialog

@@ -1,0 +1,94 @@
+{
+  "portal": "Admin",
+  "logout": "Salir",
+  "loadingDashboard": "Cargando panel...",
+  "stats": {
+    "partners": "Partners",
+    "merchants": "Comercios",
+    "transactions": "Transacciones",
+    "adminUsers": "Administradores"
+  },
+  "tabs": {
+    "partners": "Partners",
+    "merchants": "Comercios",
+    "transactions": "Transacciones",
+    "admins": "Administradores"
+  },
+  "partners": {
+    "title": "Partners ({{total}} total)",
+    "create": "Crear Partner",
+    "columns": {
+      "fantasyName": "Nombre Fantasia",
+      "businessName": "Razon Social",
+      "contactEmail": "Email de Contacto",
+      "phone": "Telefono",
+      "status": "Estado"
+    },
+    "noResults": "No se encontraron partners",
+    "deleteTitle": "Eliminar Partner",
+    "deleteMessage": "Estas seguro de eliminar \"{{name}}\"? Esta accion no se puede deshacer."
+  },
+  "merchants": {
+    "title": "Comercios ({{total}} total)",
+    "create": "Crear Comercio",
+    "columns": {
+      "fantasyName": "Nombre Fantasia",
+      "legalName": "Razon Social",
+      "partner": "Partner",
+      "taxId": "RUT",
+      "status": "Estado",
+      "paymentMethods": "Metodos de Pago"
+    },
+    "noResults": "No se encontraron comercios",
+    "deleteTitle": "Eliminar Comercio",
+    "deleteMessage": "Estas seguro de eliminar \"{{name}}\"? Esta accion no se puede deshacer."
+  },
+  "transactions": {
+    "title": "Transacciones ({{total}} total)",
+    "columns": {
+      "id": "ID",
+      "amount": "Monto",
+      "currency": "Moneda",
+      "status": "Estado",
+      "paymentMethod": "Metodo de Pago",
+      "created": "Fecha"
+    },
+    "noResults": "No se encontraron transacciones",
+    "capture": "Capturar",
+    "void": "Anular",
+    "refund": "Reembolsar"
+  },
+  "admins": {
+    "title": "Administradores ({{total}} total)",
+    "create": "Crear Admin",
+    "columns": {
+      "name": "Nombre",
+      "email": "Email",
+      "roles": "Roles",
+      "status": "Estado"
+    },
+    "noResults": "No se encontraron administradores",
+    "deleteTitle": "Eliminar Administrador",
+    "deleteMessage": "Estas seguro de eliminar \"{{name}}\"? Esta accion no se puede deshacer."
+  },
+  "filters": {
+    "status": "Estado",
+    "search": "Buscar",
+    "method": "Metodo",
+    "partner": "Partner",
+    "currency": "Moneda",
+    "role": "Rol",
+    "from": "Desde",
+    "to": "Hasta",
+    "nameOrEmail": "Nombre o email...",
+    "nameTaxId": "Nombre, RUT...",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "errors": {
+    "loadFailed": "Error al cargar datos",
+    "deleteFailed": "Error al eliminar",
+    "actionFailed": "Error al {{action}}"
+  },
+  "footer": "\u00a9 {{year}} TX Pay Panel Admin. Todos los derechos reservados."
+}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { PaginationState } from '@/types/dashboard.types';
@@ -5,10 +6,11 @@ import type { PaginationState } from '@/types/dashboard.types';
 interface PaginationControlsProps {
   pagination: PaginationState;
   onPageChange: (page: number) => void;
-  locale?: 'en' | 'es';
 }
 
-export function PaginationControls({ pagination, onPageChange, locale = 'en' }: PaginationControlsProps) {
+export function PaginationControls({ pagination, onPageChange }: PaginationControlsProps) {
+  const { t } = useTranslation('common');
+
   if (pagination.total === 0) return null;
 
   const start = (pagination.page - 1) * pagination.limit + 1;
@@ -18,10 +20,7 @@ export function PaginationControls({ pagination, onPageChange, locale = 'en' }: 
   return (
     <div className="flex items-center justify-between px-4 py-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        {locale === 'es'
-          ? `Mostrando ${start} a ${end} de ${pagination.total}`
-          : `Showing ${start} to ${end} of ${pagination.total}`
-        }
+        {t('pagination.showing', { start, end, total: pagination.total })}
       </p>
       {hasMultiplePages && (
         <div className="flex items-center gap-2">
@@ -35,10 +34,7 @@ export function PaginationControls({ pagination, onPageChange, locale = 'en' }: 
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-zinc-600 dark:text-zinc-400 min-w-[100px] text-center">
-            {locale === 'es'
-              ? `Pagina ${pagination.page} de ${pagination.totalPages}`
-              : `Page ${pagination.page} of ${pagination.totalPages}`
-            }
+            {t('pagination.page', { page: pagination.page, totalPages: pagination.totalPages })}
           </span>
           <Button
             variant="outline"

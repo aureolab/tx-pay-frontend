@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePartnerAuth } from '../../context/PartnerAuthContext';
 import {
   partnerMerchantsApi,
@@ -8,9 +9,17 @@ import type {
   PartnerMerchant,
   PartnerTransaction,
 } from '../../types/partner.types';
-import { type PaginationState, defaultPagination } from '@/types/dashboard.types';
-import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
+import { type PaginationState } from '@/types/dashboard.types';
+import {
+  getStatusConfig,
+  getPaymentMethodLabel,
+  MerchantStatuses,
+  TransactionStatuses,
+  PaymentMethods,
+} from '@/lib/constants';
 import { getDecimalValue, formatCurrency, formatDate } from '@/lib/formatters';
+import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { FilterBar, type FilterConfig } from '@/components/shared/FilterBar';
 
 import { DashboardHeader } from '@/components/shared/DashboardHeader';
 import { DashboardFooter } from '@/components/shared/DashboardFooter';
@@ -29,13 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Building2,
@@ -49,71 +51,102 @@ import {
 } from 'lucide-react';
 
 export default function PartnerDashboard() {
+  const { t, i18n } = useTranslation(['partner', 'common']);
   const { partnerUser, logout, isPartnerType } = usePartnerAuth();
+  const { tab, page, filters, setTab, setPage, setFilter, clearFilters, hasFilters } = useUrlFilters({ defaultTab: 'merchants' });
+
+  // Set default language to Spanish for partner portal
+  useEffect(() => {
+    if (!localStorage.getItem('i18nextLng')) {
+      i18n.changeLanguage('es');
+    }
+  }, [i18n]);
 
   // Data states
   const [merchants, setMerchants] = useState<PartnerMerchant[]>([]);
   const [transactions, setTransactions] = useState<PartnerTransaction[]>([]);
-  const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
-  const [transactionsPagination, setTransactionsPagination] = useState<PaginationState>(defaultPagination);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
   // UI states
-  const [activeTab, setActiveTab] = useState('merchants');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedMerchantFilter, setSelectedMerchantFilter] = useState<string>('all');
 
   // Dialog states
   const [createTxDialogOpen, setCreateTxDialogOpen] = useState(false);
   const [selectedMerchantForTx, setSelectedMerchantForTx] = useState<PartnerMerchant | null>(null);
 
+  // Merchant options for transaction filter
+  const merchantOptions = useMemo(
+    () => merchants.map((m) => ({ value: m._id, label: m.profile.fantasy_name })),
+    [merchants],
+  );
+
+  // Filter configurations per tab
+  const filterConfigs: Record<string, FilterConfig[]> = useMemo(() => ({
+    merchants: [
+      { key: 'status', label: t('partner:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: MerchantStatuses.map((s) => ({ value: s, label: getStatusConfig(s).label })) },
+      { key: 'search', label: t('partner:filters.search'), type: 'text', placeholder: t('partner:filters.nameOrLegalName') },
+    ],
+    transactions: [
+      { key: 'status', label: t('partner:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: TransactionStatuses.map((s) => ({ value: s, label: getStatusConfig(s).label })) },
+      { key: 'payment_method', label: t('partner:filters.method'), type: 'select', placeholder: t('common:filters.allMethods'), options: PaymentMethods.map((m) => ({ value: m, label: getPaymentMethodLabel(m) })) },
+      { key: 'merchant', label: t('partner:filters.merchant'), type: 'select', placeholder: t('common:filters.allMerchants'), options: merchantOptions },
+      { key: 'dateFrom', label: t('partner:filters.from'), type: 'date' },
+      { key: 'dateTo', label: t('partner:filters.to'), type: 'date' },
+    ],
+  }), [merchantOptions, t]);
+
   // Fetch merchants
-  const fetchMerchants = useCallback(async (page: number = 1) => {
+  const fetchMerchants = useCallback(async (pageNum: number = 1) => {
     try {
-      const res = await partnerMerchantsApi.getMyMerchants({ page, limit: 10 });
+      const res = await partnerMerchantsApi.getMyMerchants({ page: pageNum, limit: 10 });
       setMerchants(res.data.data);
-      setMerchantsPagination({
-        ...res.data.meta,
-      });
+      setMeta(res.data.meta);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar comercios');
+      setError(err.response?.data?.message || t('partner:errors.loadMerchants'));
     }
-  }, []);
+  }, [t]);
 
   // Fetch transactions
-  const fetchTransactions = useCallback(async (page: number = 1, merchantId?: string) => {
+  const fetchTransactions = useCallback(async (pageNum: number = 1, merchantId?: string) => {
     try {
       let res;
       if (merchantId && merchantId !== 'all') {
-        res = await partnerTransactionsApi.getByMerchant(merchantId, { page, limit: 10 });
+        res = await partnerTransactionsApi.getByMerchant(merchantId, { page: pageNum, limit: 10 });
       } else {
-        res = await partnerTransactionsApi.getMyTransactions({ page, limit: 10 });
+        res = await partnerTransactionsApi.getMyTransactions({ page: pageNum, limit: 10 });
       }
       setTransactions(res.data.data);
-      setTransactionsPagination({
-        ...res.data.meta,
-      });
+      setMeta(res.data.meta);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al cargar transacciones');
+      setError(err.response?.data?.message || t('partner:errors.loadTransactions'));
     }
-  }, []);
+  }, [t]);
 
-  // Initial load
+  // Load data based on active tab and filters
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchMerchants(), fetchTransactions()]);
+      setError('');
+      if (tab === 'merchants') {
+        await fetchMerchants(page);
+      } else if (tab === 'transactions') {
+        const merchantFilter = filters.merchant;
+        await fetchTransactions(page, merchantFilter);
+      }
       setLoading(false);
     };
     loadData();
-  }, [fetchMerchants, fetchTransactions]);
+  }, [tab, page, JSON.stringify(filters), fetchMerchants, fetchTransactions]);
 
-  // Handle merchant filter change
+  // Load merchants once for the transaction merchant filter
   useEffect(() => {
-    if (!loading) {
-      fetchTransactions(1, selectedMerchantFilter);
+    if (merchants.length === 0) {
+      partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }).then((res) => {
+        setMerchants(res.data.data);
+      }).catch(() => {});
     }
-  }, [selectedMerchantFilter, fetchTransactions, loading]);
+  }, []);
 
   // Open create transaction dialog
   const openCreateTxDialog = (merchant: PartnerMerchant) => {
@@ -130,14 +163,23 @@ export default function PartnerDashboard() {
     return merchant?.profile.fantasy_name || merchantId.slice(-6);
   };
 
-  if (loading) {
+  const pagination: PaginationState = {
+    page,
+    limit: 10,
+    total: meta.total,
+    totalPages: meta.totalPages,
+    hasNextPage: meta.hasNextPage,
+    hasPrevPage: meta.hasPrevPage,
+  };
+
+  if (loading && merchants.length === 0 && transactions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
         <div className="text-center">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 animate-pulse">
             <Building2 className="w-6 h-6 text-white" />
           </div>
-          <p className="text-zinc-600 dark:text-zinc-400">Cargando dashboard...</p>
+          <p className="text-zinc-600 dark:text-zinc-400">{t('partner:loadingDashboard')}</p>
         </div>
       </div>
     );
@@ -153,14 +195,14 @@ export default function PartnerDashboard() {
 
       {/* Header */}
       <DashboardHeader
-        portalName="Partner"
+        portalName={t('partner:portal')}
         icon={Building2}
         gradientClass="from-amber-500 to-orange-600"
         shadowClass="shadow-amber-500/20"
         userName={partnerUser?.name || ''}
         userEmail={partnerUser?.email || ''}
         onLogout={logout}
-        logoutLabel="Salir"
+        logoutLabel={t('partner:logout')}
         rightSlot={
           <Badge
             variant="outline"
@@ -171,7 +213,7 @@ export default function PartnerDashboard() {
             }`}
           >
             <Sparkles className="w-3 h-3 mr-1" />
-            {isPartnerType ? 'Acceso Completo' : 'Acceso Limitado'}
+            {isPartnerType ? t('partner:access.full') : t('partner:access.limited')}
           </Badge>
         }
       />
@@ -192,41 +234,41 @@ export default function PartnerDashboard() {
             icon={Store}
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
             iconColorClass="text-amber-600 dark:text-amber-400"
-            label="Total Comercios"
-            value={merchantsPagination.total}
+            label={t('partner:stats.totalMerchants')}
+            value={merchants.length}
           />
           <StatsCard
             icon={TrendingUp}
             iconBgClass="from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10"
             iconColorClass="text-emerald-600 dark:text-emerald-400"
-            label="Comercios Activos"
+            label={t('partner:stats.activeMerchants')}
             value={activeMerchants}
           />
           <StatsCard
             icon={CreditCard}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
             iconColorClass="text-blue-600 dark:text-blue-400"
-            label="Total Transacciones"
-            value={transactionsPagination.total}
+            label={t('partner:stats.totalTransactions')}
+            value={tab === 'transactions' ? meta.total : '-'}
           />
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
           <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl">
             <TabsTrigger
               value="merchants"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
             >
               <Store className="w-4 h-4 mr-2" />
-              Comercios
+              {t('partner:tabs.merchants')}
             </TabsTrigger>
             <TabsTrigger
               value="transactions"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Transacciones
+              {t('partner:tabs.transactions')}
             </TabsTrigger>
           </TabsList>
 
@@ -234,38 +276,45 @@ export default function PartnerDashboard() {
           <TabsContent value="merchants" className="space-y-4">
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
-                <h3 className="font-semibold text-zinc-900 dark:text-white">Mis Comercios</h3>
+                <h3 className="font-semibold text-zinc-900 dark:text-white">{t('partner:merchants.title')}</h3>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => fetchMerchants(merchantsPagination.page)}
+                  onClick={() => fetchMerchants(page)}
                   className="gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Actualizar
+                  {t('partner:merchants.refresh')}
                 </Button>
               </div>
+              <FilterBar
+                config={filterConfigs.merchants}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
 
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Razon Social</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Metodos de Pago</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{t('partner:merchants.columns.name')}</TableHead>
+                    <TableHead>{t('partner:merchants.columns.legalName')}</TableHead>
+                    <TableHead>{t('partner:merchants.columns.status')}</TableHead>
+                    <TableHead>{t('partner:merchants.columns.paymentMethods')}</TableHead>
+                    <TableHead className="text-right">{t('partner:merchants.columns.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {merchants.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-zinc-500">
-                        No tienes comercios asignados
+                        {t('partner:merchants.noResults')}
                       </TableCell>
                     </TableRow>
                   ) : (
                     merchants.map((merchant) => {
-                      const statusCfg = getStatusConfig(merchant.status, 'es');
+                      const statusCfg = getStatusConfig(merchant.status);
                       return (
                         <TableRow key={merchant._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
                           <TableCell className="font-medium">{merchant.profile.fantasy_name}</TableCell>
@@ -281,7 +330,7 @@ export default function PartnerDashboard() {
                             <div className="flex flex-wrap gap-1">
                               {merchant.enabled_payment_methods.slice(0, 3).map((method) => (
                                 <Badge key={method} variant="outline" className="text-xs">
-                                  {getPaymentMethodLabel(method, 'es')}
+                                  {getPaymentMethodLabel(method)}
                                 </Badge>
                               ))}
                               {merchant.enabled_payment_methods.length > 3 && (
@@ -299,7 +348,7 @@ export default function PartnerDashboard() {
                               className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
                             >
                               <Plus className="w-4 h-4 mr-1" />
-                              Nueva Transaccion
+                              {t('partner:merchants.newTransaction')}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -309,67 +358,56 @@ export default function PartnerDashboard() {
                 </TableBody>
               </Table>
 
-              {merchantsPagination.total > 0 && (
-                <PaginationControls
-                  pagination={merchantsPagination}
-                  onPageChange={(page) => fetchMerchants(page)}
-                  locale="es"
-                />
-              )}
+              <PaginationControls
+                pagination={pagination}
+                onPageChange={setPage}
+              />
             </div>
           </TabsContent>
 
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-4">
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h3 className="font-semibold text-zinc-900 dark:text-white">Mis Transacciones</h3>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <Select value={selectedMerchantFilter} onValueChange={setSelectedMerchantFilter}>
-                    <SelectTrigger className="w-full sm:w-[200px]">
-                      <SelectValue placeholder="Filtrar por comercio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los comercios</SelectItem>
-                      {merchants.map((m) => (
-                        <SelectItem key={m._id} value={m._id}>
-                          {m.profile.fantasy_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchTransactions(transactionsPagination.page, selectedMerchantFilter)}
-                    className="gap-2 shrink-0"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">{t('partner:transactions.title')}</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchTransactions(page, filters.merchant)}
+                  className="gap-2 shrink-0"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
               </div>
+              <FilterBar
+                config={filterConfigs.transactions}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
 
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
-                    <TableHead>ID</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Metodo</TableHead>
-                    <TableHead>Comercio</TableHead>
-                    <TableHead>Fecha</TableHead>
+                    <TableHead>{t('partner:transactions.columns.id')}</TableHead>
+                    <TableHead>{t('partner:transactions.columns.amount')}</TableHead>
+                    <TableHead>{t('partner:transactions.columns.status')}</TableHead>
+                    <TableHead>{t('partner:transactions.columns.method')}</TableHead>
+                    <TableHead>{t('partner:transactions.columns.merchant')}</TableHead>
+                    <TableHead>{t('partner:transactions.columns.date')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-zinc-500">
-                        No hay transacciones
+                        {t('partner:transactions.noResults')}
                       </TableCell>
                     </TableRow>
                   ) : (
                     transactions.map((tx) => {
-                      const statusCfg = getStatusConfig(tx.status, 'es');
+                      const statusCfg = getStatusConfig(tx.status);
                       const amount = getDecimalValue(tx.financials.amount_gross);
                       return (
                         <TableRow key={tx._id} className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
@@ -386,7 +424,7 @@ export default function PartnerDashboard() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-xs">
-                              {getPaymentMethodLabel(tx.payment_method, 'es')}
+                              {getPaymentMethodLabel(tx.payment_method)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-zinc-600 dark:text-zinc-400">
@@ -402,13 +440,10 @@ export default function PartnerDashboard() {
                 </TableBody>
               </Table>
 
-              {transactionsPagination.total > 0 && (
-                <PaginationControls
-                  pagination={transactionsPagination}
-                  onPageChange={(page) => fetchTransactions(page, selectedMerchantFilter)}
-                  locale="es"
-                />
-              )}
+              <PaginationControls
+                pagination={pagination}
+                onPageChange={setPage}
+              />
             </div>
           </TabsContent>
         </Tabs>
@@ -419,11 +454,11 @@ export default function PartnerDashboard() {
         merchant={selectedMerchantForTx}
         open={createTxDialogOpen}
         onOpenChange={setCreateTxDialogOpen}
-        onSuccess={() => fetchTransactions(1, selectedMerchantFilter)}
+        onSuccess={() => fetchTransactions(1, filters.merchant)}
       />
 
       {/* Footer */}
-      <DashboardFooter text={`\u00A9 ${new Date().getFullYear()} TX Pay Partner Portal. Todos los derechos reservados.`} />
+      <DashboardFooter text={t('partner:footer', { year: new Date().getFullYear() })} />
     </div>
   );
 }

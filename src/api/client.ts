@@ -43,6 +43,10 @@ export interface PaginationParams {
   limit?: number;
 }
 
+export interface ListParams extends PaginationParams {
+  [key: string]: string | number | boolean | undefined;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -57,7 +61,7 @@ export interface PaginatedResponse<T> {
 
 // Admin Users
 export const adminUsersApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ListParams) =>
     client.get('/admin-users', { params }),
   get: (id: string) => client.get(`/admin-users/${id}`),
   create: (data: any) => client.post('/admin-users', data),
@@ -67,7 +71,7 @@ export const adminUsersApi = {
 
 // Merchants
 export const merchantsApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ListParams) =>
     client.get('/merchants', { params }),
   get: (id: string) => client.get(`/merchants/${id}`),
   getSecret: (id: string) => client.get<string>(`/merchants/${id}/secret`),
@@ -80,7 +84,7 @@ export const merchantsApi = {
 
 // Transactions
 export const transactionsApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ListParams) =>
     client.get('/transactions', { params }),
   get: (id: string) => client.get(`/transactions/${id}`),
   create: (data: any, merchantId?: string) =>
@@ -94,7 +98,7 @@ export const transactionsApi = {
 
 // Partners
 export const partnersApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ListParams) =>
     client.get('/partners', { params }),
   get: (id: string) => client.get(`/partners/${id}`),
   create: (data: any) => client.post('/partners', data),
@@ -104,9 +108,9 @@ export const partnersApi = {
 
 // Partner Users
 export const partnerUsersApi = {
-  list: (params?: PaginationParams) =>
+  list: (params?: ListParams) =>
     client.get('/partner-users', { params }),
-  listByPartner: (partnerId: string, params?: PaginationParams) =>
+  listByPartner: (partnerId: string, params?: ListParams) =>
     client.get(`/partner-users/by-partner/${partnerId}`, { params }),
   get: (id: string) => client.get(`/partner-users/${id}`),
   create: (data: any) => client.post('/partner-users', data),
