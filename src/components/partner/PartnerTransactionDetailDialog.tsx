@@ -88,15 +88,32 @@ export function PartnerTransactionDetailDialog({ transaction, merchantName, open
                 </div>
               </div>
               {item.financials?.fee_snapshot && (
-                <div className="mt-2 bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40">
+                <div className="mt-2 bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40 space-y-1">
                   <p>
-                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.feeFixed')}</span>{' '}
+                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.feeFixed')}:</span>{' '}
                     {getDecimalValue(item.financials.fee_snapshot.fixed)}
                   </p>
                   <p>
-                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.feePercentage')}</span>{' '}
+                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.feePercentage')}:</span>{' '}
                     {getDecimalValue(item.financials.fee_snapshot.percentage)}%
                   </p>
+                  <p>
+                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.ivaPercentage')}:</span>{' '}
+                    {getDecimalValue(item.financials.fee_snapshot.iva_percentage || 0)}%
+                  </p>
+                  <p>
+                    <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.ivaAmount')}:</span>{' '}
+                    {formatCurrency(getDecimalValue(item.financials.fee_snapshot.iva_amount || 0), item.financials.currency)}
+                  </p>
+                  <div className="pt-1 mt-1 border-t border-zinc-200/60 dark:border-zinc-700/40">
+                    <p className="font-medium">
+                      <span className="text-zinc-500">{t('partner:dialogs.transactionDetail.totalFee')}:</span>{' '}
+                      {formatCurrency(
+                        getDecimalValue(item.financials.amount_gross) - getDecimalValue(item.financials.amount_net || 0),
+                        item.financials.currency
+                      )}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>

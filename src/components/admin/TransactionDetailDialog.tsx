@@ -83,9 +83,20 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: an
                 </div>
               </div>
               {item.financials?.fee_snapshot && (
-                <div className="mt-2 bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40">
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feeFixed')}</span> {item.financials.fee_snapshot.fixed?.$numberDecimal || item.financials.fee_snapshot.fixed || 0}</p>
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feePercentage')}</span> {item.financials.fee_snapshot.percentage?.$numberDecimal || item.financials.fee_snapshot.percentage || 0}%</p>
+                <div className="mt-2 bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40 space-y-1">
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feeFixed')}:</span> {item.financials.fee_snapshot.fixed?.$numberDecimal || item.financials.fee_snapshot.fixed || 0}</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feePercentage')}:</span> {item.financials.fee_snapshot.percentage?.$numberDecimal || item.financials.fee_snapshot.percentage || 0}%</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaPercentage')}:</span> {item.financials.fee_snapshot.iva_percentage?.$numberDecimal || item.financials.fee_snapshot.iva_percentage || 0}%</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaAmount')}:</span> {item.financials?.currency} {item.financials.fee_snapshot.iva_amount?.$numberDecimal || item.financials.fee_snapshot.iva_amount || 0}</p>
+                  <div className="pt-1 mt-1 border-t border-zinc-200/60 dark:border-zinc-700/40">
+                    <p className="font-medium"><span className="text-zinc-500">{t('dialogs.transactionDetail.totalFee')}:</span> {item.financials?.currency} {
+                      (() => {
+                        const gross = parseFloat(item.financials?.amount_gross?.$numberDecimal || item.financials?.amount_gross || 0);
+                        const net = parseFloat(item.financials?.amount_net?.$numberDecimal || item.financials?.amount_net || 0);
+                        return (gross - net).toFixed(2);
+                      })()
+                    }</p>
+                  </div>
                 </div>
               )}
             </div>

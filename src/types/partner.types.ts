@@ -89,6 +89,8 @@ export interface PartnerTransaction {
     fee_snapshot?: {
       fixed: MongoDecimal;
       percentage: MongoDecimal;
+      iva_percentage?: MongoDecimal;
+      iva_amount?: MongoDecimal;
     };
   };
   external_reference?: string;
