@@ -82,6 +82,11 @@ export const partnerTransactionsApi = {
       '/transactions/my-transactions',
       { params }
     ),
+  exportMyTransactions: (params?: Record<string, string>) =>
+    partnerClient.get('/transactions/my-transactions/export', {
+      params,
+      responseType: 'blob',
+    }),
   getByMerchant: (merchantId: string, params?: PaginationParams) =>
     partnerClient.get<PaginatedResponse<PartnerTransaction>>(
       `/transactions/by-merchant/${merchantId}`,

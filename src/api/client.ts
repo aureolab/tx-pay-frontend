@@ -94,6 +94,8 @@ export const transactionsApi = {
   capture: (id: string) => client.post(`/transactions/${id}/capture`),
   refund: (id: string) => client.post(`/transactions/${id}/refund`),
   void: (id: string) => client.post(`/transactions/${id}/void`),
+  export: (params?: Record<string, string>) =>
+    client.get('/transactions/export', { params, responseType: 'blob' }),
 };
 
 // Partners
@@ -129,4 +131,5 @@ export const healthApi = {
 export const systemConfigApi = {
   get: () => client.get('/system-config'),
   update: (data: any) => client.patch('/system-config', data),
+  getDefaultExportColumns: () => client.get('/system-config/default-export-columns'),
 };

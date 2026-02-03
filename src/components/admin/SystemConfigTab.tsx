@@ -13,16 +13,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Check, Plus, Trash2, Settings, Shield } from 'lucide-react';
+import { AlertCircle, Check, Plus, Trash2, Settings, Shield, FileSpreadsheet, RotateCcw, DollarSign } from 'lucide-react';
+import { PaymentMethods } from '@/lib/constants';
 
 interface AcquirerDefault {
   provider: string;
   config: any;
 }
 
+interface PricingRuleDefault {
+  method: string;
+  fixed: number;
+  percentage: number;
+}
+
+interface ExportColumn {
+  key: string;
+  label: string;
+  path: string;
+  type: string;
+}
+
 interface SystemConfig {
   iva_percentage: number;
   acquirer_defaults: AcquirerDefault[];
+  pricing_rules_defaults: PricingRuleDefault[];
+  export_columns: ExportColumn[];
 }
 
 const AVAILABLE_PROVIDERS = ['WEBPAY', 'VITA_WALLET'];
@@ -33,6 +49,8 @@ export function SystemConfigTab() {
   const [config, setConfig] = useState<SystemConfig>({
     iva_percentage: 19,
     acquirer_defaults: [],
+    pricing_rules_defaults: [],
+    export_columns: [],
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,6 +69,8 @@ export function SystemConfigTab() {
       setConfig({
         iva_percentage: res.data.iva_percentage ?? 19,
         acquirer_defaults: res.data.acquirer_defaults ?? [],
+        pricing_rules_defaults: res.data.pricing_rules_defaults ?? [],
+        export_columns: res.data.export_columns ?? [],
       });
     } catch (err: any) {
       setError(err.response?.data?.message || t('admin:configuration.loadError'));
@@ -72,6 +92,8 @@ export function SystemConfigTab() {
       await systemConfigApi.update({
         iva_percentage: config.iva_percentage,
         acquirer_defaults: parsedDefaults,
+        pricing_rules_defaults: config.pricing_rules_defaults,
+        export_columns: config.export_columns,
       });
       setSuccess(t('admin:configuration.saved'));
       setTimeout(() => setSuccess(''), 3000);
@@ -117,6 +139,80 @@ export function SystemConfigTab() {
   };
 
   const usedProviders = config.acquirer_defaults.map((d) => d.provider);
+
+  const addPricingDefault = () => {
+    setConfig((prev) => ({
+      ...prev,
+      pricing_rules_defaults: [
+        ...prev.pricing_rules_defaults,
+        { method: '', fixed: 0, percentage: 0 },
+      ],
+    }));
+  };
+
+  const removePricingDefault = (index: number) => {
+    setConfig((prev) => ({
+      ...prev,
+      pricing_rules_defaults: prev.pricing_rules_defaults.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updatePricingDefault = (
+    index: number,
+    field: keyof PricingRuleDefault,
+    value: string | number,
+  ) => {
+    setConfig((prev) => ({
+      ...prev,
+      pricing_rules_defaults: prev.pricing_rules_defaults.map((d, i) =>
+        i === index ? { ...d, [field]: value } : d,
+      ),
+    }));
+  };
+
+  const usedMethods = config.pricing_rules_defaults.map((d) => d.method);
+
+  const addExportColumn = () => {
+    setConfig((prev) => ({
+      ...prev,
+      export_columns: [
+        ...prev.export_columns,
+        { key: '', label: '', path: '', type: 'string' },
+      ],
+    }));
+  };
+
+  const removeExportColumn = (index: number) => {
+    setConfig((prev) => ({
+      ...prev,
+      export_columns: prev.export_columns.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateExportColumn = (
+    index: number,
+    field: keyof ExportColumn,
+    value: string,
+  ) => {
+    setConfig((prev) => ({
+      ...prev,
+      export_columns: prev.export_columns.map((col, i) =>
+        i === index ? { ...col, [field]: value } : col,
+      ),
+    }));
+  };
+
+  const restoreDefaultColumns = async () => {
+    try {
+      const res = await systemConfigApi.getDefaultExportColumns();
+      setConfig((prev) => ({
+        ...prev,
+        export_columns: res.data,
+      }));
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error loading default columns');
+    }
+  };
 
   if (loading) {
     return (
@@ -271,6 +367,207 @@ export function SystemConfigTab() {
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Pricing Rules Defaults */}
+      <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-900 dark:text-white">{t('admin:configuration.pricingDefaults.title')}</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.pricingDefaults.description')}</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addPricingDefault}
+            disabled={usedMethods.length >= PaymentMethods.length}
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            {t('admin:configuration.pricingDefaults.add')}
+          </Button>
+        </div>
+
+        <div className="p-6">
+          {config.pricing_rules_defaults.length === 0 ? (
+            <p className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-sm">
+              {t('admin:configuration.pricingDefaults.noDefaults')}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {config.pricing_rules_defaults.map((rule, index) => (
+                <div
+                  key={index}
+                  className="p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-700/40 bg-zinc-50/50 dark:bg-zinc-800/30"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {t('admin:configuration.pricingDefaults.method')}
+                      </Label>
+                      <Select
+                        value={rule.method}
+                        onValueChange={(value) => updatePricingDefault(index, 'method', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={t('admin:configuration.pricingDefaults.selectMethod')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PaymentMethods.filter(
+                            (m) => !usedMethods.includes(m) || m === rule.method,
+                          ).map((m) => (
+                            <SelectItem key={m} value={m}>
+                              <Badge variant="outline" className="text-xs">{m}</Badge>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-36">
+                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {t('admin:configuration.pricingDefaults.fixed')}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={rule.fixed}
+                        onChange={(e) => updatePricingDefault(index, 'fixed', parseFloat(e.target.value) || 0)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="w-36">
+                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {t('admin:configuration.pricingDefaults.percentage')}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={rule.percentage}
+                        onChange={(e) => updatePricingDefault(index, 'percentage', parseFloat(e.target.value) || 0)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removePricingDefault(index)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 mt-5"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Export Columns */}
+      <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-900 dark:text-white">{t('admin:configuration.exportColumns.title')}</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.description')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={restoreDefaultColumns}
+              className="gap-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              {t('admin:configuration.exportColumns.restoreDefaults')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={addExportColumn}
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {t('admin:configuration.exportColumns.addColumn')}
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {config.export_columns.length === 0 ? (
+            <p className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-sm">
+              {t('admin:configuration.exportColumns.noColumns')}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 px-2 pb-2 border-b border-zinc-200/50 dark:border-zinc-700/50">
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.key')}</span>
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.label')}</span>
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.path')}</span>
+                <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.type')}</span>
+                <span />
+              </div>
+              {config.export_columns.map((col, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 items-center"
+                >
+                  <Input
+                    value={col.key}
+                    onChange={(e) => updateExportColumn(index, 'key', e.target.value)}
+                    placeholder="transaction_id"
+                    className="h-8 text-sm"
+                  />
+                  <Input
+                    value={col.label}
+                    onChange={(e) => updateExportColumn(index, 'label', e.target.value)}
+                    placeholder="ID Transacción"
+                    className="h-8 text-sm"
+                  />
+                  <Input
+                    value={col.path}
+                    onChange={(e) => updateExportColumn(index, 'path', e.target.value)}
+                    placeholder="_id"
+                    className="h-8 text-sm font-mono"
+                  />
+                  <Select
+                    value={col.type}
+                    onValueChange={(value) => updateExportColumn(index, 'type', value)}
+                  >
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="string">string</SelectItem>
+                      <SelectItem value="decimal">decimal</SelectItem>
+                      <SelectItem value="date">date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeExportColumn(index)}
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               ))}
             </div>

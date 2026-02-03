@@ -41,7 +41,9 @@
       "merchant": "Merchant",
       "date": "Date"
     },
-    "noResults": "No transactions"
+    "noResults": "No transactions",
+    "export": "Export Excel",
+    "exporting": "Exporting..."
   },
   "users": {
     "title": "Client Users",
@@ -68,7 +70,8 @@
   "errors": {
     "loadMerchants": "Failed to load merchants",
     "loadTransactions": "Failed to load transactions",
-    "loadUsers": "Failed to load users"
+    "loadUsers": "Failed to load users",
+    "exportFailed": "Failed to export transactions"
   },
   "dialogs": {
     "common": {

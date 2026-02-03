@@ -37,7 +37,7 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     fantasy_name: '',
-    business_name: '',
+    legal_name: '',
     tax_id: '',
     contact_name: '',
     contact_email: '',
@@ -49,7 +49,7 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
     if (item) {
       setFormData({
         fantasy_name: item.fantasy_name || '',
-        business_name: item.business_name || '',
+        legal_name: item.legal_name || '',
         tax_id: item.tax_id || '',
         contact_name: item.contact_name || '',
         contact_email: item.contact_email || '',
@@ -59,7 +59,7 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
     } else {
       setFormData({
         fantasy_name: '',
-        business_name: '',
+        legal_name: '',
         tax_id: '',
         contact_name: '',
         contact_email: '',
@@ -77,7 +77,7 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
     try {
       const payload: any = {
         fantasy_name: formData.fantasy_name,
-        business_name: formData.business_name,
+        legal_name: formData.legal_name,
         tax_id: formData.tax_id,
         contact_name: formData.contact_name,
         contact_email: formData.contact_email,
@@ -149,8 +149,8 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
               </Label>
               <Input
                 id="partner-business"
-                value={formData.business_name}
-                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                value={formData.legal_name}
+                onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
                 placeholder={t('dialogs.partner.placeholderBusiness')}
                 required
                 className={inputClass}
@@ -160,14 +160,13 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
 
           <div className="space-y-1.5">
             <Label htmlFor="partner-tax" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-              {t('dialogs.partner.taxId')} {t('dialogs.common.required')}
+              {t('dialogs.partner.taxId')}
             </Label>
             <Input
               id="partner-tax"
               value={formData.tax_id}
               onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
               placeholder={t('dialogs.partner.placeholderTaxId')}
-              required
               className={inputClass}
             />
           </div>

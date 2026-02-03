@@ -57,7 +57,10 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertCircle,
+  Ban,
+  CheckCircle,
   Database,
+  Download,
   Handshake,
   Plus,
   Eye,
@@ -71,6 +74,7 @@ import {
   RefreshCw,
   Settings,
 } from 'lucide-react';
+import { downloadBlob } from '@/lib/downloadFile';
 
 export default function Dashboard() {
   const { t, i18n } = useTranslation(['admin', 'common']);
@@ -90,6 +94,7 @@ export default function Dashboard() {
   const [partners, setPartners] = useState<any[]>([]);
   const [allPartners, setAllPartners] = useState<any[]>([]);
 
+  const [counts, setCounts] = useState({ partners: 0, merchants: 0, transactions: 0, admins: 0 });
   const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -112,6 +117,7 @@ export default function Dashboard() {
   const [createTxMerchant, setCreateTxMerchant] = useState<any>(null);
 
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [exporting, setExporting] = useState(false);
 
   const partnerMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -154,6 +160,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     healthApi.check().then(res => setHealth(res.data)).catch(() => {});
+    // Load all counts in parallel on mount
+    Promise.all([
+      partnersApi.list({ page: 1, limit: 1 }),
+      merchantsApi.list({ page: 1, limit: 1 }),
+      transactionsApi.list({ page: 1, limit: 1 }),
+      adminUsersApi.list({ page: 1, limit: 1 }),
+    ]).then(([pRes, mRes, tRes, aRes]) => {
+      setCounts({
+        partners: (pRes.data as PaginatedResponse<any>).meta.total,
+        merchants: (mRes.data as PaginatedResponse<any>).meta.total,
+        transactions: (tRes.data as PaginatedResponse<any>).meta.total,
+        admins: (aRes.data as PaginatedResponse<any>).meta.total,
+      });
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -170,6 +190,7 @@ export default function Dashboard() {
         const data = res.data as PaginatedResponse<any>;
         setPartners(data.data);
         setMeta(data.meta);
+        setCounts(prev => ({ ...prev, partners: data.meta.total }));
       } else if (tab === 'merchants') {
         const [merchRes, partnersRes] = await Promise.all([
           merchantsApi.list(params),
@@ -178,17 +199,20 @@ export default function Dashboard() {
         const data = merchRes.data as PaginatedResponse<any>;
         setMerchants(data.data);
         setMeta(data.meta);
+        setCounts(prev => ({ ...prev, merchants: data.meta.total }));
         setAllPartners((partnersRes.data as PaginatedResponse<any>).data);
       } else if (tab === 'transactions') {
         const res = await transactionsApi.list(params);
         const data = res.data as PaginatedResponse<any>;
         setTransactions(data.data);
         setMeta(data.meta);
+        setCounts(prev => ({ ...prev, transactions: data.meta.total }));
       } else if (tab === 'admins') {
         const res = await adminUsersApi.list(params);
         const data = res.data as PaginatedResponse<any>;
         setAdmins(data.data);
         setMeta(data.meta);
+        setCounts(prev => ({ ...prev, admins: data.meta.total }));
       }
     } catch (err: any) {
       setError(err.response?.data?.message || t('admin:errors.loadFailed'));
@@ -274,6 +298,26 @@ export default function Dashboard() {
     setPartnerDialogOpen(true);
   };
 
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const exportFilters: Record<string, string> = {};
+      if (filters.status) exportFilters.status = filters.status as string;
+      if (filters.payment_method) exportFilters.payment_method = filters.payment_method as string;
+      if (filters.currency) exportFilters.currency = filters.currency as string;
+      if (filters.dateFrom) exportFilters.dateFrom = filters.dateFrom as string;
+      if (filters.dateTo) exportFilters.dateTo = filters.dateTo as string;
+
+      const res = await transactionsApi.export(exportFilters);
+      const filename = `transactions_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      downloadBlob(new Blob([res.data]), filename);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('admin:errors.exportFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const openCreateMerchant = () => {
     setEditingMerchant(null);
     setMerchantDialogOpen(true);
@@ -336,41 +380,34 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <StatsCard
             icon={Handshake}
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
             iconColorClass="text-amber-600 dark:text-amber-400"
             label={t('admin:stats.partners')}
-            value={tab === 'partners' ? meta.total : '-'}
+            value={counts.partners}
           />
           <StatsCard
             icon={Store}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
             iconColorClass="text-blue-600 dark:text-blue-400"
             label={t('admin:stats.merchants')}
-            value={tab === 'merchants' ? meta.total : '-'}
+            value={counts.merchants}
           />
           <StatsCard
             icon={TrendingUp}
             iconBgClass="from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10"
             iconColorClass="text-emerald-600 dark:text-emerald-400"
             label={t('admin:stats.transactions')}
-            value={tab === 'transactions' ? meta.total : '-'}
+            value={counts.transactions}
           />
           <StatsCard
             icon={Users}
             iconBgClass="from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10"
             iconColorClass="text-purple-600 dark:text-purple-400"
             label={t('admin:stats.adminUsers')}
-            value={tab === 'admins' ? meta.total : '-'}
-          />
-          <StatsCard
-            icon={Settings}
-            iconBgClass="from-zinc-500/20 to-slate-500/20 dark:from-zinc-500/10 dark:to-slate-500/10"
-            iconColorClass="text-zinc-600 dark:text-zinc-400"
-            label={t('admin:stats.configuration')}
-            value="-"
+            value={counts.admins}
           />
         </div>
 
@@ -469,7 +506,7 @@ export default function Dashboard() {
                             <TableCell className="font-medium text-zinc-900 dark:text-white">
                               {p.fantasy_name}
                             </TableCell>
-                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.business_name}</TableCell>
+                            <TableCell className="text-zinc-600 dark:text-zinc-400">{p.legal_name}</TableCell>
                             <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_email}</TableCell>
                             <TableCell className="text-zinc-600 dark:text-zinc-400">{p.contact_phone || '-'}</TableCell>
                             <TableCell>
@@ -621,6 +658,26 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex gap-1 justify-end">
+                                {m.status === 'REVIEW' && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={async () => { await merchantsApi.update(m._id, { status: 'ACTIVE' }); loadData(); }}
+                                      className="h-8 w-8 p-0 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border-emerald-200 dark:border-emerald-900/50"
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={async () => { await merchantsApi.update(m._id, { status: 'BLOCKED' }); loadData(); }}
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50"
+                                    >
+                                      <Ban className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -698,14 +755,25 @@ export default function Dashboard() {
                 <h3 className="font-semibold text-zinc-900 dark:text-white">
                   {t('admin:transactions.title', { total: meta.total })}
                 </h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => loadData()}
-                  className="gap-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData()}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleExportExcel}
+                    disabled={exporting}
+                    className="gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-md shadow-emerald-500/20"
+                  >
+                    <Download className="h-4 w-4" />
+                    {exporting ? t('admin:transactions.exporting') : t('admin:transactions.export')}
+                  </Button>
+                </div>
               </div>
               <FilterBar
                 config={filterConfigs.transactions}

@@ -60,6 +60,7 @@ import {
   Building2,
   Store,
   CreditCard,
+  Download,
   TrendingUp,
   Plus,
   AlertCircle,
@@ -71,6 +72,7 @@ import {
   KeyRound,
   Trash2,
 } from 'lucide-react';
+import { downloadBlob } from '@/lib/downloadFile';
 
 export default function PartnerDashboard() {
   const { t, i18n } = useTranslation(['partner', 'common']);
@@ -91,6 +93,8 @@ export default function PartnerDashboard() {
   const [meta, setMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [usersMeta, setUsersMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
+  const [counts, setCounts] = useState({ merchants: 0, activeMerchants: 0, transactions: 0, users: 0 });
+
   // UI states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -105,10 +109,45 @@ export default function PartnerDashboard() {
   const [selectedTransaction, setSelectedTransaction] = useState<PartnerTransaction | null>(null);
   const [transactionDetailOpen, setTransactionDetailOpen] = useState(false);
 
+  const [exporting, setExporting] = useState(false);
+
   // User management dialog states
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<PartnerClientUser | null>(null);
   const [changePasswordUser, setChangePasswordUser] = useState<PartnerClientUser | null>(null);
+
+  // Load all counts on mount
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        const [mRes, tRes] = await Promise.all([
+          partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }),
+          partnerTransactionsApi.getMyTransactions({ page: 1, limit: 1 }),
+        ]);
+        const merchantsData = mRes.data.data as PartnerMerchant[];
+        const activeMerch = merchantsData.filter((m) => m.status === 'ACTIVE').length;
+        setCounts(prev => ({
+          ...prev,
+          merchants: merchantsData.length,
+          activeMerchants: activeMerch,
+          transactions: mRes.data.meta ? mRes.data.meta.total : merchantsData.length,
+        }));
+        setCounts(prev => ({
+          ...prev,
+          transactions: (tRes.data as any).meta.total,
+        }));
+        // Also populate merchants array for filter dropdown
+        setMerchants(merchantsData);
+      } catch { /* ignore */ }
+      if (isPartnerType) {
+        try {
+          const uRes = await partnerPortalUsersApi.list({ page: 1, limit: 1 });
+          setCounts(prev => ({ ...prev, users: (uRes.data as any).meta.total }));
+        } catch { /* ignore */ }
+      }
+    };
+    loadCounts();
+  }, [isPartnerType]);
 
   // Merchant options for transaction filter
   const merchantOptions = useMemo(
@@ -137,6 +176,12 @@ export default function PartnerDashboard() {
       const res = await partnerMerchantsApi.getMyMerchants({ page: pageNum, limit: 10 });
       setMerchants(res.data.data);
       setMeta(res.data.meta);
+      const allData = res.data.data as PartnerMerchant[];
+      setCounts(prev => ({
+        ...prev,
+        merchants: res.data.meta.total,
+        activeMerchants: allData.filter((m) => m.status === 'ACTIVE').length,
+      }));
     } catch (err: any) {
       setError(err.response?.data?.message || t('partner:errors.loadMerchants'));
     }
@@ -153,6 +198,7 @@ export default function PartnerDashboard() {
       }
       setTransactions(res.data.data);
       setMeta(res.data.meta);
+      setCounts(prev => ({ ...prev, transactions: res.data.meta.total }));
     } catch (err: any) {
       setError(err.response?.data?.message || t('partner:errors.loadTransactions'));
     }
@@ -165,6 +211,7 @@ export default function PartnerDashboard() {
       const res = await partnerPortalUsersApi.list({ page: pageNum, limit: 10 });
       setClientUsers(res.data.data);
       setUsersMeta(res.data.meta);
+      setCounts(prev => ({ ...prev, users: res.data.meta.total }));
     } catch (err: any) {
       setError(err.response?.data?.message || t('partner:errors.loadUsers'));
     }
@@ -220,6 +267,26 @@ export default function PartnerDashboard() {
     setTransactionDetailOpen(true);
   };
 
+  // Export transactions to Excel
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      const exportFilters: Record<string, string> = {};
+      if (filters.status) exportFilters.status = filters.status as string;
+      if (filters.payment_method) exportFilters.payment_method = filters.payment_method as string;
+      if (filters.dateFrom) exportFilters.dateFrom = filters.dateFrom as string;
+      if (filters.dateTo) exportFilters.dateTo = filters.dateTo as string;
+
+      const res = await partnerTransactionsApi.exportMyTransactions(exportFilters);
+      const filename = `transactions_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      downloadBlob(new Blob([res.data]), filename);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('partner:errors.exportFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // Delete client user
   const handleDeleteUser = async (userId: string) => {
     try {
@@ -229,9 +296,6 @@ export default function PartnerDashboard() {
       setError(err.response?.data?.message || t('partner:dialogs.deleteUser.error'));
     }
   };
-
-  // Stats calculations
-  const activeMerchants = merchants.filter((m) => m.status === 'ACTIVE').length;
 
   // Get merchant name by ID
   const getMerchantName = (merchantId: string): string => {
@@ -320,21 +384,21 @@ export default function PartnerDashboard() {
             iconBgClass="from-amber-500/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-500/10"
             iconColorClass="text-amber-600 dark:text-amber-400"
             label={t('partner:stats.totalMerchants')}
-            value={merchants.length}
+            value={counts.merchants}
           />
           <StatsCard
             icon={TrendingUp}
             iconBgClass="from-emerald-500/20 to-green-500/20 dark:from-emerald-500/10 dark:to-green-500/10"
             iconColorClass="text-emerald-600 dark:text-emerald-400"
             label={t('partner:stats.activeMerchants')}
-            value={activeMerchants}
+            value={counts.activeMerchants}
           />
           <StatsCard
             icon={CreditCard}
             iconBgClass="from-blue-500/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-500/10"
             iconColorClass="text-blue-600 dark:text-blue-400"
             label={t('partner:stats.totalTransactions')}
-            value={tab === 'transactions' ? meta.total : '-'}
+            value={counts.transactions}
           />
           {isPartnerType && (
             <StatsCard
@@ -342,7 +406,7 @@ export default function PartnerDashboard() {
               iconBgClass="from-purple-500/20 to-violet-500/20 dark:from-purple-500/10 dark:to-violet-500/10"
               iconColorClass="text-purple-600 dark:text-purple-400"
               label={t('partner:stats.totalUsers')}
-              value={tab === 'users' ? usersMeta.total : '-'}
+              value={counts.users}
             />
           )}
         </div>
@@ -488,14 +552,25 @@ export default function PartnerDashboard() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
               <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">{t('partner:transactions.title')}</h3>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchTransactions(page, filters.merchant)}
-                  className="gap-2 shrink-0"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchTransactions(page, filters.merchant)}
+                    className="gap-2 shrink-0"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleExportExcel}
+                    disabled={exporting}
+                    className="gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-md shadow-emerald-500/20"
+                  >
+                    <Download className="h-4 w-4" />
+                    {exporting ? t('partner:transactions.exporting') : t('partner:transactions.export')}
+                  </Button>
+                </div>
               </div>
               <FilterBar
                 config={filterConfigs.transactions}

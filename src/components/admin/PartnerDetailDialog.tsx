@@ -130,10 +130,10 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
   }, [open, item?._id, innerTab, loadUsers]);
 
   useEffect(() => {
-    if (open && item?._id && innerTab === 'merchants') {
+    if (open && item?._id) {
       loadMerchants();
     }
-  }, [open, item?._id, innerTab, loadMerchants]);
+  }, [open, item?._id, loadMerchants]);
 
   const handleDeleteUser = async (id: string) => {
     try {
@@ -188,7 +188,7 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
                 </div>
                 <div>
                   <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.businessName')}</Label>
-                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.business_name || '-'}</p>
+                  <p className="font-medium text-zinc-900 dark:text-white mt-0.5">{item.legal_name || '-'}</p>
                 </div>
                 <div>
                   <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.partnerDetail.taxId')}</Label>

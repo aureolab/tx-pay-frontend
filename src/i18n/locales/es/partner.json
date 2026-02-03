@@ -41,7 +41,9 @@
       "merchant": "Comercio",
       "date": "Fecha"
     },
-    "noResults": "No hay transacciones"
+    "noResults": "No hay transacciones",
+    "export": "Exportar Excel",
+    "exporting": "Exportando..."
   },
   "users": {
     "title": "Usuarios Cliente",
@@ -68,7 +70,8 @@
   "errors": {
     "loadMerchants": "Error al cargar comercios",
     "loadTransactions": "Error al cargar transacciones",
-    "loadUsers": "Error al cargar usuarios"
+    "loadUsers": "Error al cargar usuarios",
+    "exportFailed": "Error al exportar transacciones"
   },
   "dialogs": {
     "common": {

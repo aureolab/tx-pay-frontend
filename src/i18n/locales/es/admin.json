@@ -38,7 +38,29 @@
     "saving": "Guardando...",
     "saved": "Configuracion guardada exitosamente",
     "error": "Error al guardar configuracion",
-    "loadError": "Error al cargar configuracion"
+    "loadError": "Error al cargar configuracion",
+    "pricingDefaults": {
+      "title": "Reglas de Fee Base",
+      "description": "Reglas de comision base por metodo de pago. Se usan cuando un comercio no tiene regla propia para un metodo dado.",
+      "method": "Metodo de Pago",
+      "fixed": "Fee Fijo",
+      "percentage": "Porcentaje (%)",
+      "add": "Agregar Regla",
+      "remove": "Eliminar",
+      "noDefaults": "Sin reglas de fee base configuradas.",
+      "selectMethod": "Seleccionar metodo..."
+    },
+    "exportColumns": {
+      "title": "Configuracion de Columnas de Exportacion",
+      "description": "Configura que columnas aparecen en el archivo Excel exportado.",
+      "key": "Clave",
+      "label": "Etiqueta",
+      "path": "Ruta de Dato",
+      "type": "Tipo",
+      "addColumn": "Agregar Columna",
+      "restoreDefaults": "Restaurar Predeterminados",
+      "noColumns": "Sin columnas de exportacion configuradas."
+    }
   },
   "partners": {
     "title": "Partners ({{total}} total)",
@@ -82,7 +104,9 @@
     "noResults": "No se encontraron transacciones",
     "capture": "Capturar",
     "void": "Anular",
-    "refund": "Reembolsar"
+    "refund": "Reembolsar",
+    "export": "Exportar Excel",
+    "exporting": "Exportando..."
   },
   "admins": {
     "title": "Administradores ({{total}} total)",
@@ -114,7 +138,8 @@
   "errors": {
     "loadFailed": "Error al cargar datos",
     "deleteFailed": "Error al eliminar",
-    "actionFailed": "Error al {{action}}"
+    "actionFailed": "Error al {{action}}",
+    "exportFailed": "Error al exportar transacciones"
   },
   "footer": "\u00a9 {{year}} TX Pay Panel Admin. Todos los derechos reservados.",
   "dialogs": {

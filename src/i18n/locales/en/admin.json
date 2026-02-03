@@ -38,7 +38,29 @@
     "saving": "Saving...",
     "saved": "Configuration saved successfully",
     "error": "Error saving configuration",
-    "loadError": "Error loading configuration"
+    "loadError": "Error loading configuration",
+    "pricingDefaults": {
+      "title": "Default Pricing Rules",
+      "description": "Base fee rules by payment method. Used when a merchant does not have its own pricing rule for a given method.",
+      "method": "Payment Method",
+      "fixed": "Fixed Fee",
+      "percentage": "Percentage (%)",
+      "add": "Add Rule",
+      "remove": "Remove",
+      "noDefaults": "No default pricing rules configured.",
+      "selectMethod": "Select method..."
+    },
+    "exportColumns": {
+      "title": "Export Columns Configuration",
+      "description": "Configure which columns appear in the exported Excel file.",
+      "key": "Key",
+      "label": "Label",
+      "path": "Data Path",
+      "type": "Type",
+      "addColumn": "Add Column",
+      "restoreDefaults": "Restore Defaults",
+      "noColumns": "No export columns configured."
+    }
   },
   "partners": {
     "title": "Partners ({{total}} total)",
@@ -82,7 +104,9 @@
     "noResults": "No transactions found",
     "capture": "Capture",
     "void": "Void",
-    "refund": "Refund"
+    "refund": "Refund",
+    "export": "Export Excel",
+    "exporting": "Exporting..."
   },
   "admins": {
     "title": "Admin Users ({{total}} total)",
@@ -114,7 +138,8 @@
   "errors": {
     "loadFailed": "Failed to load data",
     "deleteFailed": "Delete failed",
-    "actionFailed": "{{action}} failed"
+    "actionFailed": "{{action}} failed",
+    "exportFailed": "Failed to export transactions"
   },
   "footer": "\u00a9 {{year}} TX Pay Admin Panel. All rights reserved.",
   "dialogs": {
