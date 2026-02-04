@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
-import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, healthApi, type PaginatedResponse } from '../api/client';
+import { useAuth } from '../../context/AuthContext';
+import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, healthApi, type PaginatedResponse } from '../../api/client';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
   getStatusConfig,
@@ -22,15 +22,17 @@ import { StatsCard } from '@/components/shared/StatsCard';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { TableSkeleton } from '@/components/shared/TableSkeleton';
 
-import { AdminUserDialog } from '@/components/admin/AdminUserDialog';
-import { AdminDetailDialog } from '@/components/admin/AdminDetailDialog';
-import { MerchantDialog } from '@/components/admin/MerchantDialog';
-import { MerchantDetailDialog } from '@/components/admin/MerchantDetailDialog';
-import { CreateTransactionDialog } from '@/components/admin/CreateTransactionDialog';
-import { TransactionDetailDialog } from '@/components/admin/TransactionDetailDialog';
-import { PartnerDialog } from '@/components/admin/PartnerDialog';
-import { PartnerDetailDialog } from '@/components/admin/PartnerDetailDialog';
-import { SystemConfigTab } from '@/components/admin/SystemConfigTab';
+import { AdminUserDialog } from '@/components/administration/AdminUserDialog';
+import { AdminDetailDialog } from '@/components/administration/AdminDetailDialog';
+import { MerchantDialog } from '@/components/administration/MerchantDialog';
+import { MerchantDetailDialog } from '@/components/administration/MerchantDetailDialog';
+import { CreateTransactionDialog } from '@/components/administration/CreateTransactionDialog';
+import { TransactionDetailDialog } from '@/components/administration/TransactionDetailDialog';
+import { PartnerDialog } from '@/components/administration/PartnerDialog';
+import { PartnerDetailDialog } from '@/components/administration/PartnerDetailDialog';
+import { SystemConfigTab } from '@/components/administration/SystemConfigTab';
+import { ResetPasswordDialog } from '@/components/administration/ResetPasswordDialog';
+import { ChangeMyPasswordDialog } from '@/components/administration/ChangeMyPasswordDialog';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +75,7 @@ import {
   Users,
   RefreshCw,
   Settings,
+  KeyRound,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
 
@@ -118,6 +121,10 @@ export default function Dashboard() {
 
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
+
+  // Password dialogs
+  const [resetPasswordAdmin, setResetPasswordAdmin] = useState<any>(null);
+  const [changeMyPasswordOpen, setChangeMyPasswordOpen] = useState(false);
 
   const partnerMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -360,13 +367,25 @@ export default function Dashboard() {
         onLogout={logout}
         logoutLabel={t('admin:logout')}
         rightSlot={
-          <Badge
-            variant="outline"
-            className="hidden md:flex gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-          >
-            <Database className="h-3 w-3" />
-            {health?.details?.database?.status || 'checking...'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className="hidden md:flex gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+            >
+              <Database className="h-3 w-3" />
+              {health?.details?.database?.status || 'checking...'}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setChangeMyPasswordOpen(true)}
+              className="gap-2 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              title={t('admin:dialogs.changeMyPassword.title')}
+            >
+              <KeyRound className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('admin:dialogs.changeMyPassword.title')}</span>
+            </Button>
+          </div>
         }
       />
 
@@ -960,6 +979,7 @@ export default function Dashboard() {
                                   size="sm"
                                   onClick={() => setSelectedAdmin(a)}
                                   className="h-8 w-8 p-0"
+                                  title={t('common:buttons.view')}
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -968,8 +988,18 @@ export default function Dashboard() {
                                   size="sm"
                                   onClick={() => openEditAdmin(a)}
                                   className="h-8 w-8 p-0"
+                                  title={t('common:buttons.edit')}
                                 >
                                   <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setResetPasswordAdmin(a)}
+                                  className="h-8 w-8 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50 border-amber-200 dark:border-amber-900/50"
+                                  title={t('admin:dialogs.adminUser.resetPassword')}
+                                >
+                                  <KeyRound className="h-4 w-4" />
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -1039,6 +1069,19 @@ export default function Dashboard() {
         item={selectedAdmin}
         open={!!selectedAdmin}
         onOpenChange={(open) => !open && setSelectedAdmin(null)}
+      />
+      <ResetPasswordDialog
+        open={!!resetPasswordAdmin}
+        onOpenChange={(open) => !open && setResetPasswordAdmin(null)}
+        onSuccess={loadData}
+        userId={resetPasswordAdmin?._id || ''}
+        userName={resetPasswordAdmin?.full_name || resetPasswordAdmin?.email || ''}
+        userEmail={resetPasswordAdmin?.email || ''}
+        userType="admin"
+      />
+      <ChangeMyPasswordDialog
+        open={changeMyPasswordOpen}
+        onOpenChange={setChangeMyPasswordOpen}
       />
 
       {/* Merchant Dialogs */}

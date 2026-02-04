@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../context/AuthContext';
+import { usePartnerAuth } from '../../context/PartnerAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
-import { AlertCircle, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { AlertCircle, Building2, ArrowRight, Sparkles } from 'lucide-react';
 
-export default function Login() {
+export default function PartnerLogin() {
   const { t, i18n } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
-  const { login } = useAuth();
+  const { login } = usePartnerAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!localStorage.getItem('i18nextLng')) {
-      i18n.changeLanguage('en');
+      i18n.changeLanguage('es');
     }
   }, [i18n]);
 
@@ -32,26 +32,26 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/admin');
+      navigate('/partners');
     } catch (err: any) {
-      setError(err.response?.data?.message || t('form.loginFailed'));
+      setError(err.response?.data?.message || t('form.invalidCredentials'));
     } finally {
       setLoading(false);
     }
   };
 
-  const features = t('admin.features', { returnObjects: true }) as string[];
+  const features = t('partner.features', { returnObjects: true }) as string[];
 
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient mesh background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-sky-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950" />
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950" />
 
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 dark:from-blue-500/10 dark:to-indigo-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-        <div className="absolute top-1/2 -left-32 w-80 h-80 bg-gradient-to-tr from-sky-400/15 to-blue-500/15 dark:from-sky-500/5 dark:to-blue-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
-        <div className="absolute -bottom-20 right-1/4 w-72 h-72 bg-gradient-to-tl from-indigo-300/20 to-sky-400/20 dark:from-indigo-500/10 dark:to-sky-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-orange-500/20 dark:from-amber-500/10 dark:to-orange-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="absolute top-1/2 -left-32 w-80 h-80 bg-gradient-to-tr from-yellow-400/15 to-amber-500/15 dark:from-yellow-500/5 dark:to-amber-600/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
+        <div className="absolute -bottom-20 right-1/4 w-72 h-72 bg-gradient-to-tl from-orange-300/20 to-yellow-400/20 dark:from-orange-500/10 dark:to-yellow-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
 
         {/* Grid pattern overlay */}
         <div
@@ -75,8 +75,8 @@ export default function Login() {
         <div className="hidden lg:flex lg:w-1/2 flex-col justify-center px-16 xl:px-24">
           <div className="max-w-lg">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <ShieldCheck className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                <Building2 className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
                 TX Pay
@@ -84,14 +84,14 @@ export default function Login() {
             </div>
 
             <h1 className="text-5xl xl:text-6xl font-bold tracking-tight text-zinc-900 dark:text-white mb-6 leading-[1.1]">
-              {t('admin.title').split(' ').slice(0, -1).join(' ')}{' '}
-              <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-sky-500 dark:from-blue-400 dark:via-indigo-400 dark:to-sky-400 bg-clip-text text-transparent">
-                {t('admin.title').split(' ').slice(-1)[0]}
+              {t('partner.title').split(' ').slice(0, -1).join(' ')}{' '}
+              <span className="bg-gradient-to-r from-amber-600 via-orange-500 to-yellow-500 dark:from-amber-400 dark:via-orange-400 dark:to-yellow-400 bg-clip-text text-transparent">
+                {t('partner.title').split(' ').slice(-1)[0]}
               </span>
             </h1>
 
             <p className="text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed mb-12">
-              {t('admin.subtitle')}
+              {t('partner.subtitle')}
             </p>
 
             <div className="space-y-4">
@@ -105,7 +105,7 @@ export default function Login() {
                     opacity: 0
                   }}
                 >
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span>{feature}</span>
@@ -121,15 +121,15 @@ export default function Login() {
             {/* Mobile branding */}
             <div className="lg:hidden text-center mb-10">
               <div className="inline-flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <ShieldCheck className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xl font-semibold tracking-tight text-zinc-800 dark:text-zinc-100">
                   TX Pay
                 </span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                {t('admin.title')}
+                {t('partner.title')}
               </h1>
             </div>
 
@@ -137,10 +137,10 @@ export default function Login() {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-2xl shadow-zinc-900/10 dark:shadow-black/30 p-8 sm:p-10">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-2">
-                  {t('admin.welcome')}
+                  {t('partner.welcome')}
                 </h2>
                 <p className="text-zinc-600 dark:text-zinc-400">
-                  {t('admin.accessPanel')}
+                  {t('partner.accessPanel')}
                 </p>
               </div>
 
@@ -157,7 +157,7 @@ export default function Login() {
                     htmlFor="email"
                     className={`text-sm font-medium transition-colors duration-200 ${
                       focused === 'email'
-                        ? 'text-blue-600 dark:text-blue-400'
+                        ? 'text-amber-600 dark:text-amber-400'
                         : 'text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
@@ -166,13 +166,13 @@ export default function Login() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@txpay.com"
+                    placeholder="tu@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     onFocus={() => setFocused('email')}
                     onBlur={() => setFocused(null)}
                     required
-                    className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-200 placeholder:text-zinc-400"
+                    className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-all duration-200 placeholder:text-zinc-400"
                   />
                 </div>
 
@@ -181,7 +181,7 @@ export default function Login() {
                     htmlFor="password"
                     className={`text-sm font-medium transition-colors duration-200 ${
                       focused === 'password'
-                        ? 'text-blue-600 dark:text-blue-400'
+                        ? 'text-amber-600 dark:text-amber-400'
                         : 'text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
@@ -196,13 +196,13 @@ export default function Login() {
                     onFocus={() => setFocused('password')}
                     onBlur={() => setFocused(null)}
                     required
-                    className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-all duration-200 placeholder:text-zinc-400"
+                    className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-all duration-200 placeholder:text-zinc-400"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500 hover:from-blue-600 hover:via-indigo-600 hover:to-blue-600 text-white font-medium rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 group"
+                  className="w-full h-12 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-600 hover:via-orange-600 hover:to-amber-600 text-white font-medium rounded-xl shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 transition-all duration-300 group"
                   disabled={loading}
                 >
                   {loading ? (
@@ -221,12 +221,12 @@ export default function Login() {
 
               <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-                  {t('links.isPartner')}{' '}
+                  {t('links.isAdmin')}{' '}
                   <Link
-                    to="/partner/login"
-                    className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                    to="/administration/login"
+                    className="font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                   >
-                    {t('links.accessPartnerPortal')}
+                    {t('links.accessAdminPortal')}
                   </Link>
                 </p>
               </div>

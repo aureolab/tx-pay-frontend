@@ -135,11 +135,13 @@
       "name": "Nombre Completo",
       "email": "Email",
       "password": "Contraseña",
+      "passwordOptional": "opcional",
+      "passwordAutoHint": "Si no ingresa contraseña, se generará una automáticamente y se mostrarán las credenciales para descargar.",
       "assignedMerchants": "Comercios Asignados",
       "assignedMerchantsHint": "Selecciona a qué comercios puede acceder este usuario",
       "placeholderName": "Ingresa nombre completo",
       "placeholderEmail": "usuario@ejemplo.com",
-      "placeholderPassword": "Mínimo 8 caracteres",
+      "placeholderPassword": "Mínimo 12 caracteres",
       "createError": "Error al crear usuario"
     },
     "editUser": {
@@ -164,6 +166,43 @@
       "message": "¿Estás seguro de eliminar a {{name}}? Esta acción no se puede deshacer.",
       "confirm": "Eliminar",
       "error": "Error al eliminar usuario"
+    },
+    "credentials": {
+      "title": "Credenciales Generadas",
+      "description": "Guarde estas credenciales de forma segura",
+      "warning": "Estas credenciales no se mostrarán nuevamente. Asegúrese de guardarlas.",
+      "name": "Nombre",
+      "email": "Email",
+      "password": "Contraseña",
+      "loginUrl": "URL de Login",
+      "download": "Descargar Credenciales",
+      "close": "Cerrar"
+    },
+    "resetPassword": {
+      "title": "Resetear Contraseña",
+      "description": "Generar nueva contraseña para {{name}}",
+      "warningTitle": "Esta acción es irreversible",
+      "warningMessage": "Se generará una nueva contraseña segura para el usuario {{email}}. La contraseña anterior dejará de funcionar inmediatamente.",
+      "submit": "Resetear",
+      "resetting": "Reseteando...",
+      "error": "Error al resetear contraseña"
+    },
+    "changeMyPassword": {
+      "title": "Cambiar Mi Contraseña",
+      "description": "Actualice su contraseña de acceso",
+      "currentPassword": "Contraseña Actual",
+      "newPassword": "Nueva Contraseña",
+      "confirmPassword": "Confirmar Nueva Contraseña",
+      "requirements": "Requisitos de contraseña:",
+      "reqMinLength": "Mín. 12 caracteres",
+      "reqUppercase": "Una mayúscula",
+      "reqLowercase": "Una minúscula",
+      "reqNumber": "Un número",
+      "reqSpecial": "Un carácter especial",
+      "requirementsError": "La contraseña no cumple todos los requisitos",
+      "submit": "Cambiar Contraseña",
+      "success": "Contraseña actualizada",
+      "error": "Error al cambiar contraseña"
     }
   },
   "footer": "\u00a9 {{year}} TX Pay Portal Partner. Todos los derechos reservados."

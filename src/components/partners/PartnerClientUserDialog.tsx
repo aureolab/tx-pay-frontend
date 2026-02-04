@@ -22,7 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, UserPlus } from 'lucide-react';
+import { AlertCircle, UserPlus, Info } from 'lucide-react';
+import { PartnerCredentialsDialog, type CredentialsData } from './PartnerCredentialsDialog';
 
 interface Props {
   open: boolean;
@@ -37,6 +38,8 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [credentials, setCredentials] = useState<CredentialsData | null>(null);
+  const [showCredentials, setShowCredentials] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -86,16 +89,27 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
           status: formData.status as 'ACTIVE' | 'INACTIVE',
           assigned_merchants: formData.assigned_merchants,
         });
+        onOpenChange(false);
+        onSuccess();
       } else {
-        await partnerPortalUsersApi.create({
+        const payload: any = {
           name: formData.name,
           email: formData.email,
-          password: formData.password,
           assigned_merchants: formData.assigned_merchants,
-        });
+        };
+        // Only include password if provided (otherwise backend generates one)
+        if (formData.password) {
+          payload.password = formData.password;
+        }
+        const response = await partnerPortalUsersApi.create(payload);
+        // Check if response contains credentials (auto-generated password)
+        if (response.data?.password) {
+          setCredentials(response.data);
+          setShowCredentials(true);
+        }
+        onOpenChange(false);
+        onSuccess();
       }
-      onOpenChange(false);
-      onSuccess();
     } catch (err: any) {
       setError(err.response?.data?.message || t(isEdit ? 'partner:dialogs.editUser.updateError' : 'partner:dialogs.createUser.createError'));
     } finally {
@@ -106,6 +120,7 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
   const inputClass = "h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-colors placeholder:text-zinc-400";
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-amber-900/5 dark:shadow-amber-900/20 p-0 gap-0 overflow-hidden">
         {/* Decorative top accent */}
@@ -168,7 +183,8 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
           {!isEdit && (
             <div className="space-y-1.5">
               <Label htmlFor="pcu-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                {t('partner:dialogs.createUser.password')} {t('partner:dialogs.common.required')}
+                {t('partner:dialogs.createUser.password')}{' '}
+                <span className="font-normal text-zinc-400 dark:text-zinc-500">({t('partner:dialogs.createUser.passwordOptional')})</span>
               </Label>
               <Input
                 id="pcu-password"
@@ -176,10 +192,15 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder={t('partner:dialogs.createUser.placeholderPassword')}
-                required
-                minLength={8}
+                minLength={12}
                 className={inputClass}
               />
+              <div className="flex items-start gap-2 mt-1.5 p-2 rounded bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-200/50 dark:border-zinc-700/30">
+                <Info className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('partner:dialogs.createUser.passwordAutoHint')}
+                </p>
+              </div>
             </div>
           )}
 
@@ -267,5 +288,13 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Credentials Dialog - shown when password is auto-generated */}
+    <PartnerCredentialsDialog
+      open={showCredentials}
+      onOpenChange={setShowCredentials}
+      credentials={credentials}
+    />
+    </>
   );
 }

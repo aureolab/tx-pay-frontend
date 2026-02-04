@@ -135,11 +135,13 @@
       "name": "Full Name",
       "email": "Email",
       "password": "Password",
+      "passwordOptional": "optional",
+      "passwordAutoHint": "If no password is provided, one will be generated automatically and credentials will be shown for download.",
       "assignedMerchants": "Assigned Merchants",
       "assignedMerchantsHint": "Select which merchants this user can access",
       "placeholderName": "Enter full name",
       "placeholderEmail": "user@example.com",
-      "placeholderPassword": "Minimum 8 characters",
+      "placeholderPassword": "Minimum 12 characters",
       "createError": "Failed to create user"
     },
     "editUser": {
@@ -164,6 +166,43 @@
       "message": "Are you sure you want to delete {{name}}? This action cannot be undone.",
       "confirm": "Delete",
       "error": "Failed to delete user"
+    },
+    "credentials": {
+      "title": "Generated Credentials",
+      "description": "Save these credentials securely",
+      "warning": "These credentials will not be shown again. Make sure to save them.",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "loginUrl": "Login URL",
+      "download": "Download Credentials",
+      "close": "Close"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Generate new password for {{name}}",
+      "warningTitle": "This action is irreversible",
+      "warningMessage": "A new secure password will be generated for user {{email}}. The previous password will stop working immediately.",
+      "submit": "Reset",
+      "resetting": "Resetting...",
+      "error": "Failed to reset password"
+    },
+    "changeMyPassword": {
+      "title": "Change My Password",
+      "description": "Update your access password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "requirements": "Password requirements:",
+      "reqMinLength": "Min. 12 characters",
+      "reqUppercase": "One uppercase",
+      "reqLowercase": "One lowercase",
+      "reqNumber": "One number",
+      "reqSpecial": "One special character",
+      "requirementsError": "Password does not meet all requirements",
+      "submit": "Change Password",
+      "success": "Password updated",
+      "error": "Failed to change password"
     }
   },
   "footer": "\u00a9 {{year}} TX Pay Partner Portal. All rights reserved."

@@ -166,13 +166,15 @@
       "fullName": "Nombre Completo",
       "email": "Email",
       "password": "Contrasena",
-      "passwordKeepHint": "(dejar vacio para mantener actual)",
+      "passwordOptional": "opcional",
+      "passwordAutoHint": "Si no ingresa contrasena, se generara una automaticamente y se mostraran las credenciales para descargar.",
       "roles": "Roles",
       "active": "Activo",
       "createError": "Error al crear administrador",
       "updateError": "Error al actualizar administrador",
       "placeholderName": "Juan Perez",
-      "placeholderEmail": "admin@ejemplo.com"
+      "placeholderEmail": "admin@ejemplo.com",
+      "resetPassword": "Resetear Contrasena"
     },
     "adminDetail": {
       "title": "Detalles del Administrador",
@@ -213,11 +215,48 @@
       "newPassword": "Nueva Contrasena",
       "confirmPassword": "Confirmar Contrasena",
       "mismatchError": "Las contrasenas no coinciden",
-      "minLengthError": "La contrasena debe tener al menos 8 caracteres",
+      "minLengthError": "La contrasena debe tener al menos 12 caracteres",
       "changeError": "Error al cambiar contrasena",
       "submit": "Cambiar Contrasena",
-      "placeholderNew": "Min. 8 caracteres",
+      "placeholderNew": "Min. 12 caracteres",
       "placeholderConfirm": "Repetir contrasena"
+    },
+    "credentials": {
+      "title": "Credenciales Generadas",
+      "description": "Guarde estas credenciales de forma segura",
+      "warning": "Estas credenciales no se mostraran nuevamente. Asegurese de guardarlas.",
+      "name": "Nombre",
+      "email": "Email",
+      "password": "Contrasena",
+      "loginUrl": "URL de Login",
+      "download": "Descargar Credenciales",
+      "close": "Cerrar"
+    },
+    "resetPassword": {
+      "title": "Resetear Contrasena",
+      "description": "Generar nueva contrasena para {{name}}",
+      "warningTitle": "Esta accion es irreversible",
+      "warningMessage": "Se generara una nueva contrasena segura para el usuario {{email}}. La contrasena anterior dejara de funcionar inmediatamente.",
+      "submit": "Resetear",
+      "resetting": "Reseteando...",
+      "error": "Error al resetear contrasena"
+    },
+    "changeMyPassword": {
+      "title": "Cambiar Mi Contrasena",
+      "description": "Actualice su contrasena de acceso",
+      "currentPassword": "Contrasena Actual",
+      "newPassword": "Nueva Contrasena",
+      "confirmPassword": "Confirmar Nueva Contrasena",
+      "requirements": "Requisitos de contrasena:",
+      "reqMinLength": "Min. 12 caracteres",
+      "reqUppercase": "Una mayuscula",
+      "reqLowercase": "Una minuscula",
+      "reqNumber": "Un numero",
+      "reqSpecial": "Un caracter especial",
+      "requirementsError": "La contrasena no cumple todos los requisitos",
+      "submit": "Cambiar Contrasena",
+      "success": "Contrasena actualizada",
+      "error": "Error al cambiar contrasena"
     },
     "createTransaction": {
       "title": "Crear Transaccion",

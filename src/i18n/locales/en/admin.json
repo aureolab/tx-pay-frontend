@@ -166,13 +166,15 @@
       "fullName": "Full Name",
       "email": "Email",
       "password": "Password",
-      "passwordKeepHint": "(leave blank to keep current)",
+      "passwordOptional": "optional",
+      "passwordAutoHint": "If no password is provided, one will be generated automatically and credentials will be shown for download.",
       "roles": "Roles",
       "active": "Active",
       "createError": "Failed to create admin user",
       "updateError": "Failed to update admin user",
       "placeholderName": "John Doe",
-      "placeholderEmail": "admin@example.com"
+      "placeholderEmail": "admin@example.com",
+      "resetPassword": "Reset Password"
     },
     "adminDetail": {
       "title": "Admin User Details",
@@ -213,11 +215,48 @@
       "newPassword": "New Password",
       "confirmPassword": "Confirm Password",
       "mismatchError": "Passwords do not match",
-      "minLengthError": "Password must be at least 8 characters",
+      "minLengthError": "Password must be at least 12 characters",
       "changeError": "Failed to change password",
       "submit": "Change Password",
-      "placeholderNew": "Min. 8 characters",
+      "placeholderNew": "Min. 12 characters",
       "placeholderConfirm": "Repeat password"
+    },
+    "credentials": {
+      "title": "Generated Credentials",
+      "description": "Save these credentials securely",
+      "warning": "These credentials will not be shown again. Make sure to save them.",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "loginUrl": "Login URL",
+      "download": "Download Credentials",
+      "close": "Close"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "description": "Generate new password for {{name}}",
+      "warningTitle": "This action is irreversible",
+      "warningMessage": "A new secure password will be generated for user {{email}}. The previous password will stop working immediately.",
+      "submit": "Reset",
+      "resetting": "Resetting...",
+      "error": "Failed to reset password"
+    },
+    "changeMyPassword": {
+      "title": "Change My Password",
+      "description": "Update your access password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "requirements": "Password requirements:",
+      "reqMinLength": "Min. 12 characters",
+      "reqUppercase": "One uppercase",
+      "reqLowercase": "One lowercase",
+      "reqNumber": "One number",
+      "reqSpecial": "One special character",
+      "requirementsError": "Password does not meet all requirements",
+      "submit": "Change Password",
+      "success": "Password updated",
+      "error": "Failed to change password"
     },
     "createTransaction": {
       "title": "Create Transaction",

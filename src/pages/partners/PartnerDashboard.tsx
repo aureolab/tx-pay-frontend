@@ -27,11 +27,12 @@ import { DashboardHeader } from '@/components/shared/DashboardHeader';
 import { DashboardFooter } from '@/components/shared/DashboardFooter';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { PaginationControls } from '@/components/shared/PaginationControls';
-import { PartnerCreateTransactionDialog } from '@/components/partner/PartnerCreateTransactionDialog';
-import { PartnerMerchantDetailDialog } from '@/components/partner/PartnerMerchantDetailDialog';
-import { PartnerTransactionDetailDialog } from '@/components/partner/PartnerTransactionDetailDialog';
-import { PartnerClientUserDialog } from '@/components/partner/PartnerClientUserDialog';
-import { PartnerChangePasswordDialog } from '@/components/partner/PartnerChangePasswordDialog';
+import { PartnerCreateTransactionDialog } from '@/components/partners/PartnerCreateTransactionDialog';
+import { PartnerMerchantDetailDialog } from '@/components/partners/PartnerMerchantDetailDialog';
+import { PartnerTransactionDetailDialog } from '@/components/partners/PartnerTransactionDetailDialog';
+import { PartnerClientUserDialog } from '@/components/partners/PartnerClientUserDialog';
+import { PartnerResetPasswordDialog } from '@/components/partners/PartnerResetPasswordDialog';
+import { PartnerChangeMyPasswordDialog } from '@/components/partners/PartnerChangeMyPasswordDialog';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -114,7 +115,8 @@ export default function PartnerDashboard() {
   // User management dialog states
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<PartnerClientUser | null>(null);
-  const [changePasswordUser, setChangePasswordUser] = useState<PartnerClientUser | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<PartnerClientUser | null>(null);
+  const [changeMyPasswordOpen, setChangeMyPasswordOpen] = useState(false);
 
   // Load all counts on mount
   useEffect(() => {
@@ -353,17 +355,29 @@ export default function PartnerDashboard() {
         onLogout={logout}
         logoutLabel={t('partner:logout')}
         rightSlot={
-          <Badge
-            variant="outline"
-            className={`hidden md:flex ${
-              isPartnerType
-                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-            }`}
-          >
-            <Sparkles className="w-3 h-3 mr-1" />
-            {isPartnerType ? t('partner:access.full') : t('partner:access.limited')}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="outline"
+              className={`hidden md:flex ${
+                isPartnerType
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+              }`}
+            >
+              <Sparkles className="w-3 h-3 mr-1" />
+              {isPartnerType ? t('partner:access.full') : t('partner:access.limited')}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setChangeMyPasswordOpen(true)}
+              className="gap-2 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              title={t('partner:dialogs.changeMyPassword.title')}
+            >
+              <KeyRound className="w-4 h-4" />
+              <span className="hidden lg:inline">{t('partner:dialogs.changeMyPassword.title')}</span>
+            </Button>
+          </div>
         }
       />
 
@@ -730,11 +744,11 @@ export default function PartnerDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setChangePasswordUser(user)}
-                                  title={t('partner:dialogs.changePassword.title')}
-                                  className="h-7 w-7 p-0"
+                                  onClick={() => setResetPasswordUser(user)}
+                                  title={t('partner:dialogs.resetPassword.title')}
+                                  className="h-7 w-7 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                                 >
-                                  <KeyRound className="h-3 w-3" />
+                                  <RefreshCw className="h-3 w-3" />
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -822,15 +836,22 @@ export default function PartnerDashboard() {
             item={editingUser}
             merchants={merchants}
           />
-          <PartnerChangePasswordDialog
-            open={!!changePasswordUser}
-            onOpenChange={(open) => { if (!open) setChangePasswordUser(null); }}
+          <PartnerResetPasswordDialog
+            open={!!resetPasswordUser}
+            onOpenChange={(open) => { if (!open) setResetPasswordUser(null); }}
             onSuccess={() => fetchClientUsers(page)}
-            userId={changePasswordUser?._id || ''}
-            userName={changePasswordUser?.name || changePasswordUser?.email || ''}
+            userId={resetPasswordUser?._id || ''}
+            userName={resetPasswordUser?.name || resetPasswordUser?.email || ''}
+            userEmail={resetPasswordUser?.email || ''}
           />
         </>
       )}
+
+      {/* Change My Password Dialog */}
+      <PartnerChangeMyPasswordDialog
+        open={changeMyPasswordOpen}
+        onOpenChange={setChangeMyPasswordOpen}
+      />
 
       {/* Footer */}
       <DashboardFooter text={t('partner:footer', { year: new Date().getFullYear() })} />

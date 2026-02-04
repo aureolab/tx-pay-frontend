@@ -22,7 +22,7 @@ client.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
-      window.location.href = '/admin/login';
+      window.location.href = '/administration/login';
     }
     return Promise.reject(error);
   }
@@ -35,6 +35,8 @@ export const authApi = {
   login: (email: string, password: string) =>
     client.post('/auth/login', { email, password }),
   getProfile: () => client.get('/auth/profile'),
+  changeMyPassword: (data: { current_password: string; new_password: string }) =>
+    client.post('/auth/change-my-password', data),
 };
 
 // Pagination types
@@ -67,6 +69,7 @@ export const adminUsersApi = {
   create: (data: any) => client.post('/admin-users', data),
   update: (id: string, data: any) => client.patch(`/admin-users/${id}`, data),
   delete: (id: string) => client.delete(`/admin-users/${id}`),
+  resetPassword: (id: string) => client.post(`/admin-users/${id}/reset-password`),
 };
 
 // Merchants
@@ -118,7 +121,8 @@ export const partnerUsersApi = {
   create: (data: any) => client.post('/partner-users', data),
   update: (id: string, data: any) => client.patch(`/partner-users/${id}`, data),
   changePassword: (id: string, data: { new_password: string }) =>
-    client.post(`/partner-users/${id}/password`, data),
+    client.patch(`/partner-users/${id}/password`, data),
+  resetPassword: (id: string) => client.post(`/partner-users/${id}/reset-password`),
   delete: (id: string) => client.delete(`/partner-users/${id}`),
 };
 

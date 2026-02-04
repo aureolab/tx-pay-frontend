@@ -38,7 +38,7 @@ partnerClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem(PARTNER_TOKEN_KEY);
-      window.location.href = '/partner/login';
+      window.location.href = '/partners/login';
     }
     return Promise.reject(error);
   }
@@ -62,6 +62,8 @@ export const partnerAuthApi = {
     }),
   getProfile: () =>
     partnerClient.get<PartnerProfileResponse>('/auth/partner/profile'),
+  changeMyPassword: (data: { current_password: string; new_password: string }) =>
+    partnerClient.post('/auth/partner/change-my-password', data),
 };
 
 // Partner Merchants API
@@ -127,6 +129,8 @@ export const partnerPortalUsersApi = {
     partnerClient.patch(`/partner-portal/users/${id}`, data),
   changePassword: (id: string, data: { new_password: string }) =>
     partnerClient.post(`/partner-portal/users/${id}/password`, data),
+  resetPassword: (id: string) =>
+    partnerClient.post(`/partner-portal/users/${id}/reset-password`),
   delete: (id: string) =>
     partnerClient.delete(`/partner-portal/users/${id}`),
 };

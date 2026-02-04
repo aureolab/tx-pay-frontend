@@ -3,12 +3,13 @@ import { Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { PartnerAuthProvider, usePartnerAuth } from './context/PartnerAuthContext';
 import { ThemeProvider } from '@/components/theme-provider';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import Login from './pages/administration/Login';
+import Dashboard from './pages/administration/Dashboard';
+import NotFound from './pages/NotFound';
 
 // Lazy load Partner pages
-const PartnerLogin = lazy(() => import('./pages/partner/PartnerLogin'));
-const PartnerDashboard = lazy(() => import('./pages/partner/PartnerDashboard'));
+const PartnerLogin = lazy(() => import('./pages/partners/PartnerLogin'));
+const PartnerDashboard = lazy(() => import('./pages/partners/PartnerDashboard'));
 
 // Loading component
 function LoadingScreen() {
@@ -26,26 +27,26 @@ function LoadingScreen() {
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  return user ? <>{children}</> : <Navigate to="/admin/login" />;
+  return user ? <>{children}</> : <Navigate to="/administration/login" />;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <LoadingScreen />;
-  return user ? <Navigate to="/admin" /> : <>{children}</>;
+  return user ? <Navigate to="/administration" /> : <>{children}</>;
 }
 
 // Partner route protection
 function PartnerPrivateRoute({ children }: { children: React.ReactNode }) {
   const { partnerUser, loading } = usePartnerAuth();
   if (loading) return <LoadingScreen />;
-  return partnerUser ? <>{children}</> : <Navigate to="/partner/login" />;
+  return partnerUser ? <>{children}</> : <Navigate to="/partners/login" />;
 }
 
 function PartnerPublicRoute({ children }: { children: React.ReactNode }) {
   const { partnerUser, loading } = usePartnerAuth();
   if (loading) return <LoadingScreen />;
-  return partnerUser ? <Navigate to="/partner" /> : <>{children}</>;
+  return partnerUser ? <Navigate to="/partners" /> : <>{children}</>;
 }
 
 function App() {
@@ -56,12 +57,12 @@ function App() {
           <BrowserRouter>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
-                {/* Root redirect */}
-                <Route path="/" element={<Navigate to="/admin" replace />} />
+                {/* Root shows 404 */}
+                <Route path="/" element={<NotFound />} />
 
-                {/* Admin Routes */}
+                {/* Administration Routes */}
                 <Route
-                  path="/admin/login"
+                  path="/administration/login"
                   element={
                     <PublicRoute>
                       <Login />
@@ -69,7 +70,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/admin"
+                  path="/administration"
                   element={
                     <PrivateRoute>
                       <Dashboard />
@@ -77,9 +78,9 @@ function App() {
                   }
                 />
 
-                {/* Partner Routes */}
+                {/* Partners Routes */}
                 <Route
-                  path="/partner/login"
+                  path="/partners/login"
                   element={
                     <PartnerPublicRoute>
                       <PartnerLogin />
@@ -87,7 +88,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/partner"
+                  path="/partners"
                   element={
                     <PartnerPrivateRoute>
                       <PartnerDashboard />
@@ -95,13 +96,16 @@ function App() {
                   }
                 />
                 <Route
-                  path="/partner/*"
+                  path="/partners/*"
                   element={
                     <PartnerPrivateRoute>
                       <PartnerDashboard />
                     </PartnerPrivateRoute>
                   }
                 />
+
+                {/* Catch-all 404 */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </BrowserRouter>

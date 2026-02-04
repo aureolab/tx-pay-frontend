@@ -14,8 +14,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Shield, Users } from 'lucide-react';
+import { AlertCircle, Shield, Users, Info } from 'lucide-react';
 import { AdminRoles } from '@/lib/constants';
+import { CredentialsDialog, type CredentialsData } from './CredentialsDialog';
 
 interface AdminDialogProps {
   open: boolean;
@@ -29,6 +30,8 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [credentials, setCredentials] = useState<CredentialsData | null>(null);
+  const [showCredentials, setShowCredentials] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -74,18 +77,26 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
 
       if (!isEdit) {
         payload.email = formData.email;
-        payload.password = formData.password;
-      } else if (formData.password) {
-        payload.password = formData.password;
+        // Only include password if provided (otherwise backend generates one)
+        if (formData.password) {
+          payload.password = formData.password;
+        }
       }
 
       if (isEdit) {
         await adminUsersApi.update(item._id, payload);
+        onOpenChange(false);
+        onSuccess();
       } else {
-        await adminUsersApi.create(payload);
+        const response = await adminUsersApi.create(payload);
+        // Check if response contains credentials (auto-generated password)
+        if (response.data?.password) {
+          setCredentials(response.data);
+          setShowCredentials(true);
+        }
+        onOpenChange(false);
+        onSuccess();
       }
-      onOpenChange(false);
-      onSuccess();
     } catch (err: any) {
       setError(err.response?.data?.message || t(isEdit ? 'dialogs.adminUser.updateError' : 'dialogs.adminUser.createError'));
     } finally {
@@ -94,6 +105,7 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden">
         {/* Decorative top accent */}
@@ -151,26 +163,30 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="admin-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-              {t('dialogs.adminUser.password')}{' '}
-              {isEdit ? (
-                <span className="font-normal text-zinc-400 dark:text-zinc-500">{t('dialogs.adminUser.passwordKeepHint')}</span>
-              ) : (
-                t('dialogs.common.required')
-              )}
-            </Label>
-            <Input
-              id="admin-password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="••••••••"
-              required={!isEdit}
-              minLength={6}
-              className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-blue-500 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-colors placeholder:text-zinc-400"
-            />
-          </div>
+          {/* Password field - only shown in create mode */}
+          {!isEdit && (
+            <div className="space-y-1.5">
+              <Label htmlFor="admin-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                {t('dialogs.adminUser.password')}{' '}
+                <span className="font-normal text-zinc-400 dark:text-zinc-500">({t('dialogs.adminUser.passwordOptional')})</span>
+              </Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="••••••••"
+                minLength={12}
+                className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-blue-500 focus:ring-blue-500/20 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 transition-colors placeholder:text-zinc-400"
+              />
+              <div className="flex items-start gap-2 mt-1.5 p-2 rounded bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-200/50 dark:border-zinc-700/30">
+                <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {t('dialogs.adminUser.passwordAutoHint')}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Roles section */}
           <div className="space-y-2">
@@ -245,5 +261,13 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
         </form>
       </DialogContent>
     </Dialog>
+
+    {/* Credentials Dialog - shown when password is auto-generated */}
+    <CredentialsDialog
+      open={showCredentials}
+      onOpenChange={setShowCredentials}
+      credentials={credentials}
+    />
+  </>
   );
 }
