@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, KeyRound, Check, X, Info } from 'lucide-react';
+import { AlertCircle, KeyRound, Check, X, Info, Eye, EyeOff } from 'lucide-react';
 
 interface ChangeMyPasswordDialogProps {
   open: boolean;
@@ -49,6 +49,7 @@ export function ChangeMyPasswordDialog({ open, onOpenChange, onSuccess }: Change
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [validation, setValidation] = useState<PasswordValidation>(validatePassword(''));
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
 
   useEffect(() => {
     if (open) {
@@ -153,32 +154,50 @@ export function ChangeMyPasswordDialog({ open, onOpenChange, onSuccess }: Change
             <Label htmlFor="current-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
               {t('dialogs.changeMyPassword.currentPassword')} {t('dialogs.common.required')}
             </Label>
-            <Input
-              id="current-password"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={success}
-              className={inputClass}
-            />
+            <div className="relative">
+              <Input
+                id="current-password"
+                type={showPasswords.current ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                disabled={success}
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                {showPasswords.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="new-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
               {t('dialogs.changeMyPassword.newPassword')} {t('dialogs.common.required')}
             </Label>
-            <Input
-              id="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={success}
-              className={inputClass}
-            />
+            <div className="relative">
+              <Input
+                id="new-password"
+                type={showPasswords.new ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                disabled={success}
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Password requirements */}
@@ -202,16 +221,25 @@ export function ChangeMyPasswordDialog({ open, onOpenChange, onSuccess }: Change
             <Label htmlFor="confirm-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
               {t('dialogs.changeMyPassword.confirmPassword')} {t('dialogs.common.required')}
             </Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={success}
-              className={inputClass}
-            />
+            <div className="relative">
+              <Input
+                id="confirm-password"
+                type={showPasswords.confirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                disabled={success}
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
             {confirmPassword && newPassword !== confirmPassword && (
               <p className="text-xs text-red-500 mt-1">{t('dialogs.changePassword.mismatchError')}</p>
             )}

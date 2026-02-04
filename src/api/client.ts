@@ -137,3 +137,9 @@ export const systemConfigApi = {
   update: (data: any) => client.patch('/system-config', data),
   getDefaultExportColumns: () => client.get('/system-config/default-export-columns'),
 };
+
+// Contact
+export const contactApi = {
+  send: (data: { name: string; email: string; company?: string; message: string }) =>
+    client.post('/contact', data),
+};

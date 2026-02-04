@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, UserPlus, Info } from 'lucide-react';
+import { AlertCircle, UserPlus, Info, Eye, EyeOff } from 'lucide-react';
 import { PartnerCredentialsDialog, type CredentialsData } from './PartnerCredentialsDialog';
 
 interface Props {
@@ -40,6 +40,7 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
   const [error, setError] = useState('');
   const [credentials, setCredentials] = useState<CredentialsData | null>(null);
   const [showCredentials, setShowCredentials] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -186,15 +187,24 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
                 {t('partner:dialogs.createUser.password')}{' '}
                 <span className="font-normal text-zinc-400 dark:text-zinc-500">({t('partner:dialogs.createUser.passwordOptional')})</span>
               </Label>
-              <Input
-                id="pcu-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder={t('partner:dialogs.createUser.placeholderPassword')}
-                minLength={12}
-                className={inputClass}
-              />
+              <div className="relative">
+                <Input
+                  id="pcu-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder={t('partner:dialogs.createUser.placeholderPassword')}
+                  minLength={12}
+                  className={`${inputClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               <div className="flex items-start gap-2 mt-1.5 p-2 rounded bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-200/50 dark:border-zinc-700/30">
                 <Info className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">

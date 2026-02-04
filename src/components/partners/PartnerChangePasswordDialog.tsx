@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, KeyRound } from 'lucide-react';
+import { AlertCircle, KeyRound, Eye, EyeOff } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -29,6 +29,7 @@ export function PartnerChangePasswordDialog({ open, onOpenChange, onSuccess, use
   const [error, setError] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswords, setShowPasswords] = useState({ new: false, confirm: false });
 
   useEffect(() => {
     if (open) {
@@ -95,32 +96,50 @@ export function PartnerChangePasswordDialog({ open, onOpenChange, onSuccess, use
             <Label htmlFor="pcp-new-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
               {t('partner:dialogs.changePassword.newPassword')} {t('partner:dialogs.common.required')}
             </Label>
-            <Input
-              id="pcp-new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={t('partner:dialogs.changePassword.placeholderPassword')}
-              required
-              minLength={8}
-              className={inputClass}
-            />
+            <div className="relative">
+              <Input
+                id="pcp-new-password"
+                type={showPasswords.new ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder={t('partner:dialogs.changePassword.placeholderPassword')}
+                required
+                minLength={8}
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                {showPasswords.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="pcp-confirm-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
               {t('partner:dialogs.changePassword.confirmPassword')} {t('partner:dialogs.common.required')}
             </Label>
-            <Input
-              id="pcp-confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t('partner:dialogs.changePassword.placeholderConfirm')}
-              required
-              minLength={8}
-              className={inputClass}
-            />
+            <div className="relative">
+              <Input
+                id="pcp-confirm-password"
+                type={showPasswords.confirm ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder={t('partner:dialogs.changePassword.placeholderConfirm')}
+                required
+                minLength={8}
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+              >
+                {showPasswords.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {/* Footer */}

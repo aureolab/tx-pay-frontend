@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/shared/LanguageSwitcher';
-import { AlertCircle, Building2, ArrowRight, Sparkles } from 'lucide-react';
+import { AlertCircle, Building2, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 export default function PartnerLogin() {
   const { t, i18n } = useTranslation('auth');
@@ -17,6 +17,7 @@ export default function PartnerLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = usePartnerAuth();
   const navigate = useNavigate();
 
@@ -187,17 +188,26 @@ export default function PartnerLogin() {
                   >
                     {t('form.password')}
                   </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocused('password')}
-                    onBlur={() => setFocused(null)}
-                    required
-                    className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-all duration-200 placeholder:text-zinc-400"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setFocused('password')}
+                      onBlur={() => setFocused(null)}
+                      required
+                      className="h-12 bg-white dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-all duration-200 placeholder:text-zinc-400 pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <Button

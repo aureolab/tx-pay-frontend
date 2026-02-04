@@ -25,5 +25,49 @@
     "actions": "Acciones",
     "noResults": "No se encontraron resultados"
   },
-  "copyright": "\u00a9 {{year}} TX Pay. Todos los derechos reservados."
+  "copyright": "© {{year}} TX Pay. Todos los derechos reservados.",
+  "landing": {
+    "title": "TX Pay",
+    "subtitle": "Plataforma de pagos integrados",
+    "description": "Solución completa para procesar pagos en línea con múltiples métodos de pago",
+    "cta": "Acceso Partners",
+    "features": {
+      "payments": {
+        "title": "Múltiples métodos de pago",
+        "description": "Webpay, transferencias bancarias y más opciones para tus clientes"
+      },
+      "integration": {
+        "title": "Integración sencilla",
+        "description": "API REST documentada y SDK para una implementación rápida"
+      },
+      "reports": {
+        "title": "Reportes en tiempo real",
+        "description": "Dashboard completo con métricas y exportación de transacciones"
+      },
+      "support": {
+        "title": "Soporte dedicado",
+        "description": "Equipo especializado disponible para ayudarte"
+      }
+    },
+    "contact": {
+      "title": "¿Interesado en integrarte?",
+      "subtitle": "Déjanos tus datos y nos pondremos en contacto",
+      "name": "Nombre",
+      "namePlaceholder": "Tu nombre completo",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@empresa.com",
+      "company": "Empresa (opcional)",
+      "companyPlaceholder": "Nombre de tu empresa",
+      "message": "Mensaje",
+      "messagePlaceholder": "Cuéntanos sobre tu proyecto y necesidades de pago...",
+      "submit": "Enviar mensaje",
+      "sending": "Enviando...",
+      "success": "¡Mensaje enviado! Nos pondremos en contacto pronto.",
+      "error": "Error al enviar el mensaje. Intenta nuevamente."
+    },
+    "footer": {
+      "copyright": "© 2026 TX Pay. Todos los derechos reservados.",
+      "admin": "Administración"
+    }
+  }
 }

@@ -25,5 +25,49 @@
     "actions": "Actions",
     "noResults": "No results found"
   },
-  "copyright": "\u00a9 {{year}} TX Pay. All rights reserved."
+  "copyright": "© {{year}} TX Pay. All rights reserved.",
+  "landing": {
+    "title": "TX Pay",
+    "subtitle": "Integrated Payments Platform",
+    "description": "Complete solution for processing online payments with multiple payment methods",
+    "cta": "Partner Access",
+    "features": {
+      "payments": {
+        "title": "Multiple payment methods",
+        "description": "Webpay, bank transfers and more options for your customers"
+      },
+      "integration": {
+        "title": "Easy integration",
+        "description": "Documented REST API and SDK for quick implementation"
+      },
+      "reports": {
+        "title": "Real-time reports",
+        "description": "Complete dashboard with metrics and transaction exports"
+      },
+      "support": {
+        "title": "Dedicated support",
+        "description": "Specialized team available to help you"
+      }
+    },
+    "contact": {
+      "title": "Interested in integrating?",
+      "subtitle": "Leave your details and we'll get in touch",
+      "name": "Name",
+      "namePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "you@company.com",
+      "company": "Company (optional)",
+      "companyPlaceholder": "Your company name",
+      "message": "Message",
+      "messagePlaceholder": "Tell us about your project and payment needs...",
+      "submit": "Send message",
+      "sending": "Sending...",
+      "success": "Message sent! We'll be in touch soon.",
+      "error": "Error sending message. Please try again."
+    },
+    "footer": {
+      "copyright": "© 2026 TX Pay. All rights reserved.",
+      "admin": "Administration"
+    }
+  }
 }

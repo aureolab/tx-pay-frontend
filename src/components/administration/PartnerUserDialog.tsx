@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, UserPlus } from 'lucide-react';
+import { AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { PartnerUserTypes, PartnerUserStatuses } from '@/lib/constants';
 
 interface PartnerUserDialogProps {
@@ -38,6 +38,7 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -180,16 +181,25 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
               <Label htmlFor="pu-password" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
                 {t('dialogs.partnerUser.password')} {t('dialogs.common.required')}
               </Label>
-              <Input
-                id="pu-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder={t('dialogs.partnerUser.placeholderPassword')}
-                required
-                minLength={8}
-                className={inputClass}
-              />
+              <div className="relative">
+                <Input
+                  id="pu-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder={t('dialogs.partnerUser.placeholderPassword')}
+                  required
+                  minLength={8}
+                  className={`${inputClass} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           )}
 
