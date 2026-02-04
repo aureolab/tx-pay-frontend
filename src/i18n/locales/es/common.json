@@ -25,6 +25,11 @@
     "actions": "Acciones",
     "noResults": "No se encontraron resultados"
   },
+  "user": "Usuario",
+  "language": "Idioma",
+  "lightMode": "Modo claro",
+  "darkMode": "Modo oscuro",
+  "changePassword": "Cambiar contraseña",
   "copyright": "© {{year}} TX Pay. Todos los derechos reservados.",
   "landing": {
     "title": "TX Pay",

@@ -66,11 +66,9 @@ import {
   Plus,
   AlertCircle,
   RefreshCw,
-  Sparkles,
   Eye,
   Users,
   Pencil,
-  KeyRound,
   Trash2,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
@@ -354,31 +352,8 @@ export default function PartnerDashboard() {
         userEmail={partnerUser?.email || ''}
         onLogout={logout}
         logoutLabel={t('partner:logout')}
-        rightSlot={
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className={`hidden md:flex ${
-                isPartnerType
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-              }`}
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              {isPartnerType ? t('partner:access.full') : t('partner:access.limited')}
-            </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setChangeMyPasswordOpen(true)}
-              className="gap-2 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              title={t('partner:dialogs.changeMyPassword.title')}
-            >
-              <KeyRound className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('partner:dialogs.changeMyPassword.title')}</span>
-            </Button>
-          </div>
-        }
+        onChangePassword={() => setChangeMyPasswordOpen(true)}
+        changePasswordLabel={t('partner:dialogs.changeMyPassword.title')}
       />
 
       {/* Main Content */}
@@ -427,31 +402,33 @@ export default function PartnerDashboard() {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl">
-            <TabsTrigger
-              value="merchants"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Store className="w-4 h-4 mr-2" />
-              {t('partner:tabs.merchants')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="transactions"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              {t('partner:tabs.transactions')}
-            </TabsTrigger>
-            {isPartnerType && (
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl inline-flex w-auto min-w-full sm:min-w-0">
               <TabsTrigger
-                value="users"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-6"
+                value="merchants"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
               >
-                <Users className="w-4 h-4 mr-2" />
-                {t('partner:tabs.users')}
+                <Store className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('partner:tabs.merchants')}</span>
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger
+                value="transactions"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <CreditCard className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('partner:tabs.transactions')}</span>
+              </TabsTrigger>
+              {isPartnerType && (
+                <TabsTrigger
+                  value="users"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+                >
+                  <Users className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('partner:tabs.users')}</span>
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
           {/* Merchants Tab */}
           <TabsContent value="merchants" className="space-y-4">

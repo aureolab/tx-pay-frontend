@@ -276,9 +276,9 @@ export function SystemConfigTab() {
 
       {/* Acquirer Defaults */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center shrink-0">
               <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
@@ -291,14 +291,14 @@ export function SystemConfigTab() {
             size="sm"
             onClick={addAcquirerDefault}
             disabled={usedProviders.length >= AVAILABLE_PROVIDERS.length}
-            className="gap-2"
+            className="gap-2 shrink-0"
           >
             <Plus className="w-4 h-4" />
             {t('admin:configuration.acquirers.add')}
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {config.acquirer_defaults.length === 0 ? (
             <p className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-sm">
               {t('admin:configuration.acquirers.noDefaults')}
@@ -310,42 +310,53 @@ export function SystemConfigTab() {
                   key={index}
                   className="p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-700/40 bg-zinc-50/50 dark:bg-zinc-800/30"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
-                      <div>
-                        <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                          {t('admin:configuration.acquirers.provider')}
-                        </Label>
-                        <Select
-                          value={acquirer.provider}
-                          onValueChange={(value) =>
-                            updateAcquirerDefault(index, 'provider', value)
-                          }
+                      <div className="flex items-start justify-between sm:block">
+                        <div className="flex-1">
+                          <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                            {t('admin:configuration.acquirers.provider')}
+                          </Label>
+                          <Select
+                            value={acquirer.provider}
+                            onValueChange={(value) =>
+                              updateAcquirerDefault(index, 'provider', value)
+                            }
+                          >
+                            <SelectTrigger className="mt-1 w-full sm:w-60">
+                              <SelectValue placeholder={t('admin:configuration.acquirers.selectProvider')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {AVAILABLE_PROVIDERS.filter(
+                                (p) => !usedProviders.includes(p) || p === acquirer.provider,
+                              ).map((p) => (
+                                <SelectItem key={p} value={p}>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {p}
+                                    </Badge>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {/* Delete button on mobile - inline with provider */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeAcquirerDefault(index)}
+                          className="sm:hidden h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 ml-2 mt-5"
                         >
-                          <SelectTrigger className="mt-1 w-60">
-                            <SelectValue placeholder={t('admin:configuration.acquirers.selectProvider')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {AVAILABLE_PROVIDERS.filter(
-                              (p) => !usedProviders.includes(p) || p === acquirer.provider,
-                            ).map((p) => (
-                              <SelectItem key={p} value={p}>
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {p}
-                                  </Badge>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                       <div>
                         <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                           {t('admin:configuration.acquirers.config')}
                         </Label>
                         <textarea
-                          className="mt-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 font-mono text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[80px] resize-y"
+                          className="mt-1 w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 font-mono text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[100px] resize-y"
                           value={
                             typeof acquirer.config === 'string'
                               ? acquirer.config
@@ -358,11 +369,12 @@ export function SystemConfigTab() {
                         />
                       </div>
                     </div>
+                    {/* Delete button on desktop */}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => removeAcquirerDefault(index)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 mt-5"
+                      className="hidden sm:flex h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 mt-5"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -376,9 +388,9 @@ export function SystemConfigTab() {
 
       {/* Pricing Rules Defaults */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center shrink-0">
               <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
@@ -391,14 +403,14 @@ export function SystemConfigTab() {
             size="sm"
             onClick={addPricingDefault}
             disabled={usedMethods.length >= PaymentMethods.length}
-            className="gap-2"
+            className="gap-2 shrink-0"
           >
             <Plus className="w-4 h-4" />
             {t('admin:configuration.pricingDefaults.add')}
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {config.pricing_rules_defaults.length === 0 ? (
             <p className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-sm">
               {t('admin:configuration.pricingDefaults.noDefaults')}
@@ -410,7 +422,7 @@ export function SystemConfigTab() {
                   key={index}
                   className="p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-700/40 bg-zinc-50/50 dark:bg-zinc-800/30"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div className="flex-1">
                       <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                         {t('admin:configuration.pricingDefaults.method')}
@@ -433,37 +445,39 @@ export function SystemConfigTab() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="w-36">
-                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        {t('admin:configuration.pricingDefaults.fixed')}
-                      </Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={rule.fixed}
-                        onChange={(e) => updatePricingDefault(index, 'fixed', parseFloat(e.target.value) || 0)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div className="w-36">
-                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                        {t('admin:configuration.pricingDefaults.percentage')}
-                      </Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={rule.percentage}
-                        onChange={(e) => updatePricingDefault(index, 'percentage', parseFloat(e.target.value) || 0)}
-                        className="mt-1"
-                      />
+                    <div className="grid grid-cols-2 gap-3 sm:contents">
+                      <div className="sm:w-28">
+                        <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          {t('admin:configuration.pricingDefaults.fixed')}
+                        </Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={rule.fixed}
+                          onChange={(e) => updatePricingDefault(index, 'fixed', parseFloat(e.target.value) || 0)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="sm:w-28">
+                        <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          {t('admin:configuration.pricingDefaults.percentage')}
+                        </Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={rule.percentage}
+                          onChange={(e) => updatePricingDefault(index, 'percentage', parseFloat(e.target.value) || 0)}
+                          className="mt-1"
+                        />
+                      </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => removePricingDefault(index)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 mt-5"
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 self-end"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -477,9 +491,9 @@ export function SystemConfigTab() {
 
       {/* Export Columns */}
       <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center shrink-0">
               <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
@@ -487,37 +501,39 @@ export function SystemConfigTab() {
               <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.description')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={restoreDefaultColumns}
-              className="gap-2"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
             >
               <RotateCcw className="w-4 h-4" />
-              {t('admin:configuration.exportColumns.restoreDefaults')}
+              <span className="hidden sm:inline">{t('admin:configuration.exportColumns.restoreDefaults')}</span>
+              <span className="sm:hidden">Reset</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={addExportColumn}
-              className="gap-2"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
             >
               <Plus className="w-4 h-4" />
-              {t('admin:configuration.exportColumns.addColumn')}
+              <span className="hidden sm:inline">{t('admin:configuration.exportColumns.addColumn')}</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {config.export_columns.length === 0 ? (
             <p className="text-center py-8 text-zinc-500 dark:text-zinc-400 text-sm">
               {t('admin:configuration.exportColumns.noColumns')}
             </p>
           ) : (
-            <div className="space-y-2">
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 px-2 pb-2 border-b border-zinc-200/50 dark:border-zinc-700/50">
+            <div className="space-y-3">
+              {/* Desktop Header - Hidden on mobile */}
+              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 px-2 pb-2 border-b border-zinc-200/50 dark:border-zinc-700/50">
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.key')}</span>
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.label')}</span>
                 <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.path')}</span>
@@ -525,49 +541,108 @@ export function SystemConfigTab() {
                 <span />
               </div>
               {config.export_columns.map((col, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 items-center"
-                >
-                  <Input
-                    value={col.key}
-                    onChange={(e) => updateExportColumn(index, 'key', e.target.value)}
-                    placeholder="transaction_id"
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    value={col.label}
-                    onChange={(e) => updateExportColumn(index, 'label', e.target.value)}
-                    placeholder="ID Transacción"
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    value={col.path}
-                    onChange={(e) => updateExportColumn(index, 'path', e.target.value)}
-                    placeholder="_id"
-                    className="h-8 text-sm font-mono"
-                  />
-                  <Select
-                    value={col.type}
-                    onValueChange={(value) => updateExportColumn(index, 'type', value)}
-                  >
-                    <SelectTrigger className="h-8 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="string">string</SelectItem>
-                      <SelectItem value="decimal">decimal</SelectItem>
-                      <SelectItem value="date">date</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeExportColumn(index)}
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div key={index}>
+                  {/* Desktop Layout */}
+                  <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 items-center">
+                    <Input
+                      value={col.key}
+                      onChange={(e) => updateExportColumn(index, 'key', e.target.value)}
+                      placeholder="transaction_id"
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      value={col.label}
+                      onChange={(e) => updateExportColumn(index, 'label', e.target.value)}
+                      placeholder="ID Transacción"
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      value={col.path}
+                      onChange={(e) => updateExportColumn(index, 'path', e.target.value)}
+                      placeholder="_id"
+                      className="h-8 text-sm font-mono"
+                    />
+                    <Select
+                      value={col.type}
+                      onValueChange={(value) => updateExportColumn(index, 'type', value)}
+                    >
+                      <SelectTrigger className="h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">string</SelectItem>
+                        <SelectItem value="decimal">decimal</SelectItem>
+                        <SelectItem value="date">date</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeExportColumn(index)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  {/* Mobile/Tablet Layout - Card style */}
+                  <div className="lg:hidden p-3 rounded-lg border border-zinc-200/60 dark:border-zinc-700/40 bg-zinc-50/50 dark:bg-zinc-800/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">#{index + 1}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeExportColumn(index)}
+                        className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.key')}</Label>
+                        <Input
+                          value={col.key}
+                          onChange={(e) => updateExportColumn(index, 'key', e.target.value)}
+                          placeholder="transaction_id"
+                          className="h-8 text-sm mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.label')}</Label>
+                        <Input
+                          value={col.label}
+                          onChange={(e) => updateExportColumn(index, 'label', e.target.value)}
+                          placeholder="ID Transacción"
+                          className="h-8 text-sm mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.path')}</Label>
+                        <Input
+                          value={col.path}
+                          onChange={(e) => updateExportColumn(index, 'path', e.target.value)}
+                          placeholder="_id"
+                          className="h-8 text-sm font-mono mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.exportColumns.type')}</Label>
+                        <Select
+                          value={col.type}
+                          onValueChange={(value) => updateExportColumn(index, 'type', value)}
+                        >
+                          <SelectTrigger className="h-8 text-sm mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="string">string</SelectItem>
+                            <SelectItem value="decimal">decimal</SelectItem>
+                            <SelectItem value="date">date</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

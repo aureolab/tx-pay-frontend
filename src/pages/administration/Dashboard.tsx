@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, healthApi, type PaginatedResponse } from '../../api/client';
+import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, type PaginatedResponse } from '../../api/client';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
   getStatusConfig,
@@ -61,7 +61,6 @@ import {
   AlertCircle,
   Ban,
   CheckCircle,
-  Database,
   Download,
   Handshake,
   Plus,
@@ -98,7 +97,6 @@ export default function Dashboard() {
   const [allPartners, setAllPartners] = useState<any[]>([]);
 
   const [counts, setCounts] = useState({ partners: 0, merchants: 0, transactions: 0, admins: 0 });
-  const [health, setHealth] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
@@ -166,7 +164,6 @@ export default function Dashboard() {
   }), [partnerOptions, t]);
 
   useEffect(() => {
-    healthApi.check().then(res => setHealth(res.data)).catch(() => {});
     // Load all counts in parallel on mount
     Promise.all([
       partnersApi.list({ page: 1, limit: 1 }),
@@ -366,27 +363,8 @@ export default function Dashboard() {
         userEmail={user?.email || ''}
         onLogout={logout}
         logoutLabel={t('admin:logout')}
-        rightSlot={
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="hidden md:flex gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-            >
-              <Database className="h-3 w-3" />
-              {health?.details?.database?.status || 'checking...'}
-            </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setChangeMyPasswordOpen(true)}
-              className="gap-2 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              title={t('admin:dialogs.changeMyPassword.title')}
-            >
-              <KeyRound className="w-4 h-4" />
-              <span className="hidden lg:inline">{t('admin:dialogs.changeMyPassword.title')}</span>
-            </Button>
-          </div>
-        }
+        onChangePassword={() => setChangeMyPasswordOpen(true)}
+        changePasswordLabel={t('admin:dialogs.changeMyPassword.title')}
       />
 
       {/* Main Content */}
@@ -431,43 +409,45 @@ export default function Dashboard() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl">
-            <TabsTrigger
-              value="partners"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Handshake className="w-4 h-4 mr-2" />
-              {t('admin:tabs.partners')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="merchants"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Store className="w-4 h-4 mr-2" />
-              {t('admin:tabs.merchants')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="transactions"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              {t('admin:tabs.transactions')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="admins"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Users className="w-4 h-4 mr-2" />
-              {t('admin:tabs.admins')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="configuration"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-6"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {t('admin:tabs.configuration')}
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            <TabsList className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/50 dark:border-zinc-800/50 p-1 rounded-xl inline-flex w-auto min-w-full sm:min-w-0">
+              <TabsTrigger
+                value="partners"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <Handshake className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('admin:tabs.partners')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="merchants"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <Store className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('admin:tabs.merchants')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="transactions"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <CreditCard className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('admin:tabs.transactions')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="admins"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <Users className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('admin:tabs.admins')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="configuration"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <Settings className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('admin:tabs.configuration')}</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Partners Tab */}
           <TabsContent value="partners" className="space-y-4">
