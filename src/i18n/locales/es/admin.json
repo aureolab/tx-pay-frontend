@@ -32,7 +32,11 @@
       "add": "Agregar Proveedor",
       "remove": "Eliminar",
       "noDefaults": "Sin configuraciones de adquirentes por defecto.",
-      "selectProvider": "Seleccionar proveedor..."
+      "selectProvider": "Seleccionar proveedor...",
+      "enabledCountries": "Paises Habilitados",
+      "enabledCountriesHint": "Selecciona los paises disponibles para pagos con Vita Wallet",
+      "allCountries": "Todos los paises disponibles",
+      "selectCountries": "Seleccionar paises..."
     },
     "save": "Guardar Cambios",
     "saving": "Guardando...",
@@ -270,7 +274,9 @@
       "submit": "Crear Transaccion",
       "createError": "Error al crear transaccion",
       "placeholderAmount": "10000",
-      "placeholderCallback": "https://tu-sitio.com/callback"
+      "placeholderCallback": "https://tu-sitio.com/callback",
+      "vitaCountry": "Pais destino (Vita Wallet)",
+      "selectCountry": "Seleccionar pais"
     },
     "merchant": {
       "createTitle": "Crear Comercio",
@@ -353,7 +359,8 @@
       "pspUserId": "ID de Usuario PSP",
       "callbackUrl": "URL de Callback",
       "gatewayResult": "Resultado del Gateway",
-      "expiresAt": "Expira el"
+      "expiresAt": "Expira el",
+      "vitaCountry": "Pais Destino (Vita)"
     },
     "merchantDetail": {
       "title": "Detalles del Comercio",

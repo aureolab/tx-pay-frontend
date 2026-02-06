@@ -32,7 +32,11 @@
       "add": "Add Provider",
       "remove": "Remove",
       "noDefaults": "No default acquirer configurations set.",
-      "selectProvider": "Select provider..."
+      "selectProvider": "Select provider...",
+      "enabledCountries": "Enabled Countries",
+      "enabledCountriesHint": "Select which countries are available for Vita Wallet payments",
+      "allCountries": "All available countries",
+      "selectCountries": "Select countries..."
     },
     "save": "Save Changes",
     "saving": "Saving...",
@@ -270,7 +274,9 @@
       "submit": "Create Transaction",
       "createError": "Failed to create transaction",
       "placeholderAmount": "10000",
-      "placeholderCallback": "https://your-site.com/callback"
+      "placeholderCallback": "https://your-site.com/callback",
+      "vitaCountry": "Destination country (Vita Wallet)",
+      "selectCountry": "Select country"
     },
     "merchant": {
       "createTitle": "Create Merchant",
@@ -353,7 +359,8 @@
       "pspUserId": "PSP User ID",
       "callbackUrl": "Callback URL",
       "gatewayResult": "Gateway Result",
-      "expiresAt": "Expires At"
+      "expiresAt": "Expires At",
+      "vitaCountry": "Destination Country (Vita)"
     },
     "merchantDetail": {
       "title": "Merchant Details",

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { PartnerMerchant, CreateTransactionRequest } from '../../types/partner.types';
 import { partnerTransactionsApi } from '../../api/partnerClient';
 import { getPaymentMethodLabel } from '@/lib/constants';
 import { TransactionSuccessView } from '@/components/shared/TransactionSuccessView';
+import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
+import { DEFAULT_VITA_COUNTRY, type VitaCountry } from '@/lib/vita-countries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,14 +39,40 @@ export function PartnerCreateTransactionDialog({
   onOpenChange,
   onSuccess,
 }: PartnerCreateTransactionDialogProps) {
+  const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
+  const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
   const [formData, setFormData] = useState<CreateTransactionRequest>({
     amount: 0,
     currency: 'CLP',
     payment_method: merchant?.enabled_payment_methods[0] || 'PAYMENT_LINK',
+    vita_country: DEFAULT_VITA_COUNTRY,
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState<any>(null);
+
+  // Check if merchant has Vita Wallet enabled
+  const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
+
+  // Determine if we should show the country selector
+  const showCountrySelector =
+    formData.payment_method === 'VITA_WALLET' ||
+    ((formData.payment_method === 'PAYMENT_LINK' || formData.payment_method === 'QR') && merchantHasVita);
+
+  // Load Vita countries when dialog opens
+  useEffect(() => {
+    if (open && merchant?._id) {
+      partnerTransactionsApi.getVitaCountries(merchant._id)
+        .then(res => {
+          setVitaCountries(res.data.countries);
+          setDefaultCountry(res.data.default_country);
+          setFormData(prev => ({ ...prev, vita_country: res.data.default_country }));
+        })
+        .catch(() => {
+          // Fallback to empty
+        });
+    }
+  }, [open, merchant?._id]);
 
   function handleOpenChange(value: boolean) {
     if (value) {
@@ -53,6 +81,7 @@ export function PartnerCreateTransactionDialog({
         amount: 0,
         currency: 'CLP',
         payment_method: merchant?.enabled_payment_methods[0] || 'PAYMENT_LINK',
+        vita_country: defaultCountry,
       });
       setError('');
       setSuccessResult(null);
@@ -172,6 +201,19 @@ export function PartnerCreateTransactionDialog({
                 </Select>
               </div>
             </div>
+
+            {showCountrySelector && vitaCountries.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="partner-vita-country">Pais destino (Vita Wallet)</Label>
+                <VitaCountrySelector
+                  value={formData.vita_country || defaultCountry}
+                  onChange={(code) => setFormData({ ...formData, vita_country: code })}
+                  countries={vitaCountries}
+                  className="h-11"
+                  placeholder="Seleccionar pais"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="partner-callback-url">URL de Callback (opcional)</Label>

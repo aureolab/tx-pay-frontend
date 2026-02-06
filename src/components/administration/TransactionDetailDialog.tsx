@@ -11,6 +11,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CreditCard } from 'lucide-react';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
+import { getVitaCountryByCode } from '@/lib/vita-countries';
 
 export function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation('admin');
@@ -140,6 +141,27 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: an
               <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                 <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.transactionDetail.callbackUrl')}</Label>
                 <p className="font-mono text-sm bg-zinc-50/80 dark:bg-zinc-800/50 p-2 rounded-lg break-all mt-1">{item.callback_url}</p>
+              </div>
+            )}
+
+            {/* Vita Country */}
+            {item.vita_country && (
+              <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.transactionDetail.vitaCountry')}</Label>
+                <p className="font-medium text-zinc-900 dark:text-white mt-0.5 flex items-center gap-2">
+                  {(() => {
+                    const country = getVitaCountryByCode(item.vita_country);
+                    const flagUrl = item.vita_country === 'EU'
+                      ? 'https://flagcdn.com/24x18/eu.png'
+                      : `https://flagcdn.com/24x18/${item.vita_country.toLowerCase()}.png`;
+                    return country ? (
+                      <>
+                        <img src={flagUrl} alt={country.name} className="w-6 h-4 object-cover rounded-sm" />
+                        <span>{country.name}</span>
+                      </>
+                    ) : item.vita_country;
+                  })()}
+                </p>
               </div>
             )}
 

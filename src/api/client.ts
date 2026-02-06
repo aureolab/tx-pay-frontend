@@ -99,6 +99,11 @@ export const transactionsApi = {
   void: (id: string) => client.post(`/transactions/${id}/void`),
   export: (params?: Record<string, string>) =>
     client.get('/transactions/export', { params, responseType: 'blob' }),
+  getVitaCountries: (merchantId: string) =>
+    client.get<{ countries: Array<{ code: string; name: string; flag: string }>; default_country: string }>(
+      '/transactions/vita-countries',
+      { params: { merchantId } }
+    ),
 };
 
 // Partners

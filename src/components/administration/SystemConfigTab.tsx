@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Check, Plus, Trash2, Settings, Shield, FileSpreadsheet, RotateCcw, DollarSign } from 'lucide-react';
+import { AlertCircle, Check, Plus, Trash2, Settings, Shield, FileSpreadsheet, RotateCcw, DollarSign, Globe } from 'lucide-react';
 import { PaymentMethods } from '@/lib/constants';
+import { VITA_WALLET_COUNTRIES } from '@/lib/vita-countries';
 
 interface AcquirerDefault {
   provider: string;
@@ -368,6 +369,76 @@ export function SystemConfigTab() {
                           rows={4}
                         />
                       </div>
+
+                      {/* Vita Wallet Countries Selector */}
+                      {acquirer.provider === 'VITA_WALLET' && (
+                        <div className="mt-3 pt-3 border-t border-zinc-200/60 dark:border-zinc-700/40">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Globe className="w-4 h-4 text-blue-500" />
+                            <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                              {t('admin:configuration.acquirers.enabledCountries')}
+                            </Label>
+                          </div>
+                          <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-3">
+                            {t('admin:configuration.acquirers.enabledCountriesHint')}
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {VITA_WALLET_COUNTRIES.map((country) => {
+                              const configObj = typeof acquirer.config === 'string'
+                                ? (() => { try { return JSON.parse(acquirer.config); } catch { return {}; } })()
+                                : acquirer.config || {};
+                              const enabledCountries: string[] = configObj.enabled_countries || [];
+                              const isChecked = enabledCountries.includes(country.code);
+
+                              return (
+                                <label
+                                  key={country.code}
+                                  className={`
+                                    flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-colors
+                                    ${isChecked
+                                      ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
+                                      : 'bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200/60 dark:border-zinc-700/40 hover:bg-zinc-100/50 dark:hover:bg-zinc-700/30'
+                                    }
+                                  `}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const checked = e.target.checked;
+                                      const newEnabledCountries = checked
+                                        ? [...enabledCountries, country.code]
+                                        : enabledCountries.filter((c) => c !== country.code);
+                                      const newConfig = { ...configObj, enabled_countries: newEnabledCountries };
+                                      updateAcquirerDefault(index, 'config', JSON.stringify(newConfig, null, 2));
+                                    }}
+                                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
+                                  />
+                                  <img
+                                    src={country.code === 'EU' ? 'https://flagcdn.com/20x15/eu.png' : `https://flagcdn.com/20x15/${country.code.toLowerCase()}.png`}
+                                    alt={country.name}
+                                    className="w-5 h-4 object-cover rounded-sm"
+                                  />
+                                  <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 truncate">
+                                    {country.name}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-2">
+                            {(() => {
+                              const configObj = typeof acquirer.config === 'string'
+                                ? (() => { try { return JSON.parse(acquirer.config); } catch { return {}; } })()
+                                : acquirer.config || {};
+                              const enabledCountries: string[] = configObj.enabled_countries || [];
+                              return enabledCountries.length === 0
+                                ? t('admin:configuration.acquirers.allCountries')
+                                : `${enabledCountries.length} ${enabledCountries.length === 1 ? 'país' : 'países'} seleccionados`;
+                            })()}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     {/* Delete button on desktop */}
                     <Button

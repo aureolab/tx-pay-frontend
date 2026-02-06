@@ -127,7 +127,8 @@
       "terminalId": "Terminal ID",
       "externalReference": "External Reference",
       "callbackUrl": "Callback URL",
-      "expiresAt": "Expires At"
+      "expiresAt": "Expires At",
+      "vitaCountry": "Destination Country (Vita)"
     },
     "createUser": {
       "title": "Create Client User",

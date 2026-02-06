@@ -23,6 +23,8 @@ import {
 import { AlertCircle, CreditCard } from 'lucide-react';
 import { getPaymentMethodLabel } from '@/lib/constants';
 import { TransactionSuccessView } from '@/components/shared/TransactionSuccessView';
+import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
+import { DEFAULT_VITA_COUNTRY, type VitaCountry } from '@/lib/vita-countries';
 
 interface CreateTransactionDialogProps {
   merchant: any;
@@ -36,12 +38,38 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
+  const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
   const [formData, setFormData] = useState({
     amount: '',
     currency: 'CLP',
     payment_method: 'PAYMENT_LINK' as string,
     callback_url: '',
+    vita_country: DEFAULT_VITA_COUNTRY,
   });
+
+  // Check if merchant has Vita Wallet enabled
+  const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
+
+  // Determine if we should show the country selector
+  const showCountrySelector =
+    formData.payment_method === 'VITA_WALLET' ||
+    ((formData.payment_method === 'PAYMENT_LINK' || formData.payment_method === 'QR') && merchantHasVita);
+
+  // Load Vita countries when dialog opens
+  useEffect(() => {
+    if (open && merchant?._id) {
+      transactionsApi.getVitaCountries(merchant._id)
+        .then(res => {
+          setVitaCountries(res.data.countries);
+          setDefaultCountry(res.data.default_country);
+          setFormData(prev => ({ ...prev, vita_country: res.data.default_country }));
+        })
+        .catch(() => {
+          // Fallback to empty, selector won't show if no countries
+        });
+    }
+  }, [open, merchant?._id]);
 
   useEffect(() => {
     if (open) {
@@ -50,11 +78,12 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
         currency: 'CLP',
         payment_method: 'PAYMENT_LINK',
         callback_url: '',
+        vita_country: defaultCountry,
       });
       setError('');
       setResult(null);
     }
-  }, [open]);
+  }, [open, defaultCountry]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +91,7 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
     setError('');
     setResult(null);
     try {
-      const payload = {
+      const payload: any = {
         user_context: {
           is_guest: true,
         },
@@ -73,6 +102,11 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
         payment_method: formData.payment_method,
         callback_url: formData.callback_url || undefined,
       };
+
+      // Include vita_country if applicable
+      if (showCountrySelector && formData.vita_country) {
+        payload.vita_country = formData.vita_country;
+      }
 
       const res = await transactionsApi.create(payload, merchant._id);
       setResult(res.data);
@@ -190,6 +224,21 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                 </SelectContent>
               </Select>
             </div>
+
+            {showCountrySelector && vitaCountries.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="tx-vita-country" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  {t('dialogs.createTransaction.vitaCountry', 'Pais destino (Vita Wallet)')}
+                </Label>
+                <VitaCountrySelector
+                  value={formData.vita_country}
+                  onChange={(code) => setFormData({ ...formData, vita_country: code })}
+                  countries={vitaCountries}
+                  className="bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg"
+                  placeholder={t('dialogs.createTransaction.selectCountry', 'Seleccionar pais')}
+                />
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <Label htmlFor="tx-callback" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">

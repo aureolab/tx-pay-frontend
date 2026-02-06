@@ -127,7 +127,8 @@
       "terminalId": "ID del Terminal",
       "externalReference": "Referencia Externa",
       "callbackUrl": "URL de Callback",
-      "expiresAt": "Expira"
+      "expiresAt": "Expira",
+      "vitaCountry": "Pais Destino (Vita)"
     },
     "createUser": {
       "title": "Crear Usuario Cliente",

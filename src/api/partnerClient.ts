@@ -105,10 +105,16 @@ export const partnerTransactionsApi = {
         },
         payment_method: data.payment_method,
         callback_url: data.callback_url,
+        vita_country: data.vita_country,
       },
       {
         headers: { 'X-Merchant-Id': merchantId },
       },
+    ),
+  getVitaCountries: (merchantId: string) =>
+    partnerClient.get<{ countries: Array<{ code: string; name: string; flag: string }>; default_country: string }>(
+      '/transactions/vita-countries',
+      { params: { merchantId } }
     ),
 };
 

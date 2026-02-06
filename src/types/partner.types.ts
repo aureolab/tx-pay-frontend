@@ -96,6 +96,7 @@ export interface PartnerTransaction {
   external_reference?: string;
   callback_url?: string;
   expires_at?: string;
+  vita_country?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -107,6 +108,7 @@ export interface CreateTransactionRequest {
   payment_method: string;
   callback_url?: string;
   external_reference?: string;
+  vita_country?: string;
 }
 
 // Partner-managed client user (from partner portal user management)
