@@ -52,9 +52,10 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
   const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
 
   // Determine if we should show the country selector
+  // Show for VITA_WALLET or PAYMENT_LINK when merchant has Vita enabled
   const showCountrySelector =
     formData.payment_method === 'VITA_WALLET' ||
-    ((formData.payment_method === 'PAYMENT_LINK' || formData.payment_method === 'QR') && merchantHasVita);
+    (formData.payment_method === 'PAYMENT_LINK' && merchantHasVita);
 
   // Load Vita countries when dialog opens
   useEffect(() => {
@@ -209,14 +210,15 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                 </SelectTrigger>
                 <SelectContent>
                   {merchant?.enabled_payment_methods?.length > 0
-                    ? merchant.enabled_payment_methods.map((method: string) => (
+                    ? merchant.enabled_payment_methods
+                        .filter((method: string) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
+                        .map((method: string) => (
                         <SelectItem key={method} value={method}>
                           {getPaymentMethodLabel(method)}
                         </SelectItem>
                       ))
                     : <>
                         <SelectItem value="PAYMENT_LINK">{getPaymentMethodLabel('PAYMENT_LINK')}</SelectItem>
-                        <SelectItem value="QR">{getPaymentMethodLabel('QR')}</SelectItem>
                         <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
                         <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
                       </>

@@ -3,7 +3,8 @@ import type { StatusConfig } from '@/types/dashboard.types';
 
 export const AdminRoles = ['SUPER_ADMIN', 'FINANCE', 'SUPPORT', 'COMPLIANCE'] as const;
 export const MerchantStatuses = ['ACTIVE', 'BLOCKED', 'REVIEW', 'INACTIVE'] as const;
-export const PaymentMethods = ['CREDIT', 'DEBIT', 'PREPAID', 'QR', 'PAYMENT_LINK', 'VITA_WALLET', 'WEBPAY'] as const;
+// Note: QR has been consolidated into PAYMENT_LINK - when creating a PAYMENT_LINK, both direct URL and QR URL are returned
+export const PaymentMethods = ['CREDIT', 'DEBIT', 'PREPAID', 'PAYMENT_LINK', 'VITA_WALLET', 'WEBPAY'] as const;
 export const PartnerStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export const PartnerUserTypes = ['PARTNER', 'CLIENT'] as const;
 export const PartnerUserStatuses = ['ACTIVE', 'INACTIVE'] as const;

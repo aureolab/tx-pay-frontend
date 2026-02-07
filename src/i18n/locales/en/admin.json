@@ -264,7 +264,7 @@
     },
     "createTransaction": {
       "title": "Create Transaction",
-      "description": "Create a payment link or QR for",
+      "description": "Create a payment link for",
       "amount": "Amount",
       "currency": "Currency",
       "paymentMethod": "Payment Method",

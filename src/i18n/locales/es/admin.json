@@ -264,7 +264,7 @@
     },
     "createTransaction": {
       "title": "Crear Transaccion",
-      "description": "Crear un link de pago o QR para",
+      "description": "Crear un link de pago para",
       "amount": "Monto",
       "currency": "Moneda",
       "paymentMethod": "Metodo de Pago",

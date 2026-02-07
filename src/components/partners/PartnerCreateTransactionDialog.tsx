@@ -55,9 +55,10 @@ export function PartnerCreateTransactionDialog({
   const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
 
   // Determine if we should show the country selector
+  // Show for VITA_WALLET or PAYMENT_LINK when merchant has Vita enabled
   const showCountrySelector =
     formData.payment_method === 'VITA_WALLET' ||
-    ((formData.payment_method === 'PAYMENT_LINK' || formData.payment_method === 'QR') && merchantHasVita);
+    (formData.payment_method === 'PAYMENT_LINK' && merchantHasVita);
 
   // Load Vita countries when dialog opens
   useEffect(() => {
@@ -192,7 +193,9 @@ export function PartnerCreateTransactionDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {merchant?.enabled_payment_methods.map((method) => (
+                    {merchant?.enabled_payment_methods
+                      .filter((method) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
+                      .map((method) => (
                       <SelectItem key={method} value={method}>
                         {getPaymentMethodLabel(method, 'es')}
                       </SelectItem>
