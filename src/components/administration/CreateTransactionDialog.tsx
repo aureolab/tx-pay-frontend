@@ -124,11 +124,11 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0">
         {/* Decorative top accent */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
+        <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 flex-shrink-0" />
 
-        <DialogHeader className="px-6 pt-5 pb-0">
+        <DialogHeader className="px-6 pt-5 pb-0 flex-shrink-0">
           <DialogTitle className="flex items-center gap-3 text-lg">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
               <CreditCard className="w-4.5 h-4.5 text-white" />
@@ -143,146 +143,148 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
           </DialogDescription>
         </DialogHeader>
 
-        {result ? (
-          <div className="px-6 pb-6 pt-4">
-            <TransactionSuccessView
-              result={result}
-              gradientClass="from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
-              locale={locale}
-              onClose={() => onOpenChange(false)}
-            />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
-            {error && (
-              <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm">{error}</AlertDescription>
-              </Alert>
-            )}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6">
+          {result ? (
+            <div className="py-4">
+              <TransactionSuccessView
+                result={result}
+                gradientClass="from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                locale={locale}
+                onClose={() => onOpenChange(false)}
+              />
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="py-4 space-y-4">
+              {error && (
+                <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
+                </Alert>
+              )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="tx-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                  {t('dialogs.createTransaction.amount')} {t('dialogs.common.required')}
-                </Label>
-                <Input
-                  id="tx-amount"
-                  type="number"
-                  step="1"
-                  min="1"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  placeholder={t('dialogs.createTransaction.placeholderAmount')}
-                  required
-                  className={inputClass}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="tx-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    {t('dialogs.createTransaction.amount')} {t('dialogs.common.required')}
+                  </Label>
+                  <Input
+                    id="tx-amount"
+                    type="number"
+                    step="1"
+                    min="1"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    placeholder={t('dialogs.createTransaction.placeholderAmount')}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tx-currency" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    {t('dialogs.createTransaction.currency')}
+                  </Label>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  >
+                    <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                      <SelectValue placeholder={t('dialogs.createTransaction.selectCurrency')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CLP">CLP</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+
               <div className="space-y-1.5">
-                <Label htmlFor="tx-currency" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                  {t('dialogs.createTransaction.currency')}
+                <Label htmlFor="tx-method" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  {t('dialogs.createTransaction.paymentMethod')} {t('dialogs.common.required')}
                 </Label>
                 <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  value={formData.payment_method}
+                  onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
                 >
                   <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
-                    <SelectValue placeholder={t('dialogs.createTransaction.selectCurrency')} />
+                    <SelectValue placeholder={t('dialogs.createTransaction.selectMethod')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CLP">CLP</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
+                    {merchant?.enabled_payment_methods?.length > 0
+                      ? merchant.enabled_payment_methods
+                          .filter((method: string) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
+                          .map((method: string) => (
+                          <SelectItem key={method} value={method}>
+                            {getPaymentMethodLabel(method)}
+                          </SelectItem>
+                        ))
+                      : <>
+                          <SelectItem value="PAYMENT_LINK">{getPaymentMethodLabel('PAYMENT_LINK')}</SelectItem>
+                          <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
+                          <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
+                        </>
+                    }
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="tx-method" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                {t('dialogs.createTransaction.paymentMethod')} {t('dialogs.common.required')}
-              </Label>
-              <Select
-                value={formData.payment_method}
-                onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
-              >
-                <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
-                  <SelectValue placeholder={t('dialogs.createTransaction.selectMethod')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {merchant?.enabled_payment_methods?.length > 0
-                    ? merchant.enabled_payment_methods
-                        .filter((method: string) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
-                        .map((method: string) => (
-                        <SelectItem key={method} value={method}>
-                          {getPaymentMethodLabel(method)}
-                        </SelectItem>
-                      ))
-                    : <>
-                        <SelectItem value="PAYMENT_LINK">{getPaymentMethodLabel('PAYMENT_LINK')}</SelectItem>
-                        <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
-                        <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
-                      </>
-                  }
-                </SelectContent>
-              </Select>
-            </div>
+              {showCountrySelector && vitaCountries.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="tx-vita-country" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    {t('dialogs.createTransaction.vitaCountry', 'Pais destino (Vita Wallet)')}
+                  </Label>
+                  <VitaCountrySelector
+                    value={formData.vita_country}
+                    onChange={(code) => setFormData({ ...formData, vita_country: code })}
+                    countries={vitaCountries}
+                    className="bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg"
+                    placeholder={t('dialogs.createTransaction.selectCountry', 'Seleccionar pais')}
+                  />
+                </div>
+              )}
 
-            {showCountrySelector && vitaCountries.length > 0 && (
               <div className="space-y-1.5">
-                <Label htmlFor="tx-vita-country" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                  {t('dialogs.createTransaction.vitaCountry', 'Pais destino (Vita Wallet)')}
+                <Label htmlFor="tx-callback" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  {t('dialogs.createTransaction.callbackUrl')}
                 </Label>
-                <VitaCountrySelector
-                  value={formData.vita_country}
-                  onChange={(code) => setFormData({ ...formData, vita_country: code })}
-                  countries={vitaCountries}
-                  className="bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg"
-                  placeholder={t('dialogs.createTransaction.selectCountry', 'Seleccionar pais')}
+                <Input
+                  id="tx-callback"
+                  type="url"
+                  value={formData.callback_url}
+                  onChange={(e) => setFormData({ ...formData, callback_url: e.target.value })}
+                  placeholder={t('dialogs.createTransaction.placeholderCallback')}
+                  className={inputClass}
                 />
               </div>
-            )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="tx-callback" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                {t('dialogs.createTransaction.callbackUrl')}
-              </Label>
-              <Input
-                id="tx-callback"
-                type="url"
-                value={formData.callback_url}
-                onChange={(e) => setFormData({ ...formData, callback_url: e.target.value })}
-                placeholder={t('dialogs.createTransaction.placeholderCallback')}
-                className={inputClass}
-              />
-            </div>
-
-            {/* Footer */}
-            <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 -mx-6 px-6 -mb-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
-              >
-                {t('dialogs.common.cancel')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 min-w-[90px]"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>{t('dialogs.common.creating')}</span>
-                  </div>
-                ) : (
-                  t('dialogs.createTransaction.submit')
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+              {/* Footer */}
+              <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                >
+                  {t('dialogs.common.cancel')}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 min-w-[90px]"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>{t('dialogs.common.creating')}</span>
+                    </div>
+                  ) : (
+                    t('dialogs.createTransaction.submit')
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
