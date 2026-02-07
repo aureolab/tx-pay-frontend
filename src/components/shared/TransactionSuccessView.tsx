@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, ExternalLink, Copy, Check, Clock, Sparkles } from 'lucide-react';
+import { CheckCircle2, Copy, Check, Clock, Sparkles, Link2, QrCode } from 'lucide-react';
 import { getStatusConfig } from '@/lib/constants';
 
 interface TransactionSuccessViewProps {
@@ -18,12 +17,8 @@ const labels = {
     subtitle: 'Your payment is ready to be processed',
     transactionId: 'Transaction ID',
     status: 'Status',
-    paymentLink: 'Payment Link',
-    qrCode: 'Scan to Pay',
-    copy: 'Copy',
-    copied: 'Copied!',
-    copyLink: 'Copy Link',
-    openPayment: 'Open Payment',
+    paymentLink: 'Direct Link',
+    qrLink: 'QR Link',
     close: 'Done',
     expiresIn: 'Expires in',
     minutes: 'min',
@@ -33,12 +28,8 @@ const labels = {
     subtitle: 'Tu pago esta listo para ser procesado',
     transactionId: 'ID de Transaccion',
     status: 'Estado',
-    paymentLink: 'Link de Pago',
-    qrCode: 'Escanea para Pagar',
-    copy: 'Copiar',
-    copied: 'Copiado!',
-    copyLink: 'Copiar Link',
-    openPayment: 'Abrir Pago',
+    paymentLink: 'Link Directo',
+    qrLink: 'Link QR',
     close: 'Listo',
     expiresIn: 'Expira en',
     minutes: 'min',
@@ -46,7 +37,8 @@ const labels = {
 };
 
 export function TransactionSuccessView({ result, gradientClass, locale = 'en', onClose }: TransactionSuccessViewProps) {
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedDirect, setCopiedDirect] = useState(false);
+  const [copiedQr, setCopiedQr] = useState(false);
 
   const t = labels[locale];
 
@@ -58,10 +50,15 @@ export function TransactionSuccessView({ result, gradientClass, locale = 'en', o
 
   const statusConfig = getStatusConfig(result.status, locale);
 
-  const handleCopy = async (url: string) => {
+  const handleCopy = async (url: string, type: 'direct' | 'qr') => {
     await navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    if (type === 'direct') {
+      setCopiedDirect(true);
+      setTimeout(() => setCopiedDirect(false), 2000);
+    } else {
+      setCopiedQr(true);
+      setTimeout(() => setCopiedQr(false), 2000);
+    }
   };
 
   // Extract gradient colors for theming
@@ -134,23 +131,63 @@ export function TransactionSuccessView({ result, gradientClass, locale = 'en', o
         </div>
       </div>
 
-      {/* Payment Methods */}
+      {/* Payment Links */}
       {checkoutUrl && (
-        <div className="space-y-4">
-          {/* Payment Link Section */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
+        <div className="space-y-3">
+          {/* Direct Link */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Link2 className={`w-4 h-4 ${isAmber ? 'text-amber-500' : 'text-blue-500'}`} />
               <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
                 {t.paymentLink}
               </span>
             </div>
+            <div className="flex-1 min-w-0 relative">
+              <input
+                type="text"
+                value={checkoutUrl}
+                readOnly
+                className="
+                  w-full h-10 px-3 pr-10
+                  text-xs font-mono text-zinc-600 dark:text-zinc-300
+                  bg-white dark:bg-zinc-900/60
+                  border border-zinc-200 dark:border-zinc-700
+                  rounded-lg
+                  focus:outline-none focus:ring-2 focus:ring-offset-1
+                  focus:ring-zinc-300 dark:focus:ring-zinc-600
+                  truncate
+                "
+              />
+              <button
+                type="button"
+                onClick={() => handleCopy(checkoutUrl, 'direct')}
+                className={`
+                  absolute right-2 top-1/2 -translate-y-1/2
+                  p-1.5 rounded-md transition-all duration-200
+                  ${copiedDirect
+                    ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                    : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }
+                `}
+              >
+                {copiedDirect ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
 
-            {/* Link Input with Actions */}
-            <div className="flex gap-2">
-              <div className="flex-1 min-w-0 relative group">
+          {/* QR Link */}
+          {qrUrl && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <QrCode className={`w-4 h-4 ${isAmber ? 'text-amber-500' : 'text-blue-500'}`} />
+                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
+                  {t.qrLink}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0 relative">
                 <input
                   type="text"
-                  value={checkoutUrl}
+                  value={qrUrl}
                   readOnly
                   className="
                     w-full h-10 px-3 pr-10
@@ -165,58 +202,18 @@ export function TransactionSuccessView({ result, gradientClass, locale = 'en', o
                 />
                 <button
                   type="button"
-                  onClick={() => handleCopy(checkoutUrl)}
+                  onClick={() => handleCopy(qrUrl, 'qr')}
                   className={`
                     absolute right-2 top-1/2 -translate-y-1/2
                     p-1.5 rounded-md transition-all duration-200
-                    ${copiedLink
+                    ${copiedQr
                       ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
                       : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }
                   `}
                 >
-                  {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copiedQr ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 </button>
-              </div>
-            </div>
-
-            {/* Primary Action Button */}
-            <Button
-              type="button"
-              className={`
-                w-full h-11 gap-2
-                bg-gradient-to-r ${gradientClass}
-                text-white font-medium
-                shadow-md hover:shadow-lg
-                ${isAmber ? 'shadow-amber-500/20 hover:shadow-amber-500/30' : 'shadow-blue-500/20 hover:shadow-blue-500/30'}
-                transition-all duration-200
-              `}
-              onClick={() => window.open(checkoutUrl, '_blank')}
-            >
-              <ExternalLink className="w-4 h-4" />
-              {t.openPayment}
-            </Button>
-          </div>
-
-          {/* QR Code Section */}
-          {qrUrl && (
-            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700/80">
-              <div className="text-center space-y-3">
-                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
-                  {t.qrCode}
-                </span>
-
-                {/* QR Container with styling */}
-                <div className="inline-flex p-4 bg-white rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-700">
-                  <QRCodeSVG
-                    value={qrUrl}
-                    size={140}
-                    level="M"
-                    includeMargin={false}
-                    bgColor="transparent"
-                    fgColor={isAmber ? '#d97706' : '#3b82f6'}
-                  />
-                </div>
               </div>
             </div>
           )}
