@@ -117,7 +117,7 @@ export function PartnerCreateTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-hidden bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">

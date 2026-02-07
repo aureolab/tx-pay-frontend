@@ -124,7 +124,7 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-lg max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden">
         {/* Decorative top accent */}
         <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
 
