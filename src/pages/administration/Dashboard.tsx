@@ -136,6 +136,7 @@ export default function Dashboard() {
   const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = useState(false);
   const [editingPaymentLink, setEditingPaymentLink] = useState<PaymentLink | null>(null);
   const [selectedPaymentLink, setSelectedPaymentLink] = useState<PaymentLink | null>(null);
+  const [deletingPaymentLink, setDeletingPaymentLink] = useState<PaymentLink | null>(null);
 
   // Password dialogs
   const [resetPasswordAdmin, setResetPasswordAdmin] = useState<any>(null);
@@ -382,12 +383,15 @@ export default function Dashboard() {
   };
 
   // Payment Link actions
-  const handleDeletePaymentLink = async (id: string) => {
+  const handleDeletePaymentLink = async () => {
+    if (!deletingPaymentLink) return;
     try {
-      await paymentLinksApi.delete(id);
+      await paymentLinksApi.delete(deletingPaymentLink._id);
+      setDeletingPaymentLink(null);
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
+      setDeletingPaymentLink(null);
     }
   };
 
@@ -926,30 +930,14 @@ export default function Dashboard() {
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>{t('admin:paymentLinks.deleteTitle')}</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          {t('admin:paymentLinks.deleteMessage', { name: link.name })}
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() => handleDeletePaymentLink(link._id)}
-                                          className="bg-red-500 hover:bg-red-600 text-white"
-                                        >
-                                          {t('common:buttons.delete')}
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setDeletingPaymentLink(link)}
+                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 border-red-200 dark:border-red-900/50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1358,6 +1346,27 @@ export default function Dashboard() {
         open={!!selectedPaymentLink}
         onOpenChange={(open) => !open && setSelectedPaymentLink(null)}
       />
+
+      {/* Delete Payment Link Confirmation */}
+      <AlertDialog open={!!deletingPaymentLink} onOpenChange={(open) => !open && setDeletingPaymentLink(null)}>
+        <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('admin:paymentLinks.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('admin:paymentLinks.deleteMessage', { name: deletingPaymentLink?.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common:buttons.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePaymentLink}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {t('common:buttons.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
