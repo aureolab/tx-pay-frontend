@@ -60,17 +60,15 @@ const initialFormData: FormData = {
   expires_at: '',
 };
 
-// Generate slug from name
-const generateSlug = (name: string) => {
-  const base = name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  // Add random suffix to ensure uniqueness
-  const suffix = Math.random().toString(36).substring(2, 8);
-  return `${base}-${suffix}`;
+// Generate unique slug (random ID only, no name)
+const generateSlug = () => {
+  // Generate a random 12-character alphanumeric ID
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let slug = '';
+  for (let i = 0; i < 12; i++) {
+    slug += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return slug;
 };
 
 export function PartnerPaymentLinkDialog({
@@ -133,7 +131,7 @@ export function PartnerPaymentLinkDialog({
       } else {
         const createData = {
           name: formData.name,
-          slug: generateSlug(formData.name),
+          slug: generateSlug(),
           description: formData.description || undefined,
           link_mode: formData.link_mode as 'SINGLE_USE' | 'REUSABLE',
           amount_mode: formData.amount_mode as 'FIXED' | 'VARIABLE',
