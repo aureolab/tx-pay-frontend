@@ -60,17 +60,6 @@ const initialFormData: FormData = {
   expires_at: '',
 };
 
-// Generate unique slug (random ID only, no name)
-const generateSlug = () => {
-  // Generate a random 12-character alphanumeric ID
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let slug = '';
-  for (let i = 0; i < 12; i++) {
-    slug += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return slug;
-};
-
 export function PartnerPaymentLinkDialog({
   merchantId,
   item,
@@ -131,7 +120,6 @@ export function PartnerPaymentLinkDialog({
       } else {
         const createData = {
           name: formData.name,
-          slug: generateSlug(),
           description: formData.description || undefined,
           link_mode: formData.link_mode as 'SINGLE_USE' | 'REUSABLE',
           amount_mode: formData.amount_mode as 'FIXED' | 'VARIABLE',
