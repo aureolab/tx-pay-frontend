@@ -12,6 +12,7 @@
   "tabs": {
     "partners": "Partners",
     "merchants": "Comercios",
+    "paymentLinks": "Links de Pago",
     "transactions": "Transacciones",
     "admins": "Administradores",
     "configuration": "Configuracion"
@@ -95,6 +96,25 @@
     "deleteTitle": "Eliminar Comercio",
     "deleteMessage": "Estas seguro de eliminar \"{{name}}\"? Esta accion no se puede deshacer."
   },
+  "paymentLinks": {
+    "title": "Links de Pago ({{total}} total)",
+    "create": "Nuevo Link",
+    "linkMode": "Tipo de Link",
+    "amountMode": "Tipo de Monto",
+    "columns": {
+      "merchant": "Comercio",
+      "name": "Nombre",
+      "code": "Codigo",
+      "type": "Tipo",
+      "amount": "Monto",
+      "uses": "Usos",
+      "status": "Estado"
+    },
+    "deleteTitle": "Eliminar Link de Pago",
+    "deleteMessage": "Estas seguro de eliminar el link \"{{name}}\"? Esta accion no se puede deshacer.",
+    "noResults": "No hay links de pago",
+    "variable": "Variable"
+  },
   "transactions": {
     "title": "Transacciones ({{total}} total)",
     "columns": {
@@ -130,6 +150,7 @@
     "search": "Buscar",
     "method": "Metodo",
     "partner": "Partner",
+    "merchant": "Comercio",
     "currency": "Moneda",
     "role": "Rol",
     "from": "Desde",
@@ -137,7 +158,11 @@
     "nameOrEmail": "Nombre o email...",
     "nameTaxId": "Nombre, RUT...",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "allStatuses": "Todos los estados",
+    "allMerchants": "Todos los comercios",
+    "allPartners": "Todos los partners",
+    "all": "Todos"
   },
   "errors": {
     "loadFailed": "Error al cargar datos",

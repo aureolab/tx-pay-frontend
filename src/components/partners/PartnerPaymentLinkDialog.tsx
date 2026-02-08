@@ -26,8 +26,14 @@ import type {
 } from '@/types/payment-link.types';
 import { LinkMode, AmountMode, toNumber } from '@/types/payment-link.types';
 
+interface Merchant {
+  _id: string;
+  profile?: { fantasy_name?: string; legal_name?: string };
+}
+
 interface PartnerPaymentLinkDialogProps {
-  merchantId: string;
+  merchantId?: string;
+  merchants?: Merchant[];
   item?: PaymentLink | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -62,6 +68,7 @@ const initialFormData: FormData = {
 
 export function PartnerPaymentLinkDialog({
   merchantId,
+  merchants,
   item,
   open,
   onOpenChange,
@@ -71,6 +78,11 @@ export function PartnerPaymentLinkDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
+
+  // Determine the effective merchant ID
+  const effectiveMerchantId = merchantId || selectedMerchantId;
+  const showMerchantSelector = !merchantId && merchants && merchants.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -87,8 +99,13 @@ export function PartnerPaymentLinkDialog({
           max_uses: item.max_uses?.toString() || '',
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
         });
+        // Set merchant from existing item for editing
+        if (typeof item.merchant_id === 'string') {
+          setSelectedMerchantId(item.merchant_id);
+        }
       } else {
         setFormData(initialFormData);
+        setSelectedMerchantId('');
       }
       setError('');
     }
@@ -96,6 +113,12 @@ export function PartnerPaymentLinkDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isEditing && !effectiveMerchantId) {
+      setError('Debe seleccionar un comercio');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -136,7 +159,7 @@ export function PartnerPaymentLinkDialog({
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
         };
-        await partnerPaymentLinksApi.create(createData, merchantId);
+        await partnerPaymentLinksApi.create(createData, effectiveMerchantId);
       }
 
       onSuccess();
@@ -178,6 +201,28 @@ export function PartnerPaymentLinkDialog({
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
+              )}
+
+              {/* Merchant Selector - shown when creating from dashboard tab */}
+              {showMerchantSelector && !isEditing && (
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Comercio *</Label>
+                  <Select
+                    value={selectedMerchantId}
+                    onValueChange={setSelectedMerchantId}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccionar comercio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {merchants?.map((m) => (
+                        <SelectItem key={m._id} value={m._id}>
+                          {m.profile?.fantasy_name || m.profile?.legal_name || m._id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               {/* Nombre */}

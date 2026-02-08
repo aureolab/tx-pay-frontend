@@ -10,6 +10,7 @@
   },
   "tabs": {
     "merchants": "Comercios",
+    "paymentLinks": "Links de Pago",
     "transactions": "Transacciones",
     "users": "Usuarios"
   },
@@ -57,6 +58,25 @@
     },
     "noResults": "No hay usuarios cliente aún"
   },
+  "paymentLinks": {
+    "title": "Links de Pago ({{total}})",
+    "create": "Nuevo Link",
+    "linkMode": "Tipo de Link",
+    "amountMode": "Tipo de Monto",
+    "columns": {
+      "merchant": "Comercio",
+      "name": "Nombre",
+      "code": "Código",
+      "type": "Tipo",
+      "amount": "Monto",
+      "uses": "Usos",
+      "status": "Estado"
+    },
+    "deleteTitle": "Eliminar Link de Pago",
+    "deleteMessage": "¿Está seguro que desea eliminar el link \"{{name}}\"? Esta acción no se puede deshacer.",
+    "noResults": "No hay links de pago",
+    "variable": "Variable"
+  },
   "filters": {
     "status": "Estado",
     "search": "Buscar",
@@ -71,7 +91,9 @@
     "loadMerchants": "Error al cargar comercios",
     "loadTransactions": "Error al cargar transacciones",
     "loadUsers": "Error al cargar usuarios",
-    "exportFailed": "Error al exportar transacciones"
+    "loadPaymentLinks": "Error al cargar links de pago",
+    "exportFailed": "Error al exportar transacciones",
+    "deleteFailed": "Error al eliminar"
   },
   "dialogs": {
     "common": {

@@ -27,8 +27,14 @@ import type {
 } from '@/types/payment-link.types';
 import { LinkMode, AmountMode, toNumber } from '@/types/payment-link.types';
 
+interface Merchant {
+  _id: string;
+  profile?: { fantasy_name?: string; legal_name?: string };
+}
+
 interface PaymentLinkDialogProps {
-  merchantId: string;
+  merchantId?: string;
+  merchants?: Merchant[];
   item?: PaymentLink | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,6 +69,7 @@ const initialFormData: FormData = {
 
 export function PaymentLinkDialog({
   merchantId,
+  merchants,
   item,
   open,
   onOpenChange,
@@ -72,6 +79,11 @@ export function PaymentLinkDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
+
+  // Determine the effective merchant ID
+  const effectiveMerchantId = merchantId || selectedMerchantId;
+  const showMerchantSelector = !merchantId && merchants && merchants.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -88,8 +100,13 @@ export function PaymentLinkDialog({
           max_uses: item.max_uses?.toString() || '',
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
         });
+        // Set merchant from existing item for editing
+        if (typeof item.merchant_id === 'string') {
+          setSelectedMerchantId(item.merchant_id);
+        }
       } else {
         setFormData(initialFormData);
+        setSelectedMerchantId('');
       }
       setError('');
     }
@@ -97,6 +114,12 @@ export function PaymentLinkDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isEditing && !effectiveMerchantId) {
+      setError('Debe seleccionar un comercio');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -120,7 +143,7 @@ export function PaymentLinkDialog({
         await paymentLinksApi.update(item._id, updateData);
       } else {
         const createData: CreatePaymentLinkRequest = {
-          merchant_id: merchantId,
+          merchant_id: effectiveMerchantId,
           name: formData.name,
           description: formData.description || undefined,
           link_mode: formData.link_mode as 'SINGLE_USE' | 'REUSABLE',
@@ -180,6 +203,28 @@ export function PaymentLinkDialog({
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
+              )}
+
+              {/* Merchant Selector - shown when creating from dashboard tab */}
+              {showMerchantSelector && !isEditing && (
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Comercio *</Label>
+                  <Select
+                    value={selectedMerchantId}
+                    onValueChange={setSelectedMerchantId}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Seleccionar comercio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {merchants?.map((m) => (
+                        <SelectItem key={m._id} value={m._id}>
+                          {m.profile?.fantasy_name || m.profile?.legal_name || m._id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               {/* Nombre */}

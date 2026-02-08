@@ -10,6 +10,7 @@
   },
   "tabs": {
     "merchants": "Merchants",
+    "paymentLinks": "Payment Links",
     "transactions": "Transactions",
     "users": "Users"
   },
@@ -57,6 +58,25 @@
     },
     "noResults": "No client users yet"
   },
+  "paymentLinks": {
+    "title": "Payment Links ({{total}})",
+    "create": "New Link",
+    "linkMode": "Link Type",
+    "amountMode": "Amount Type",
+    "columns": {
+      "merchant": "Merchant",
+      "name": "Name",
+      "code": "Code",
+      "type": "Type",
+      "amount": "Amount",
+      "uses": "Uses",
+      "status": "Status"
+    },
+    "deleteTitle": "Delete Payment Link",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "noResults": "No payment links found",
+    "variable": "Variable"
+  },
   "filters": {
     "status": "Status",
     "search": "Search",
@@ -71,7 +91,9 @@
     "loadMerchants": "Failed to load merchants",
     "loadTransactions": "Failed to load transactions",
     "loadUsers": "Failed to load users",
-    "exportFailed": "Failed to export transactions"
+    "loadPaymentLinks": "Failed to load payment links",
+    "exportFailed": "Failed to export transactions",
+    "deleteFailed": "Delete failed"
   },
   "dialogs": {
     "common": {

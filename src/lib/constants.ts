@@ -11,6 +11,11 @@ export const PartnerUserStatuses = ['ACTIVE', 'INACTIVE'] as const;
 export const TransactionStatuses = ['CREATED', 'PENDING', 'APPROVED', 'REJECTED', 'VOIDED', 'REFUNDED', 'EXPIRED'] as const;
 export const TransactionCurrencies = ['CLP', 'USD'] as const;
 
+// Payment Link constants
+export const PaymentLinkStatuses = ['ACTIVE', 'INACTIVE', 'EXPIRED', 'EXHAUSTED'] as const;
+export const LinkModes = ['SINGLE_USE', 'REUSABLE'] as const;
+export const AmountModes = ['FIXED', 'VARIABLE'] as const;
+
 const STATUS_STYLES: Record<string, { variant: StatusConfig['variant']; className: string }> = {
   APPROVED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
   CAPTURED: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
@@ -66,4 +71,43 @@ const PAYMENT_METHOD_LABELS: Record<string, { en: string; es: string }> = {
 
 export function getPaymentMethodLabel(method: string, locale?: 'en' | 'es'): string {
   return PAYMENT_METHOD_LABELS[method]?.[resolveLocale(locale)] || method;
+}
+
+// Payment Link helpers
+const LINK_MODE_LABELS: Record<string, { en: string; es: string }> = {
+  SINGLE_USE: { en: 'Single Use', es: 'Uso unico' },
+  REUSABLE: { en: 'Reusable', es: 'Reutilizable' },
+};
+
+const AMOUNT_MODE_LABELS: Record<string, { en: string; es: string }> = {
+  FIXED: { en: 'Fixed', es: 'Fijo' },
+  VARIABLE: { en: 'Variable', es: 'Variable' },
+};
+
+const PAYMENT_LINK_STATUS_STYLES: Record<string, { variant: StatusConfig['variant']; className: string }> = {
+  ACTIVE: { variant: 'default', className: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+  INACTIVE: { variant: 'outline', className: 'bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20' },
+  EXPIRED: { variant: 'destructive', className: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20' },
+  EXHAUSTED: { variant: 'secondary', className: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+};
+
+const PAYMENT_LINK_STATUS_LABELS: Record<string, { en: string; es: string }> = {
+  ACTIVE: { en: 'Active', es: 'Activo' },
+  INACTIVE: { en: 'Inactive', es: 'Inactivo' },
+  EXPIRED: { en: 'Expired', es: 'Expirado' },
+  EXHAUSTED: { en: 'Exhausted', es: 'Agotado' },
+};
+
+export function getLinkModeLabel(mode: string, locale?: 'en' | 'es'): string {
+  return LINK_MODE_LABELS[mode]?.[resolveLocale(locale)] || mode;
+}
+
+export function getAmountModeLabel(mode: string, locale?: 'en' | 'es'): string {
+  return AMOUNT_MODE_LABELS[mode]?.[resolveLocale(locale)] || mode;
+}
+
+export function getPaymentLinkStatusConfig(status: string, locale?: 'en' | 'es'): StatusConfig {
+  const style = PAYMENT_LINK_STATUS_STYLES[status] || { variant: 'outline' as const, className: '' };
+  const labels = PAYMENT_LINK_STATUS_LABELS[status];
+  return { ...style, label: labels?.[resolveLocale(locale)] || status };
 }

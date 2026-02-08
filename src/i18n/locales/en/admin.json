@@ -12,6 +12,7 @@
   "tabs": {
     "partners": "Partners",
     "merchants": "Merchants",
+    "paymentLinks": "Payment Links",
     "transactions": "Transactions",
     "admins": "Admin Users",
     "configuration": "Configuration"
@@ -95,6 +96,25 @@
     "deleteTitle": "Delete Merchant",
     "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
   },
+  "paymentLinks": {
+    "title": "Payment Links ({{total}} total)",
+    "create": "New Link",
+    "linkMode": "Link Type",
+    "amountMode": "Amount Type",
+    "columns": {
+      "merchant": "Merchant",
+      "name": "Name",
+      "code": "Code",
+      "type": "Type",
+      "amount": "Amount",
+      "uses": "Uses",
+      "status": "Status"
+    },
+    "deleteTitle": "Delete Payment Link",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "noResults": "No payment links found",
+    "variable": "Variable"
+  },
   "transactions": {
     "title": "Transactions ({{total}} total)",
     "columns": {
@@ -130,6 +150,7 @@
     "search": "Search",
     "method": "Method",
     "partner": "Partner",
+    "merchant": "Merchant",
     "currency": "Currency",
     "role": "Role",
     "from": "From",
@@ -137,7 +158,11 @@
     "nameOrEmail": "Name or email...",
     "nameTaxId": "Name, tax ID...",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "allStatuses": "All statuses",
+    "allMerchants": "All merchants",
+    "allPartners": "All partners",
+    "all": "All"
   },
   "errors": {
     "loadFailed": "Failed to load data",

@@ -5,19 +5,25 @@ import {
   partnerMerchantsApi,
   partnerTransactionsApi,
   partnerPortalUsersApi,
+  partnerPaymentLinksApi,
 } from '../../api/partnerClient';
 import type {
   PartnerMerchant,
   PartnerTransaction,
   PartnerClientUser,
 } from '../../types/partner.types';
+import type { PaymentLink } from '@/types/payment-link.types';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
   getStatusConfig,
   getPaymentMethodLabel,
+  getPaymentLinkStatusConfig,
+  getLinkModeLabel,
   MerchantStatuses,
   TransactionStatuses,
   PaymentMethods,
+  PaymentLinkStatuses,
+  LinkModes,
 } from '@/lib/constants';
 import { getDecimalValue, formatCurrency, formatDate } from '@/lib/formatters';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
@@ -33,6 +39,8 @@ import { PartnerTransactionDetailDialog } from '@/components/partners/PartnerTra
 import { PartnerClientUserDialog } from '@/components/partners/PartnerClientUserDialog';
 import { PartnerResetPasswordDialog } from '@/components/partners/PartnerResetPasswordDialog';
 import { PartnerChangeMyPasswordDialog } from '@/components/partners/PartnerChangeMyPasswordDialog';
+import { PartnerPaymentLinkDialog } from '@/components/partners/PartnerPaymentLinkDialog';
+import { PartnerPaymentLinkDetailDialog } from '@/components/partners/PartnerPaymentLinkDetailDialog';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,6 +78,7 @@ import {
   Users,
   Pencil,
   Trash2,
+  Link2,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
 
@@ -89,10 +98,11 @@ export default function PartnerDashboard() {
   const [merchants, setMerchants] = useState<PartnerMerchant[]>([]);
   const [transactions, setTransactions] = useState<PartnerTransaction[]>([]);
   const [clientUsers, setClientUsers] = useState<PartnerClientUser[]>([]);
+  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
   const [meta, setMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
   const [usersMeta, setUsersMeta] = useState({ total: 0, totalPages: 0, hasNextPage: false, hasPrevPage: false });
 
-  const [counts, setCounts] = useState({ merchants: 0, activeMerchants: 0, transactions: 0, users: 0 });
+  const [counts, setCounts] = useState({ merchants: 0, activeMerchants: 0, transactions: 0, users: 0, paymentLinks: 0 });
 
   // UI states
   const [loading, setLoading] = useState(true);
@@ -116,13 +126,19 @@ export default function PartnerDashboard() {
   const [resetPasswordUser, setResetPasswordUser] = useState<PartnerClientUser | null>(null);
   const [changeMyPasswordOpen, setChangeMyPasswordOpen] = useState(false);
 
+  // Payment link dialog states
+  const [paymentLinkDialogOpen, setPaymentLinkDialogOpen] = useState(false);
+  const [editingPaymentLink, setEditingPaymentLink] = useState<PaymentLink | null>(null);
+  const [selectedPaymentLink, setSelectedPaymentLink] = useState<PaymentLink | null>(null);
+
   // Load all counts on mount
   useEffect(() => {
     const loadCounts = async () => {
       try {
-        const [mRes, tRes] = await Promise.all([
+        const [mRes, tRes, plRes] = await Promise.all([
           partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }),
           partnerTransactionsApi.getMyTransactions({ page: 1, limit: 1 }),
+          partnerPaymentLinksApi.list({ page: 1, limit: 1 }),
         ]);
         const merchantsData = mRes.data.data as PartnerMerchant[];
         const activeMerch = merchantsData.filter((m) => m.status === 'ACTIVE').length;
@@ -131,6 +147,7 @@ export default function PartnerDashboard() {
           merchants: merchantsData.length,
           activeMerchants: activeMerch,
           transactions: mRes.data.meta ? mRes.data.meta.total : merchantsData.length,
+          paymentLinks: (plRes.data as any).meta.total,
         }));
         setCounts(prev => ({
           ...prev,
@@ -168,7 +185,12 @@ export default function PartnerDashboard() {
       { key: 'dateFrom', label: t('partner:filters.from'), type: 'date' },
       { key: 'dateTo', label: t('partner:filters.to'), type: 'date' },
     ],
-  }), [merchantOptions, t]);
+    paymentLinks: [
+      { key: 'status', label: t('partner:filters.status'), type: 'select', placeholder: t('common:filters.allStatuses'), options: PaymentLinkStatuses.map((s) => ({ value: s, label: getPaymentLinkStatusConfig(s, i18n.language as 'en' | 'es').label })) },
+      { key: 'merchant_id', label: t('partner:filters.merchant'), type: 'select', placeholder: t('common:filters.allMerchants'), options: merchantOptions },
+      { key: 'link_mode', label: t('partner:paymentLinks.linkMode'), type: 'select', placeholder: t('common:filters.all'), options: LinkModes.map((m) => ({ value: m, label: getLinkModeLabel(m, i18n.language as 'en' | 'es') })) },
+    ],
+  }), [merchantOptions, t, i18n.language]);
 
   // Fetch merchants
   const fetchMerchants = useCallback(async (pageNum: number = 1) => {
@@ -217,6 +239,18 @@ export default function PartnerDashboard() {
     }
   }, [isPartnerType, t]);
 
+  // Fetch payment links
+  const fetchPaymentLinks = useCallback(async (pageNum: number = 1, linkFilters?: Record<string, string>) => {
+    try {
+      const res = await partnerPaymentLinksApi.list({ page: pageNum, limit: 10, ...linkFilters });
+      setPaymentLinks(res.data.data);
+      setMeta(res.data.meta);
+      setCounts(prev => ({ ...prev, paymentLinks: res.data.meta.total }));
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('partner:errors.loadPaymentLinks'));
+    }
+  }, [t]);
+
   // Load data based on active tab and filters
   useEffect(() => {
     let cancelled = false;
@@ -242,12 +276,24 @@ export default function PartnerDashboard() {
           }).catch(() => {});
         }
         await fetchClientUsers(page);
+      } else if (tab === 'paymentLinks') {
+        // Load merchants in background for filter dropdown and dialog if not yet loaded
+        if (merchants.length === 0) {
+          partnerMerchantsApi.getMyMerchants({ page: 1, limit: 100 }).then((res) => {
+            if (!cancelled) setMerchants(res.data.data);
+          }).catch(() => {});
+        }
+        const linkFilters: Record<string, string> = {};
+        if (filters.status) linkFilters.status = filters.status as string;
+        if (filters.merchant_id) linkFilters.merchant_id = filters.merchant_id as string;
+        if (filters.link_mode) linkFilters.link_mode = filters.link_mode as string;
+        await fetchPaymentLinks(page, linkFilters);
       }
       if (!cancelled) setLoading(false);
     };
     loadData();
     return () => { cancelled = true; };
-  }, [tab, page, JSON.stringify(filters), fetchMerchants, fetchTransactions, fetchClientUsers]);
+  }, [tab, page, JSON.stringify(filters), fetchMerchants, fetchTransactions, fetchClientUsers, fetchPaymentLinks]);
 
   // Open create transaction dialog
   const openCreateTxDialog = (merchant: PartnerMerchant) => {
@@ -301,6 +347,27 @@ export default function PartnerDashboard() {
   const getMerchantName = (merchantId: string): string => {
     const merchant = merchants.find((m) => m._id === merchantId);
     return merchant?.profile.fantasy_name || merchantId.slice(-6);
+  };
+
+  // Delete payment link
+  const handleDeletePaymentLink = async (id: string) => {
+    try {
+      await partnerPaymentLinksApi.delete(id);
+      fetchPaymentLinks(page, filters as Record<string, string>);
+    } catch (err: any) {
+      setError(err.response?.data?.message || t('partner:errors.deleteFailed'));
+    }
+  };
+
+  // Open payment link dialogs
+  const openCreatePaymentLink = () => {
+    setEditingPaymentLink(null);
+    setPaymentLinkDialogOpen(true);
+  };
+
+  const openEditPaymentLink = (link: PaymentLink) => {
+    setEditingPaymentLink(link);
+    setPaymentLinkDialogOpen(true);
   };
 
   const pagination: PaginationState = {
@@ -410,6 +477,13 @@ export default function PartnerDashboard() {
               >
                 <Store className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('partner:tabs.merchants')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="paymentLinks"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white rounded-lg px-3 sm:px-6 shrink-0"
+              >
+                <Link2 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('partner:tabs.paymentLinks')}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="transactions"
@@ -530,6 +604,164 @@ export default function PartnerDashboard() {
                   )}
                 </TableBody>
               </Table>
+
+              <PaginationControls
+                pagination={pagination}
+                onPageChange={setPage}
+              />
+            </div>
+          </TabsContent>
+
+          {/* Payment Links Tab */}
+          <TabsContent value="paymentLinks" className="space-y-4">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 className="font-semibold text-zinc-900 dark:text-white">
+                  {t('partner:paymentLinks.title', { total: meta.total })}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchPaymentLinks(page, filters as Record<string, string>)}
+                    className="gap-2 shrink-0"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={openCreatePaymentLink}
+                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('partner:paymentLinks.create')}</span>
+                    <span className="sm:hidden">Nuevo</span>
+                  </Button>
+                </div>
+              </div>
+              <FilterBar
+                config={filterConfigs.paymentLinks}
+                values={filters}
+                onChange={setFilter}
+                onClear={clearFilters}
+                hasFilters={hasFilters}
+              />
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>{t('partner:paymentLinks.columns.merchant')}</TableHead>
+                      <TableHead>{t('partner:paymentLinks.columns.name')}</TableHead>
+                      <TableHead className="hidden md:table-cell">{t('partner:paymentLinks.columns.code')}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t('partner:paymentLinks.columns.type')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('partner:paymentLinks.columns.amount')}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t('partner:paymentLinks.columns.uses')}</TableHead>
+                      <TableHead>{t('partner:paymentLinks.columns.status')}</TableHead>
+                      <TableHead className="text-right">{t('common:table.actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paymentLinks.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-zinc-500">
+                          {t('partner:paymentLinks.noResults')}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      paymentLinks.map((link) => {
+                        const statusConfig = getPaymentLinkStatusConfig(link.status, i18n.language as 'en' | 'es');
+                        const merchantName = getMerchantName(link.merchant_id);
+                        return (
+                          <TableRow
+                            key={link._id}
+                            className="hover:bg-amber-50/50 dark:hover:bg-amber-900/10"
+                          >
+                            <TableCell className="font-medium">{merchantName}</TableCell>
+                            <TableCell>{link.name}</TableCell>
+                            <TableCell className="hidden md:table-cell font-mono text-xs">
+                              {link.code}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <Badge variant="outline">
+                                {getLinkModeLabel(link.link_mode, i18n.language as 'en' | 'es')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="hidden sm:table-cell">
+                              {link.amount_mode === 'FIXED' && link.fixed_amount
+                                ? formatCurrency(
+                                    typeof link.fixed_amount === 'object' && '$numberDecimal' in link.fixed_amount
+                                      ? parseFloat((link.fixed_amount as any).$numberDecimal)
+                                      : Number(link.fixed_amount),
+                                    link.currency
+                                  )
+                                : t('partner:paymentLinks.variable')}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {link.stats?.usage_count || 0}{link.max_uses ? `/${link.max_uses}` : ''}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={statusConfig.variant} className={statusConfig.className}>
+                                {statusConfig.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-1 justify-end">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedPaymentLink(link)}
+                                  title={t('partner:merchants.viewDetails')}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => openEditPaymentLink(link)}
+                                  title={t('partner:dialogs.common.update')}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>{t('partner:paymentLinks.deleteTitle')}</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {t('partner:paymentLinks.deleteMessage', { name: link.name })}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>{t('partner:dialogs.common.cancel')}</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeletePaymentLink(link._id)}
+                                        className="bg-red-500 hover:bg-red-600 text-white"
+                                      >
+                                        {t('common:buttons.delete')}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
               <PaginationControls
                 pagination={pagination}
@@ -828,6 +1060,21 @@ export default function PartnerDashboard() {
       <PartnerChangeMyPasswordDialog
         open={changeMyPasswordOpen}
         onOpenChange={setChangeMyPasswordOpen}
+      />
+
+      {/* Payment Link Dialogs */}
+      <PartnerPaymentLinkDialog
+        merchants={merchants.map(m => ({ _id: m._id, profile: { fantasy_name: m.profile.fantasy_name, legal_name: m.profile.legal_name } }))}
+        item={editingPaymentLink}
+        open={paymentLinkDialogOpen}
+        onOpenChange={setPaymentLinkDialogOpen}
+        onSuccess={() => fetchPaymentLinks(page, filters as Record<string, string>)}
+      />
+
+      <PartnerPaymentLinkDetailDialog
+        item={selectedPaymentLink}
+        open={!!selectedPaymentLink}
+        onOpenChange={(open) => { if (!open) setSelectedPaymentLink(null); }}
       />
 
       {/* Footer */}
