@@ -50,7 +50,7 @@ export function PaymentLinkDetailDialog({
       } else {
         response = await paymentLinksApi.downloadQrPdf(item._id);
       }
-      downloadBlob(response.data, `${item.slug}-qr.${format}`);
+      downloadBlob(response.data, `${item.code}-qr.${format}`);
     } catch (err) {
       console.error('Failed to download QR:', err);
     } finally {
@@ -114,8 +114,8 @@ export function PaymentLinkDetailDialog({
                 </div>
               </div>
               <div>
-                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Slug</Label>
-                <p className="font-mono text-sm text-zinc-900 dark:text-white mt-0.5">{item.slug}</p>
+                <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Código</Label>
+                <p className="font-mono text-sm text-zinc-900 dark:text-white mt-0.5">{item.code}</p>
               </div>
               <div>
                 <Label className="text-zinc-500 dark:text-zinc-400 text-xs">Moneda</Label>

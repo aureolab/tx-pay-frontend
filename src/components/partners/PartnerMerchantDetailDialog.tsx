@@ -303,7 +303,7 @@ export function PartnerMerchantDetailDialog({ merchant, open, onOpenChange }: Pr
                                       {linkStatus.label}
                                     </Badge>
                                   </div>
-                                  <p className="text-sm text-zinc-500 dark:text-zinc-400 truncate">/{link.slug}</p>
+                                  <p className="text-sm text-zinc-500 dark:text-zinc-400 truncate">/{link.code}</p>
                                   <div className="flex items-center gap-4 mt-2 text-sm">
                                     <span className="text-zinc-600 dark:text-zinc-300">
                                       {link.amount_mode === 'FIXED'

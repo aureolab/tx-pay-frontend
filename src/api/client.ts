@@ -155,7 +155,7 @@ import type {
   CreatePaymentLinkRequest,
   UpdatePaymentLinkRequest,
   QueryPaymentLinkParams,
-  SlugValidationResponse,
+  CodeValidationResponse,
 } from '../types/payment-link.types';
 
 export const paymentLinksApi = {
@@ -169,8 +169,8 @@ export const paymentLinksApi = {
   update: (id: string, data: UpdatePaymentLinkRequest) =>
     client.patch<PaymentLink>(`/payment-links/${id}`, data),
   delete: (id: string) => client.delete(`/payment-links/${id}`),
-  validateSlug: (slug: string) =>
-    client.get<SlugValidationResponse>(`/payment-links/validate-slug/${slug}`),
+  validateCode: (code: string) =>
+    client.get<CodeValidationResponse>(`/payment-links/validate-code/${code}`),
   downloadQrPng: (id: string) =>
     client.get(`/payment-links/${id}/qr.png`, { responseType: 'blob' }),
   downloadQrSvg: (id: string) =>
