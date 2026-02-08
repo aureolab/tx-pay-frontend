@@ -120,6 +120,7 @@ export default function PartnerDashboard() {
   const [transactionDetailOpen, setTransactionDetailOpen] = useState(false);
 
   const [exporting, setExporting] = useState(false);
+  const [deletingLoading, setDeletingLoading] = useState(false);
 
   // User management dialog states
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
@@ -354,6 +355,7 @@ export default function PartnerDashboard() {
   // Delete payment link
   const handleDeletePaymentLink = async () => {
     if (!deletingPaymentLink) return;
+    setDeletingLoading(true);
     try {
       await partnerPaymentLinksApi.delete(deletingPaymentLink._id);
       setDeletingPaymentLink(null);
@@ -361,6 +363,8 @@ export default function PartnerDashboard() {
     } catch (err: any) {
       setError(err.response?.data?.message || t('partner:errors.deleteFailed'));
       setDeletingPaymentLink(null);
+    } finally {
+      setDeletingLoading(false);
     }
   };
 
@@ -1079,7 +1083,7 @@ export default function PartnerDashboard() {
       />
 
       {/* Delete Payment Link Confirmation */}
-      <AlertDialog open={!!deletingPaymentLink} onOpenChange={(open) => !open && setDeletingPaymentLink(null)}>
+      <AlertDialog open={!!deletingPaymentLink} onOpenChange={(open) => !open && !deletingLoading && setDeletingPaymentLink(null)}>
         <AlertDialogContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('partner:paymentLinks.deleteTitle')}</AlertDialogTitle>
@@ -1088,13 +1092,27 @@ export default function PartnerDashboard() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('partner:dialogs.common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
+            <Button
+              variant="outline"
+              onClick={() => setDeletingPaymentLink(null)}
+              disabled={deletingLoading}
+            >
+              {t('partner:dialogs.common.cancel')}
+            </Button>
+            <Button
               onClick={handleDeletePaymentLink}
+              disabled={deletingLoading}
               className="bg-red-500 hover:bg-red-600 text-white"
             >
-              {t('common:buttons.delete')}
-            </AlertDialogAction>
+              {deletingLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Eliminando...</span>
+                </div>
+              ) : (
+                t('common:buttons.delete')
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
