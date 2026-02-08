@@ -41,24 +41,27 @@ export function PartnerCreateTransactionDialog({
 }: PartnerCreateTransactionDialogProps) {
   const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
   const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
+  // Get first valid payment method (excluding QR and PAYMENT_LINK)
+  const getDefaultPaymentMethod = () => {
+    const validMethods = merchant?.enabled_payment_methods?.filter(
+      (m: string) => m !== 'QR' && m !== 'PAYMENT_LINK'
+    );
+    return validMethods?.[0] || 'WEBPAY';
+  };
+
   const [formData, setFormData] = useState<CreateTransactionRequest>({
     amount: 0,
     currency: 'CLP',
-    payment_method: merchant?.enabled_payment_methods[0] || 'PAYMENT_LINK',
+    payment_method: getDefaultPaymentMethod(),
     vita_country: DEFAULT_VITA_COUNTRY,
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState<any>(null);
 
-  // Check if merchant has Vita Wallet enabled
-  const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
-
   // Determine if we should show the country selector
-  // Show for VITA_WALLET or PAYMENT_LINK when merchant has Vita enabled
-  const showCountrySelector =
-    formData.payment_method === 'VITA_WALLET' ||
-    (formData.payment_method === 'PAYMENT_LINK' && merchantHasVita);
+  // Show for VITA_WALLET only
+  const showCountrySelector = formData.payment_method === 'VITA_WALLET';
 
   // Load Vita countries when dialog opens
   useEffect(() => {
@@ -81,7 +84,7 @@ export function PartnerCreateTransactionDialog({
       setFormData({
         amount: 0,
         currency: 'CLP',
-        payment_method: merchant?.enabled_payment_methods[0] || 'PAYMENT_LINK',
+        payment_method: getDefaultPaymentMethod(),
         vita_country: defaultCountry,
       });
       setError('');
@@ -195,7 +198,7 @@ export function PartnerCreateTransactionDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {merchant?.enabled_payment_methods
-                        .filter((method) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
+                        .filter((method) => method !== 'QR' && method !== 'PAYMENT_LINK')
                         .map((method) => (
                         <SelectItem key={method} value={method}>
                           {getPaymentMethodLabel(method, 'es')}

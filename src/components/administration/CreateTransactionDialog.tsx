@@ -40,22 +40,25 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
   const [result, setResult] = useState<any>(null);
   const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
   const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
+  // Get first valid payment method (excluding QR and PAYMENT_LINK)
+  const getDefaultPaymentMethod = () => {
+    const validMethods = merchant?.enabled_payment_methods?.filter(
+      (m: string) => m !== 'QR' && m !== 'PAYMENT_LINK'
+    );
+    return validMethods?.[0] || 'WEBPAY';
+  };
+
   const [formData, setFormData] = useState({
     amount: '',
     currency: 'CLP',
-    payment_method: 'PAYMENT_LINK' as string,
+    payment_method: getDefaultPaymentMethod(),
     callback_url: '',
     vita_country: DEFAULT_VITA_COUNTRY,
   });
 
-  // Check if merchant has Vita Wallet enabled
-  const merchantHasVita = merchant?.enabled_payment_methods?.includes('VITA_WALLET');
-
   // Determine if we should show the country selector
-  // Show for VITA_WALLET or PAYMENT_LINK when merchant has Vita enabled
-  const showCountrySelector =
-    formData.payment_method === 'VITA_WALLET' ||
-    (formData.payment_method === 'PAYMENT_LINK' && merchantHasVita);
+  // Show for VITA_WALLET only
+  const showCountrySelector = formData.payment_method === 'VITA_WALLET';
 
   // Load Vita countries when dialog opens
   useEffect(() => {
@@ -77,14 +80,14 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
       setFormData({
         amount: '',
         currency: 'CLP',
-        payment_method: 'PAYMENT_LINK',
+        payment_method: getDefaultPaymentMethod(),
         callback_url: '',
         vita_country: defaultCountry,
       });
       setError('');
       setResult(null);
     }
-  }, [open, defaultCountry]);
+  }, [open, defaultCountry, merchant?.enabled_payment_methods]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,14 +215,13 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                   <SelectContent>
                     {merchant?.enabled_payment_methods?.length > 0
                       ? merchant.enabled_payment_methods
-                          .filter((method: string) => method !== 'QR') // QR is now consolidated into PAYMENT_LINK
+                          .filter((method: string) => method !== 'QR' && method !== 'PAYMENT_LINK')
                           .map((method: string) => (
                           <SelectItem key={method} value={method}>
                             {getPaymentMethodLabel(method)}
                           </SelectItem>
                         ))
                       : <>
-                          <SelectItem value="PAYMENT_LINK">{getPaymentMethodLabel('PAYMENT_LINK')}</SelectItem>
                           <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
                           <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
                         </>
