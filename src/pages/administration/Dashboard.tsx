@@ -127,6 +127,7 @@ export default function Dashboard() {
   const [editingMerchant, setEditingMerchant] = useState<any>(null);
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
   const [createTxMerchant, setCreateTxMerchant] = useState<any>(null);
+  const [txDialogOpen, setTxDialogOpen] = useState(false);
 
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
@@ -998,22 +999,15 @@ export default function Dashboard() {
                     <Download className="h-4 w-4" />
                     <span className="hidden sm:inline">{exporting ? t('admin:transactions.exporting') : t('admin:transactions.export')}</span>
                   </Button>
-                  <select
-                    className="h-8 px-3 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-blue-500 to-indigo-600 text-white cursor-pointer appearance-none pr-8 bg-no-repeat bg-[length:16px_16px] bg-[right_8px_center]"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const merchant = allMerchants.find(m => m._id === e.target.value);
-                        if (merchant) setCreateTxMerchant(merchant);
-                      }
-                    }}
+                  <Button
+                    size="sm"
+                    onClick={() => setTxDialogOpen(true)}
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20"
                   >
-                    <option value="" disabled>+ {t('admin:transactions.create', 'Nueva Transacción')}</option>
-                    {allMerchants.filter(m => m.status === 'ACTIVE').map((m) => (
-                      <option key={m._id} value={m._id}>{m.profile?.fantasy_name || m._id}</option>
-                    ))}
-                  </select>
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('admin:transactions.create')}</span>
+                    <span className="sm:hidden">Nuevo</span>
+                  </Button>
                 </div>
               </div>
               <FilterBar
@@ -1342,6 +1336,12 @@ export default function Dashboard() {
         merchant={createTxMerchant}
         open={!!createTxMerchant}
         onOpenChange={(open) => !open && setCreateTxMerchant(null)}
+        onSuccess={loadData}
+      />
+      <CreateTransactionDialog
+        merchants={allMerchants.filter(m => m.status === 'ACTIVE')}
+        open={txDialogOpen}
+        onOpenChange={setTxDialogOpen}
         onSuccess={loadData}
       />
 

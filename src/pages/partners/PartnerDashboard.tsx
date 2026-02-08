@@ -111,6 +111,7 @@ export default function PartnerDashboard() {
   // Dialog states
   const [createTxDialogOpen, setCreateTxDialogOpen] = useState(false);
   const [selectedMerchantForTx, setSelectedMerchantForTx] = useState<PartnerMerchant | null>(null);
+  const [txTabDialogOpen, setTxTabDialogOpen] = useState(false);
 
   // Detail dialog states
   const [selectedMerchant, setSelectedMerchant] = useState<PartnerMerchant | null>(null);
@@ -793,22 +794,15 @@ export default function PartnerDashboard() {
                     <Download className="h-4 w-4" />
                     <span className="hidden sm:inline">{exporting ? t('partner:transactions.exporting') : t('partner:transactions.export')}</span>
                   </Button>
-                  <select
-                    className="h-8 px-3 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-amber-500 to-orange-500 text-white cursor-pointer appearance-none pr-8 bg-no-repeat bg-[length:16px_16px] bg-[right_8px_center]"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const merchant = merchants.find(m => m._id === e.target.value);
-                        if (merchant) openCreateTxDialog(merchant);
-                      }
-                    }}
+                  <Button
+                    size="sm"
+                    onClick={() => setTxTabDialogOpen(true)}
+                    className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20"
                   >
-                    <option value="" disabled>+ {t('partner:transactions.create')}</option>
-                    {merchants.filter(m => m.status === 'ACTIVE').map((m) => (
-                      <option key={m._id} value={m._id}>{m.profile?.fantasy_name || m._id}</option>
-                    ))}
-                  </select>
+                    <Plus className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('partner:transactions.create')}</span>
+                    <span className="sm:hidden">Nuevo</span>
+                  </Button>
                 </div>
               </div>
               <FilterBar
@@ -1022,11 +1016,18 @@ export default function PartnerDashboard() {
         </Tabs>
       </main>
 
-      {/* Create Transaction Dialog */}
+      {/* Create Transaction Dialog (from merchant row) */}
       <PartnerCreateTransactionDialog
         merchant={selectedMerchantForTx}
         open={createTxDialogOpen}
         onOpenChange={setCreateTxDialogOpen}
+        onSuccess={() => fetchTransactions(1, filters.merchant)}
+      />
+      {/* Create Transaction Dialog (from transactions tab) */}
+      <PartnerCreateTransactionDialog
+        merchants={merchants.filter(m => m.status === 'ACTIVE')}
+        open={txTabDialogOpen}
+        onOpenChange={setTxTabDialogOpen}
         onSuccess={() => fetchTransactions(1, filters.merchant)}
       />
 

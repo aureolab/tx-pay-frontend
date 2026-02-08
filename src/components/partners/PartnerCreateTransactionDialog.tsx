@@ -24,10 +24,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, AlertCircle } from 'lucide-react';
+import { CreditCard, AlertCircle } from 'lucide-react';
 
 interface PartnerCreateTransactionDialogProps {
-  merchant: PartnerMerchant | null;
+  merchant?: PartnerMerchant | null;
+  merchants?: PartnerMerchant[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -35,15 +36,22 @@ interface PartnerCreateTransactionDialogProps {
 
 export function PartnerCreateTransactionDialog({
   merchant,
+  merchants,
   open,
   onOpenChange,
   onSuccess,
 }: PartnerCreateTransactionDialogProps) {
   const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
   const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
+
+  // Determine the effective merchant
+  const effectiveMerchant = merchant || merchants?.find(m => m._id === selectedMerchantId);
+  const showMerchantSelector = !merchant && merchants && merchants.length > 0;
+
   // Get first valid payment method (excluding QR and PAYMENT_LINK)
   const getDefaultPaymentMethod = () => {
-    const validMethods = merchant?.enabled_payment_methods?.filter(
+    const validMethods = effectiveMerchant?.enabled_payment_methods?.filter(
       (m: string) => m !== 'QR' && m !== 'PAYMENT_LINK'
     );
     return validMethods?.[0] || 'WEBPAY';
@@ -63,10 +71,10 @@ export function PartnerCreateTransactionDialog({
   // Show for VITA_WALLET only
   const showCountrySelector = formData.payment_method === 'VITA_WALLET';
 
-  // Load Vita countries when dialog opens
+  // Load Vita countries when dialog opens and merchant is selected
   useEffect(() => {
-    if (open && merchant?._id) {
-      partnerTransactionsApi.getVitaCountries(merchant._id)
+    if (open && effectiveMerchant?._id) {
+      partnerTransactionsApi.getVitaCountries(effectiveMerchant._id)
         .then(res => {
           setVitaCountries(res.data.countries);
           setDefaultCountry(res.data.default_country);
@@ -76,11 +84,11 @@ export function PartnerCreateTransactionDialog({
           // Fallback to empty
         });
     }
-  }, [open, merchant?._id]);
+  }, [open, effectiveMerchant?._id]);
 
-  function handleOpenChange(value: boolean) {
-    if (value) {
-      // Reset state when opening
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
       setFormData({
         amount: 0,
         currency: 'CLP',
@@ -89,13 +97,28 @@ export function PartnerCreateTransactionDialog({
       });
       setError('');
       setSuccessResult(null);
+      if (!merchant) {
+        setSelectedMerchantId('');
+      }
     }
-    onOpenChange(value);
-  }
+  }, [open]);
+
+  // Update payment method when merchant changes
+  useEffect(() => {
+    if (effectiveMerchant) {
+      setFormData(prev => ({
+        ...prev,
+        payment_method: getDefaultPaymentMethod(),
+      }));
+    }
+  }, [effectiveMerchant?._id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!merchant) return;
+    if (!effectiveMerchant) {
+      setError('Debe seleccionar un comercio');
+      return;
+    }
 
     setCreating(true);
     setError('');
@@ -107,7 +130,7 @@ export function PartnerCreateTransactionDialog({
           payment_method: formData.payment_method,
           callback_url: formData.callback_url,
         },
-        merchant._id,
+        effectiveMerchant._id,
       );
       setSuccessResult(res.data);
       onSuccess();
@@ -118,66 +141,108 @@ export function PartnerCreateTransactionDialog({
     }
   }
 
+  const inputClass = "h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg focus:border-amber-500 focus:ring-amber-500/20 dark:focus:border-amber-400 dark:focus:ring-amber-400/20 transition-colors placeholder:text-zinc-400";
+
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-              <Plus className="w-4 h-4 text-white" />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-amber-900/5 dark:shadow-amber-900/20 p-0 gap-0">
+        {/* Decorative top accent */}
+        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 flex-shrink-0" />
+
+        <DialogHeader className="px-6 pt-5 pb-0 flex-shrink-0">
+          <DialogTitle className="flex items-center gap-3 text-lg">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+              <CreditCard className="w-4.5 h-4.5 text-white" />
             </div>
-            Nueva Transaccion
-          </DialogTitle>
-          <DialogDescription>
-            Crear transaccion para{' '}
-            <span className="font-medium text-zinc-900 dark:text-white">
-              {merchant?.profile.fantasy_name}
+            <span className="text-zinc-900 dark:text-zinc-50">
+              Nueva Transaccion
             </span>
+          </DialogTitle>
+          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
+            {effectiveMerchant ? (
+              <>
+                Crear transaccion para{' '}
+                <span className="font-medium text-zinc-900 dark:text-white">
+                  {effectiveMerchant?.profile?.fantasy_name}
+                </span>
+              </>
+            ) : (
+              'Selecciona un comercio para crear la transaccion'
+            )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 px-6">
           {successResult ? (
-            <TransactionSuccessView
-              result={successResult}
-              gradientClass="from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
-              locale="es"
-              onClose={() => onOpenChange(false)}
-            />
+            <div className="py-4">
+              <TransactionSuccessView
+                result={successResult}
+                gradientClass="from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                locale="es"
+                onClose={() => onOpenChange(false)}
+              />
+            </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4 pb-4">
+            <form onSubmit={handleSubmit} className="py-4 space-y-4">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-red-200 dark:border-red-900/50 bg-red-50/80 dark:bg-red-950/30">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="partner-amount">Monto</Label>
-                <Input
-                  id="partner-amount"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={formData.amount || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })
-                  }
-                  placeholder="10000"
-                  required
-                  className="h-11"
-                />
-              </div>
+              {/* Merchant Selector */}
+              {showMerchantSelector && (
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    Comercio <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={selectedMerchantId}
+                    onValueChange={setSelectedMerchantId}
+                  >
+                    <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                      <SelectValue placeholder="Seleccionar comercio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {merchants?.filter(m => m.status === 'ACTIVE').map((m) => (
+                        <SelectItem key={m._id} value={m._id}>
+                          {m.profile?.fantasy_name || m._id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="partner-currency">Moneda</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    Monto <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="partner-amount"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={formData.amount || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: parseInt(e.target.value) || 0 })
+                    }
+                    placeholder="10000"
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-currency" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    Moneda
+                  </Label>
                   <Select
                     value={formData.currency}
                     onValueChange={(v) => setFormData({ ...formData, currency: v })}
                   >
-                    <SelectTrigger id="partner-currency" className="h-11">
+                    <SelectTrigger id="partner-currency" className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -186,44 +251,58 @@ export function PartnerCreateTransactionDialog({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="partner-payment-method">Metodo de Pago</Label>
-                  <Select
-                    value={formData.payment_method}
-                    onValueChange={(v) => setFormData({ ...formData, payment_method: v })}
-                  >
-                    <SelectTrigger id="partner-payment-method" className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {merchant?.enabled_payment_methods
-                        .filter((method) => method !== 'QR' && method !== 'PAYMENT_LINK')
-                        .map((method) => (
-                        <SelectItem key={method} value={method}>
-                          {getPaymentMethodLabel(method, 'es')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="partner-payment-method" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  Metodo de Pago <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.payment_method}
+                  onValueChange={(v) => setFormData({ ...formData, payment_method: v })}
+                  disabled={!effectiveMerchant}
+                >
+                  <SelectTrigger id="partner-payment-method" className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                    <SelectValue placeholder="Seleccionar metodo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {effectiveMerchant?.enabled_payment_methods?.length ? (
+                      effectiveMerchant.enabled_payment_methods
+                        .filter((method: string) => method !== 'QR' && method !== 'PAYMENT_LINK')
+                        .map((method: string) => (
+                          <SelectItem key={method} value={method}>
+                            {getPaymentMethodLabel(method, 'es')}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <>
+                        <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY', 'es')}</SelectItem>
+                        <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET', 'es')}</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               {showCountrySelector && vitaCountries.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="partner-vita-country">Pais destino (Vita Wallet)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="partner-vita-country" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    Pais destino (Vita Wallet)
+                  </Label>
                   <VitaCountrySelector
                     value={formData.vita_country || defaultCountry}
                     onChange={(code) => setFormData({ ...formData, vita_country: code })}
                     countries={vitaCountries}
-                    className="h-11"
+                    className="bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg"
                     placeholder="Seleccionar pais"
                   />
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="partner-callback-url">URL de Callback (opcional)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="partner-callback-url" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                  URL de Callback
+                </Label>
                 <Input
                   id="partner-callback-url"
                   type="url"
@@ -232,28 +311,30 @@ export function PartnerCreateTransactionDialog({
                     setFormData({ ...formData, callback_url: e.target.value })
                   }
                   placeholder="https://mi-sitio.com/callback"
-                  className="h-11"
+                  className={inputClass}
                 />
               </div>
 
-              <DialogFooter className="pt-4 flex-shrink-0">
+              {/* Footer */}
+              <DialogFooter className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => onOpenChange(false)}
+                  className="border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
-                  disabled={creating || formData.amount <= 0}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                  disabled={creating || formData.amount <= 0 || (!merchant && !selectedMerchantId)}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md shadow-amber-500/20 hover:shadow-amber-500/30 transition-all duration-200 min-w-[90px]"
                 >
                   {creating ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Creando...
-                    </>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creando...</span>
+                    </div>
                   ) : (
                     'Crear Transaccion'
                   )}

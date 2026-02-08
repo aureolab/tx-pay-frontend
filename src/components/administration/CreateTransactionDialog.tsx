@@ -26,23 +26,37 @@ import { TransactionSuccessView } from '@/components/shared/TransactionSuccessVi
 import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
 import { DEFAULT_VITA_COUNTRY, type VitaCountry } from '@/lib/vita-countries';
 
+interface Merchant {
+  _id: string;
+  status: string;
+  profile?: { fantasy_name?: string; legal_name?: string };
+  enabled_payment_methods?: string[];
+}
+
 interface CreateTransactionDialogProps {
-  merchant: any;
+  merchant?: Merchant | null;
+  merchants?: Merchant[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export function CreateTransactionDialog({ merchant, open, onOpenChange, onSuccess }: CreateTransactionDialogProps) {
+export function CreateTransactionDialog({ merchant, merchants, open, onOpenChange, onSuccess }: CreateTransactionDialogProps) {
   const { t, i18n } = useTranslation('admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<any>(null);
   const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
   const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
+
+  // Determine the effective merchant
+  const effectiveMerchant = merchant || merchants?.find(m => m._id === selectedMerchantId);
+  const showMerchantSelector = !merchant && merchants && merchants.length > 0;
+
   // Get first valid payment method (excluding QR and PAYMENT_LINK)
   const getDefaultPaymentMethod = () => {
-    const validMethods = merchant?.enabled_payment_methods?.filter(
+    const validMethods = effectiveMerchant?.enabled_payment_methods?.filter(
       (m: string) => m !== 'QR' && m !== 'PAYMENT_LINK'
     );
     return validMethods?.[0] || 'WEBPAY';
@@ -60,10 +74,10 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
   // Show for VITA_WALLET only
   const showCountrySelector = formData.payment_method === 'VITA_WALLET';
 
-  // Load Vita countries when dialog opens
+  // Load Vita countries when dialog opens and merchant is selected
   useEffect(() => {
-    if (open && merchant?._id) {
-      transactionsApi.getVitaCountries(merchant._id)
+    if (open && effectiveMerchant?._id) {
+      transactionsApi.getVitaCountries(effectiveMerchant._id)
         .then(res => {
           setVitaCountries(res.data.countries);
           setDefaultCountry(res.data.default_country);
@@ -73,8 +87,9 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
           // Fallback to empty, selector won't show if no countries
         });
     }
-  }, [open, merchant?._id]);
+  }, [open, effectiveMerchant?._id]);
 
+  // Reset form when dialog opens or merchant changes
   useEffect(() => {
     if (open) {
       setFormData({
@@ -86,11 +101,30 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
       });
       setError('');
       setResult(null);
+      if (!merchant) {
+        setSelectedMerchantId('');
+      }
     }
-  }, [open, defaultCountry, merchant?.enabled_payment_methods]);
+  }, [open]);
+
+  // Update payment method when merchant changes
+  useEffect(() => {
+    if (effectiveMerchant) {
+      setFormData(prev => ({
+        ...prev,
+        payment_method: getDefaultPaymentMethod(),
+      }));
+    }
+  }, [effectiveMerchant?._id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!effectiveMerchant) {
+      setError(t('dialogs.createTransaction.selectMerchantError', 'Debe seleccionar un comercio'));
+      return;
+    }
+
     setLoading(true);
     setError('');
     setResult(null);
@@ -112,7 +146,7 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
         payload.vita_country = formData.vita_country;
       }
 
-      const res = await transactionsApi.create(payload, merchant._id);
+      const res = await transactionsApi.create(payload, effectiveMerchant._id);
       setResult(res.data);
       onSuccess();
     } catch (err: any) {
@@ -141,8 +175,14 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
             </span>
           </DialogTitle>
           <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
-            {t('dialogs.createTransaction.description')}{' '}
-            <span className="font-medium text-zinc-900 dark:text-white">{merchant?.profile?.fantasy_name}</span>
+            {effectiveMerchant ? (
+              <>
+                {t('dialogs.createTransaction.description')}{' '}
+                <span className="font-medium text-zinc-900 dark:text-white">{effectiveMerchant?.profile?.fantasy_name}</span>
+              </>
+            ) : (
+              t('dialogs.createTransaction.selectMerchantHint', 'Selecciona un comercio para crear la transacción')
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -163,6 +203,30 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
+              )}
+
+              {/* Merchant Selector */}
+              {showMerchantSelector && (
+                <div className="space-y-1.5">
+                  <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    {t('dialogs.createTransaction.merchant', 'Comercio')} {t('dialogs.common.required')}
+                  </Label>
+                  <Select
+                    value={selectedMerchantId}
+                    onValueChange={setSelectedMerchantId}
+                  >
+                    <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
+                      <SelectValue placeholder={t('dialogs.createTransaction.selectMerchant', 'Seleccionar comercio')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {merchants?.filter(m => m.status === 'ACTIVE').map((m) => (
+                        <SelectItem key={m._id} value={m._id}>
+                          {m.profile?.fantasy_name || m.profile?.legal_name || m._id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
@@ -208,24 +272,26 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                 <Select
                   value={formData.payment_method}
                   onValueChange={(value) => setFormData({ ...formData, payment_method: value })}
+                  disabled={!effectiveMerchant}
                 >
                   <SelectTrigger className="h-10 bg-zinc-50/50 dark:bg-zinc-800/30 border-zinc-200 dark:border-zinc-700/80 rounded-lg">
                     <SelectValue placeholder={t('dialogs.createTransaction.selectMethod')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {merchant?.enabled_payment_methods?.length > 0
-                      ? merchant.enabled_payment_methods
-                          .filter((method: string) => method !== 'QR' && method !== 'PAYMENT_LINK')
-                          .map((method: string) => (
+                    {effectiveMerchant?.enabled_payment_methods?.length ? (
+                      effectiveMerchant.enabled_payment_methods
+                        .filter((method: string) => method !== 'QR' && method !== 'PAYMENT_LINK')
+                        .map((method: string) => (
                           <SelectItem key={method} value={method}>
                             {getPaymentMethodLabel(method)}
                           </SelectItem>
                         ))
-                      : <>
-                          <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
-                          <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
-                        </>
-                    }
+                    ) : (
+                      <>
+                        <SelectItem value="WEBPAY">{getPaymentMethodLabel('WEBPAY')}</SelectItem>
+                        <SelectItem value="VITA_WALLET">{getPaymentMethodLabel('VITA_WALLET')}</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -271,7 +337,7 @@ export function CreateTransactionDialog({ merchant, open, onOpenChange, onSucces
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || (!merchant && !selectedMerchantId)}
                   className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 min-w-[90px]"
                 >
                   {loading ? (
