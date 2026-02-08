@@ -19,8 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, Link2, Check, X } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertCircle, Link2 } from 'lucide-react';
 import type {
   PaymentLink,
   CreatePaymentLinkRequest,
@@ -38,7 +37,6 @@ interface PaymentLinkDialogProps {
 
 interface FormData {
   name: string;
-  slug: string;
   description: string;
   link_mode: string;
   amount_mode: string;
@@ -48,24 +46,32 @@ interface FormData {
   max_amount: string;
   max_uses: string;
   expires_at: string;
-  callback_url: string;
-  success_message: string;
 }
 
 const initialFormData: FormData = {
   name: '',
-  slug: '',
   description: '',
-  link_mode: LinkMode.REUSABLE,
-  amount_mode: AmountMode.VARIABLE,
+  link_mode: LinkMode.SINGLE_USE,
+  amount_mode: AmountMode.FIXED,
   fixed_amount: '',
   currency: 'CLP',
   min_amount: '',
   max_amount: '',
   max_uses: '',
   expires_at: '',
-  callback_url: '',
-  success_message: '',
+};
+
+// Generate slug from name
+const generateSlug = (name: string) => {
+  const base = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+  // Add random suffix to ensure uniqueness
+  const suffix = Math.random().toString(36).substring(2, 8);
+  return `${base}-${suffix}`;
 };
 
 export function PaymentLinkDialog({
@@ -78,7 +84,6 @@ export function PaymentLinkDialog({
   const isEditing = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
   useEffect(() => {
@@ -86,7 +91,6 @@ export function PaymentLinkDialog({
       if (item) {
         setFormData({
           name: item.name,
-          slug: item.slug,
           description: item.description || '',
           link_mode: item.link_mode,
           amount_mode: item.amount_mode,
@@ -96,53 +100,13 @@ export function PaymentLinkDialog({
           max_amount: item.amount_limits?.max_amount ? toNumber(item.amount_limits.max_amount).toString() : '',
           max_uses: item.max_uses?.toString() || '',
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
-          callback_url: item.callback_url || '',
-          success_message: item.success_message || '',
         });
-        setSlugStatus('idle');
       } else {
         setFormData(initialFormData);
-        setSlugStatus('idle');
       }
       setError('');
     }
   }, [open, item]);
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  };
-
-  const handleNameChange = (name: string) => {
-    setFormData(prev => ({
-      ...prev,
-      name,
-      slug: isEditing ? prev.slug : generateSlug(name),
-    }));
-  };
-
-  useEffect(() => {
-    if (!formData.slug || isEditing) {
-      setSlugStatus('idle');
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setSlugStatus('checking');
-      try {
-        const res = await paymentLinksApi.validateSlug(formData.slug);
-        setSlugStatus(res.data.available ? 'available' : 'taken');
-      } catch {
-        setSlugStatus('idle');
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [formData.slug, isEditing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,15 +129,13 @@ export function PaymentLinkDialog({
             : undefined,
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
-          callback_url: formData.callback_url || undefined,
-          success_message: formData.success_message || undefined,
         };
         await paymentLinksApi.update(item._id, updateData);
       } else {
         const createData: CreatePaymentLinkRequest = {
           merchant_id: merchantId,
           name: formData.name,
-          slug: formData.slug,
+          slug: generateSlug(formData.name),
           description: formData.description || undefined,
           link_mode: formData.link_mode as 'SINGLE_USE' | 'REUSABLE',
           amount_mode: formData.amount_mode as 'FIXED' | 'VARIABLE',
@@ -189,8 +151,6 @@ export function PaymentLinkDialog({
             : undefined,
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
-          callback_url: formData.callback_url || undefined,
-          success_message: formData.success_message || undefined,
         };
         await paymentLinksApi.create(createData);
       }
@@ -207,120 +167,100 @@ export function PaymentLinkDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl shadow-blue-900/5 dark:shadow-blue-900/20 p-0 gap-0 overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl p-0 gap-0 overflow-hidden flex flex-col">
         <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 flex-shrink-0" />
 
-        <DialogHeader className="px-6 pt-5 pb-0 flex-shrink-0">
-          <DialogTitle className="flex items-center gap-3 text-lg">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
-              <Link2 className="w-4.5 h-4.5 text-white" />
+        <DialogHeader className="px-4 sm:px-6 pt-4 pb-2 flex-shrink-0">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
+              <Link2 className="w-4 h-4 text-white" />
             </div>
             <span className="text-zinc-900 dark:text-zinc-50">
-              {isEditing ? 'Editar Link de Pago' : 'Crear Link de Pago'}
+              {isEditing ? 'Editar Link' : 'Nuevo Link de Pago'}
             </span>
           </DialogTitle>
-          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
+          <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             {isEditing
-              ? 'Modifica la configuracion del link de pago'
-              : 'Crea un nuevo link de pago para este comercio'}
+              ? 'Modifica la configuración del link'
+              : 'Configura tu nuevo link de pago'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1 px-6 py-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3">
             <div className="space-y-4">
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="py-2">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre *</Label>
+              {/* Nombre */}
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm">Nombre del link *</Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => handleNameChange(e.target.value)}
-                  placeholder="Ej: Donacion, Pago Mensual"
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ej: Pago Servicio, Donación"
                   required
+                  className="h-10"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug (URL) *</Label>
-                <div className="relative">
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                    placeholder="mi-link-de-pago"
-                    disabled={isEditing}
-                    className="pr-10"
-                    required
-                  />
-                  {!isEditing && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      {slugStatus === 'checking' && (
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent block" />
-                      )}
-                      {slugStatus === 'available' && <Check className="h-4 w-4 text-emerald-500" />}
-                      {slugStatus === 'taken' && <X className="h-4 w-4 text-red-500" />}
-                    </div>
-                  )}
-                </div>
-                {!isEditing && slugStatus === 'taken' && (
-                  <p className="text-sm text-red-500">Este slug ya esta en uso</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Descripcion</Label>
+              {/* Descripción */}
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-sm">Descripción (opcional)</Label>
                 <Input
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Descripcion opcional del link"
+                  placeholder="Se mostrará en el checkout"
+                  className="h-10"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Modo de Link</Label>
+              {/* Tipo de Link */}
+              <div className="space-y-1.5">
+                <Label className="text-sm">Tipo de link</Label>
                 <Select
                   value={formData.link_mode}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, link_mode: value }))}
                   disabled={isEditing}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={LinkMode.SINGLE_USE}>Uso Unico</SelectItem>
-                    <SelectItem value={LinkMode.REUSABLE}>Reutilizable</SelectItem>
+                    <SelectItem value={LinkMode.SINGLE_USE}>Uso único (expira al pagar)</SelectItem>
+                    <SelectItem value={LinkMode.REUSABLE}>Reutilizable (múltiples pagos)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Modo de Monto</Label>
+              {/* Tipo de Monto */}
+              <div className="space-y-1.5">
+                <Label className="text-sm">Tipo de monto</Label>
                 <Select
                   value={formData.amount_mode}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, amount_mode: value }))}
                   disabled={isEditing}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={AmountMode.FIXED}>Monto Fijo</SelectItem>
-                    <SelectItem value={AmountMode.VARIABLE}>Monto Variable</SelectItem>
+                    <SelectItem value={AmountMode.FIXED}>Monto fijo</SelectItem>
+                    <SelectItem value={AmountMode.VARIABLE}>Cliente ingresa monto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Monto Fijo */}
               {formData.amount_mode === AmountMode.FIXED && (
-                <div className="space-y-2">
-                  <Label htmlFor="fixed_amount">Monto Fijo *</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fixed_amount" className="text-sm">Monto *</Label>
                   <div className="flex gap-2">
                     <Input
                       id="fixed_amount"
@@ -330,14 +270,14 @@ export function PaymentLinkDialog({
                       placeholder="10000"
                       min="1"
                       required
-                      className="flex-1"
+                      className="flex-1 h-10"
                     />
                     <Select
                       value={formData.currency}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
                       disabled={isEditing}
                     >
-                      <SelectTrigger className="w-24">
+                      <SelectTrigger className="w-20 h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -349,95 +289,87 @@ export function PaymentLinkDialog({
                 </div>
               )}
 
+              {/* Límites de Monto Variable */}
               {formData.amount_mode === AmountMode.VARIABLE && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="min_amount">Monto Minimo</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="min_amount" className="text-sm">Mínimo</Label>
                     <Input
                       id="min_amount"
                       type="number"
                       value={formData.min_amount}
                       onChange={(e) => setFormData(prev => ({ ...prev, min_amount: e.target.value }))}
-                      placeholder="Default: 1000"
+                      placeholder="1000"
                       min="1"
+                      className="h-10"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="max_amount">Monto Maximo</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="max_amount" className="text-sm">Máximo</Label>
                     <Input
                       id="max_amount"
                       type="number"
                       value={formData.max_amount}
                       onChange={(e) => setFormData(prev => ({ ...prev, max_amount: e.target.value }))}
-                      placeholder="Default: 5000000"
+                      placeholder="5000000"
                       min="1"
+                      className="h-10"
                     />
                   </div>
                 </div>
               )}
 
+              {/* Máximo de Usos (solo para reutilizable) */}
               {formData.link_mode === LinkMode.REUSABLE && (
-                <div className="space-y-2">
-                  <Label htmlFor="max_uses">Maximo de Usos</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="max_uses" className="text-sm">Máximo de usos (opcional)</Label>
                   <Input
                     id="max_uses"
                     type="number"
                     value={formData.max_uses}
                     onChange={(e) => setFormData(prev => ({ ...prev, max_uses: e.target.value }))}
-                    placeholder="Sin limite"
+                    placeholder="Sin límite"
                     min="1"
+                    className="h-10"
                   />
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="expires_at">Fecha de Expiracion</Label>
+              {/* Fecha de Expiración */}
+              <div className="space-y-1.5">
+                <Label htmlFor="expires_at" className="text-sm">Expiración (opcional)</Label>
                 <Input
                   id="expires_at"
                   type="datetime-local"
                   value={formData.expires_at}
                   onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="callback_url">URL de Callback</Label>
-                <Input
-                  id="callback_url"
-                  type="url"
-                  value={formData.callback_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, callback_url: e.target.value }))}
-                  placeholder="https://mi-sitio.com/gracias"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="success_message">Mensaje de Exito</Label>
-                <Input
-                  id="success_message"
-                  value={formData.success_message}
-                  onChange={(e) => setFormData(prev => ({ ...prev, success_message: e.target.value }))}
-                  placeholder="Gracias por tu pago!"
+                  className="h-10"
                 />
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <DialogFooter className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex-shrink-0">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <DialogFooter className="px-4 sm:px-6 py-3 border-t border-zinc-100 dark:border-zinc-800 flex-shrink-0 flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="w-full sm:w-auto order-2 sm:order-1"
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={loading || (!isEditing && slugStatus === 'taken')}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              disabled={loading}
+              className="w-full sm:w-auto order-1 sm:order-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
+                <span className="flex items-center justify-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   {isEditing ? 'Guardando...' : 'Creando...'}
                 </span>
-              ) : isEditing ? 'Guardar Cambios' : 'Crear Link'}
+              ) : isEditing ? 'Guardar' : 'Crear Link'}
             </Button>
           </DialogFooter>
         </form>
