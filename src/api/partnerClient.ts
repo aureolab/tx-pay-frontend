@@ -9,6 +9,11 @@ import type {
   CreatePartnerClientUserRequest,
   UpdatePartnerClientUserRequest,
 } from '../types/partner.types';
+import type {
+  PaymentLink,
+  CreatePaymentLinkRequest,
+  UpdatePaymentLinkRequest,
+} from '../types/payment-link.types';
 import type { PaginatedResponse, PaginationParams } from './client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
@@ -139,4 +144,41 @@ export const partnerPortalUsersApi = {
     partnerClient.post(`/partner-portal/users/${id}/reset-password`),
   delete: (id: string) =>
     partnerClient.delete(`/partner-portal/users/${id}`),
+};
+
+// Partner Portal Payment Links API
+// Backend dependency: requires /partner-portal/payment-links endpoints with Partner JWT auth
+export const partnerPaymentLinksApi = {
+  list: (params?: PaginationParams) =>
+    partnerClient.get<PaginatedResponse<PaymentLink>>(
+      '/partner-portal/payment-links',
+      { params }
+    ),
+  getByMerchant: (merchantId: string) =>
+    partnerClient.get<PaymentLink[]>(
+      `/partner-portal/payment-links/by-merchant/${merchantId}`
+    ),
+  get: (id: string) =>
+    partnerClient.get<PaymentLink>(`/partner-portal/payment-links/${id}`),
+  create: (data: Omit<CreatePaymentLinkRequest, 'merchant_id'>, merchantId: string) =>
+    partnerClient.post<PaymentLink>('/partner-portal/payment-links', {
+      ...data,
+      merchant_id: merchantId,
+    }),
+  update: (id: string, data: UpdatePaymentLinkRequest) =>
+    partnerClient.patch<PaymentLink>(`/partner-portal/payment-links/${id}`, data),
+  delete: (id: string) =>
+    partnerClient.delete(`/partner-portal/payment-links/${id}`),
+  downloadQrPng: (id: string) =>
+    partnerClient.get(`/partner-portal/payment-links/${id}/qr.png`, {
+      responseType: 'blob',
+    }),
+  downloadQrSvg: (id: string) =>
+    partnerClient.get(`/partner-portal/payment-links/${id}/qr.svg`, {
+      responseType: 'blob',
+    }),
+  downloadQrPdf: (id: string) =>
+    partnerClient.get(`/partner-portal/payment-links/${id}/qr.pdf`, {
+      responseType: 'blob',
+    }),
 };

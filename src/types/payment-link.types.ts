@@ -1,0 +1,133 @@
+// Payment Link enums matching backend
+export const LinkMode = {
+  SINGLE_USE: 'SINGLE_USE',
+  REUSABLE: 'REUSABLE',
+} as const;
+
+export type LinkMode = (typeof LinkMode)[keyof typeof LinkMode];
+
+export const AmountMode = {
+  FIXED: 'FIXED',
+  VARIABLE: 'VARIABLE',
+} as const;
+
+export type AmountMode = (typeof AmountMode)[keyof typeof AmountMode];
+
+export const PaymentLinkStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  EXPIRED: 'EXPIRED',
+  EXHAUSTED: 'EXHAUSTED',
+} as const;
+
+export type PaymentLinkStatus = (typeof PaymentLinkStatus)[keyof typeof PaymentLinkStatus];
+
+// MongoDB Decimal type
+type MongoDecimal = number | { $numberDecimal: string };
+
+// Amount limits for variable mode
+export interface AmountLimits {
+  min_amount?: MongoDecimal;
+  max_amount?: MongoDecimal;
+}
+
+// Stats for reusable links
+export interface PaymentLinkStats {
+  usage_count: number;
+  total_collected: MongoDecimal;
+  last_used_at?: string;
+}
+
+// Main PaymentLink interface
+export interface PaymentLink {
+  _id: string;
+  merchant_id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  status: PaymentLinkStatus;
+  link_mode: LinkMode;
+  amount_mode: AmountMode;
+  fixed_amount?: MongoDecimal;
+  currency: string;
+  amount_limits?: AmountLimits;
+  expires_at?: string;
+  max_uses?: number;
+  checkout_url?: string;
+  qr_url?: string;
+  callback_url?: string;
+  success_message?: string;
+  stats: PaymentLinkStats;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Create payment link request
+export interface CreatePaymentLinkRequest {
+  merchant_id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  link_mode: LinkMode;
+  amount_mode: AmountMode;
+  fixed_amount?: number;
+  currency?: string;
+  amount_limits?: {
+    min_amount?: number;
+    max_amount?: number;
+  };
+  expires_at?: string;
+  max_uses?: number;
+  callback_url?: string;
+  success_message?: string;
+}
+
+// Update payment link request
+export interface UpdatePaymentLinkRequest {
+  name?: string;
+  description?: string;
+  status?: PaymentLinkStatus;
+  fixed_amount?: number;
+  amount_limits?: {
+    min_amount?: number;
+    max_amount?: number;
+  };
+  expires_at?: string;
+  max_uses?: number;
+  callback_url?: string;
+  success_message?: string;
+}
+
+// Query parameters for listing
+export interface QueryPaymentLinkParams {
+  page?: number;
+  limit?: number;
+  merchant_id?: string;
+  status?: PaymentLinkStatus;
+}
+
+// Slug validation response
+export interface SlugValidationResponse {
+  available: boolean;
+  message?: string;
+}
+
+// Helper function to convert MongoDecimal to number
+export function toNumber(value: MongoDecimal | undefined | null): number {
+  if (value === undefined || value === null) return 0;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'object' && '$numberDecimal' in value) {
+    return parseFloat(value.$numberDecimal);
+  }
+  return 0;
+}
+
+// Helper function to format currency
+export function formatCurrency(amount: MongoDecimal, currency: string = 'CLP'): string {
+  const num = toNumber(amount);
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+  }).format(num);
+}

@@ -148,3 +148,33 @@ export const contactApi = {
   send: (data: { name: string; email: string; company?: string; message: string }) =>
     client.post('/contact', data),
 };
+
+// Payment Links (Admin)
+import type {
+  PaymentLink,
+  CreatePaymentLinkRequest,
+  UpdatePaymentLinkRequest,
+  QueryPaymentLinkParams,
+  SlugValidationResponse,
+} from '../types/payment-link.types';
+
+export const paymentLinksApi = {
+  list: (params?: QueryPaymentLinkParams) =>
+    client.get<PaginatedResponse<PaymentLink>>('/payment-links', { params }),
+  get: (id: string) => client.get<PaymentLink>(`/payment-links/${id}`),
+  getByMerchant: (merchantId: string) =>
+    client.get<PaymentLink[]>(`/payment-links/by-merchant/${merchantId}`),
+  create: (data: CreatePaymentLinkRequest) =>
+    client.post<PaymentLink>('/payment-links', data),
+  update: (id: string, data: UpdatePaymentLinkRequest) =>
+    client.patch<PaymentLink>(`/payment-links/${id}`, data),
+  delete: (id: string) => client.delete(`/payment-links/${id}`),
+  validateSlug: (slug: string) =>
+    client.get<SlugValidationResponse>(`/payment-links/validate-slug/${slug}`),
+  downloadQrPng: (id: string) =>
+    client.get(`/payment-links/${id}/qr.png`, { responseType: 'blob' }),
+  downloadQrSvg: (id: string) =>
+    client.get(`/payment-links/${id}/qr.svg`, { responseType: 'blob' }),
+  downloadQrPdf: (id: string) =>
+    client.get(`/payment-links/${id}/qr.pdf`, { responseType: 'blob' }),
+};
