@@ -773,13 +773,13 @@ export default function PartnerDashboard() {
           {/* Transactions Tab */}
           <TabsContent value="transactions" className="space-y-4">
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
-              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between">
+              <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 className="font-semibold text-zinc-900 dark:text-white">{t('partner:transactions.title')}</h3>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => fetchTransactions(page, filters.merchant)}
+                    onClick={() => fetchTransactions(page, filters.merchant as string)}
                     className="gap-2 shrink-0"
                   >
                     <RefreshCw className="w-4 h-4" />
@@ -791,8 +791,24 @@ export default function PartnerDashboard() {
                     className="gap-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-md shadow-emerald-500/20"
                   >
                     <Download className="h-4 w-4" />
-                    {exporting ? t('partner:transactions.exporting') : t('partner:transactions.export')}
+                    <span className="hidden sm:inline">{exporting ? t('partner:transactions.exporting') : t('partner:transactions.export')}</span>
                   </Button>
+                  <select
+                    className="h-8 px-3 text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-gradient-to-r from-amber-500 to-orange-500 text-white cursor-pointer appearance-none pr-8 bg-no-repeat bg-[length:16px_16px] bg-[right_8px_center]"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const merchant = merchants.find(m => m._id === e.target.value);
+                        if (merchant) openCreateTxDialog(merchant);
+                      }
+                    }}
+                  >
+                    <option value="" disabled>+ {t('partner:transactions.create')}</option>
+                    {merchants.filter(m => m.status === 'ACTIVE').map((m) => (
+                      <option key={m._id} value={m._id}>{m.profile?.fantasy_name || m._id}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <FilterBar

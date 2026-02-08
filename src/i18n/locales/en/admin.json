@@ -117,6 +117,7 @@
   },
   "transactions": {
     "title": "Transactions ({{total}} total)",
+    "create": "New Transaction",
     "columns": {
       "id": "ID",
       "amount": "Amount",

@@ -34,6 +34,7 @@
   },
   "transactions": {
     "title": "Mis Transacciones",
+    "create": "Nueva Transacción",
     "columns": {
       "id": "ID",
       "amount": "Monto",
