@@ -145,7 +145,7 @@ export function DashboardHeader({
                 <DropdownMenuSubContent className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800">
                   <DropdownMenuRadioGroup value={currentLang} onValueChange={handleLanguageChange}>
                     <DropdownMenuRadioItem value="es" className="cursor-pointer">
-                      Espa\u00f1ol
+                      Español
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="en" className="cursor-pointer">
                       English
