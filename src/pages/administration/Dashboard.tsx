@@ -186,7 +186,7 @@ export default function Dashboard() {
       { key: 'search', label: t('admin:filters.search'), type: 'text', placeholder: t('admin:filters.nameOrEmail') },
     ],
     paymentLinks: [
-      { key: 'status', label: t('admin:filters.status'), type: 'select', placeholder: t('admin:filters.allStatuses'), options: PaymentLinkStatuses.map((s) => ({ value: s, label: getPaymentLinkStatusConfig(s).label })) },
+      { key: 'status', label: t('admin:filters.status'), type: 'select', placeholder: t('admin:filters.allStatuses'), options: PaymentLinkStatuses.map((s) => ({ value: s, label: getPaymentLinkStatusConfig(s, i18n.language as 'en' | 'es').label })) },
       { key: 'merchant_id', label: t('admin:filters.merchant'), type: 'select', placeholder: t('admin:filters.allMerchants'), options: merchantOptions },
       { key: 'link_mode', label: t('admin:paymentLinks.linkMode'), type: 'select', placeholder: t('admin:filters.all'), options: LinkModes.map((m) => ({ value: m, label: getLinkModeLabel(m) })) },
     ],
@@ -890,7 +890,7 @@ export default function Dashboard() {
                       </TableHeader>
                       <TableBody>
                         {paymentLinks.map((link) => {
-                          const statusCfg = getPaymentLinkStatusConfig(link.status);
+                          const statusCfg = getPaymentLinkStatusConfig(link.status, i18n.language as 'en' | 'es');
                           return (
                             <TableRow key={link._id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/10">
                               <TableCell className="font-medium text-zinc-900 dark:text-white">
