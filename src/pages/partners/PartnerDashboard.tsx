@@ -79,8 +79,9 @@ import {
   Pencil,
   Trash2,
   Link2,
-  ExternalLink,
-  QrCode,
+  Copy,
+  Check,
+  History,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
 
@@ -135,6 +136,7 @@ export default function PartnerDashboard() {
   const [editingPaymentLink, setEditingPaymentLink] = useState<PaymentLink | null>(null);
   const [selectedPaymentLink, setSelectedPaymentLink] = useState<PaymentLink | null>(null);
   const [deletingPaymentLink, setDeletingPaymentLink] = useState<PaymentLink | null>(null);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   // Load all counts on mount
   useEffect(() => {
@@ -379,6 +381,20 @@ export default function PartnerDashboard() {
   const openEditPaymentLink = (link: PaymentLink) => {
     setEditingPaymentLink(link);
     setPaymentLinkDialogOpen(true);
+  };
+
+  const handleCopyLink = async (url: string, linkId: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedLinkId(linkId);
+    setTimeout(() => setCopiedLinkId(null), 2000);
+  };
+
+  const handleViewLinkTransactions = (link: PaymentLink) => {
+    if (link._id) {
+      setFilter('payment_link_id', link._id);
+      setPage(1);
+      setTab('transactions');
+    }
   };
 
   const pagination: PaginationState = {
@@ -721,20 +737,20 @@ export default function PartnerDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => window.open(link.checkout_url, '_blank')}
-                                  title={t('partner:paymentLinks.openLink')}
+                                  onClick={() => handleCopyLink(link.checkout_url!, link._id!)}
+                                  title={t('partner:paymentLinks.copyLink')}
                                   className="h-8 w-8 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50"
                                 >
-                                  <ExternalLink className="h-4 w-4" />
+                                  {copiedLinkId === link._id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                                 </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => window.open(link.qr_url, '_blank')}
-                                  title={t('partner:paymentLinks.openQr')}
+                                  onClick={() => handleViewLinkTransactions(link)}
+                                  title={t('partner:paymentLinks.viewTransactions')}
                                   className="h-8 w-8 p-0 text-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50"
                                 >
-                                  <QrCode className="h-4 w-4" />
+                                  <History className="h-4 w-4" />
                                 </Button>
                                 <Button
                                   variant="outline"

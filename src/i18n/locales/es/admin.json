@@ -114,8 +114,8 @@
     "deleteMessage": "Estas seguro de eliminar el link \"{{name}}\"? Esta accion no se puede deshacer.",
     "noResults": "No hay links de pago",
     "variable": "Variable",
-    "openLink": "Abrir link de pago",
-    "openQr": "Abrir pagina QR"
+    "copyLink": "Copiar link de pago",
+    "viewTransactions": "Ver transacciones"
   },
   "transactions": {
     "title": "Transacciones ({{total}} total)",

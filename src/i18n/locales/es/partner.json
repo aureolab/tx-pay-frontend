@@ -77,8 +77,8 @@
     "deleteMessage": "¿Está seguro que desea eliminar el link \"{{name}}\"? Esta acción no se puede deshacer.",
     "noResults": "No hay links de pago",
     "variable": "Variable",
-    "openLink": "Abrir link de pago",
-    "openQr": "Abrir página QR"
+    "copyLink": "Copiar link de pago",
+    "viewTransactions": "Ver transacciones"
   },
   "filters": {
     "status": "Estado",
