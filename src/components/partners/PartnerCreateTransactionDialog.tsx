@@ -123,15 +123,17 @@ export function PartnerCreateTransactionDialog({
     setCreating(true);
     setError('');
     try {
-      const res = await partnerTransactionsApi.create(
-        {
-          amount: formData.amount,
-          currency: formData.currency,
-          payment_method: formData.payment_method,
-          callback_url: formData.callback_url,
-        },
-        effectiveMerchant._id,
-      );
+      const payload: CreateTransactionRequest = {
+        amount: formData.amount,
+        currency: formData.currency,
+        payment_method: formData.payment_method,
+        callback_url: formData.callback_url,
+      };
+      // Include vita_country if applicable
+      if (showCountrySelector && formData.vita_country) {
+        payload.vita_country = formData.vita_country;
+      }
+      const res = await partnerTransactionsApi.create(payload, effectiveMerchant._id);
       setSuccessResult(res.data);
       onSuccess();
     } catch (err: any) {
