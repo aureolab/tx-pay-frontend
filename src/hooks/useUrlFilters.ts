@@ -21,8 +21,14 @@ export function useUrlFilters({ defaultTab }: UseUrlFiltersOptions) {
     return f;
   }, [searchParams]);
 
-  const setTab = useCallback((newTab: string) => {
-    setSearchParams({ tab: newTab });
+  const setTab = useCallback((newTab: string, newFilters?: Record<string, string>) => {
+    const params: Record<string, string> = { tab: newTab };
+    if (newFilters) {
+      Object.entries(newFilters).forEach(([key, value]) => {
+        if (value) params[key] = value;
+      });
+    }
+    setSearchParams(params);
   }, [setSearchParams]);
 
   const setPage = useCallback((newPage: number) => {

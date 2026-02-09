@@ -397,9 +397,7 @@ export default function PartnerDashboard() {
 
   const handleViewLinkTransactions = (link: PaymentLink) => {
     if (link._id) {
-      setFilter('payment_link_id', link._id);
-      setPage(1);
-      setTab('transactions');
+      setTab('transactions', { payment_link_id: link._id });
     }
   };
 
