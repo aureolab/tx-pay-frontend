@@ -57,6 +57,7 @@ export interface PaymentLink {
   qr_url?: string;
   callback_url?: string;
   success_message?: string;
+  vita_country?: string;
   stats: PaymentLinkStats;
   createdAt: string;
   updatedAt: string;
@@ -80,6 +81,7 @@ export interface CreatePaymentLinkRequest {
   max_uses?: number;
   callback_url?: string;
   success_message?: string;
+  vita_country?: string;
 }
 
 // Update payment link request
@@ -96,6 +98,7 @@ export interface UpdatePaymentLinkRequest {
   max_uses?: number;
   callback_url?: string;
   success_message?: string;
+  vita_country?: string;
 }
 
 // Query parameters for listing

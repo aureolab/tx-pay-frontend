@@ -26,10 +26,13 @@ import type {
   UpdatePaymentLinkRequest,
 } from '@/types/payment-link.types';
 import { LinkMode, AmountMode, toNumber } from '@/types/payment-link.types';
+import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
+import { VITA_WALLET_COUNTRIES, DEFAULT_VITA_COUNTRY } from '@/lib/vita-countries';
 
 interface Merchant {
   _id: string;
   profile?: { fantasy_name?: string; legal_name?: string };
+  enabled_payment_methods?: string[];
 }
 
 interface PaymentLinkDialogProps {
@@ -52,6 +55,7 @@ interface FormData {
   max_amount: string;
   max_uses: string;
   expires_at: string;
+  vita_country: string;
 }
 
 const initialFormData: FormData = {
@@ -65,6 +69,7 @@ const initialFormData: FormData = {
   max_amount: '',
   max_uses: '',
   expires_at: '',
+  vita_country: DEFAULT_VITA_COUNTRY,
 };
 
 export function PaymentLinkDialog({
@@ -85,6 +90,10 @@ export function PaymentLinkDialog({
   const effectiveMerchantId = merchantId || selectedMerchantId;
   const showMerchantSelector = !merchantId && merchants && merchants.length > 0;
 
+  // Check if selected merchant has VITA_WALLET enabled
+  const selectedMerchant = merchants?.find(m => m._id === effectiveMerchantId);
+  const hasVitaWallet = selectedMerchant?.enabled_payment_methods?.includes('VITA_WALLET') ?? false;
+
   useEffect(() => {
     if (open) {
       if (item) {
@@ -99,6 +108,7 @@ export function PaymentLinkDialog({
           max_amount: item.amount_limits?.max_amount ? toNumber(item.amount_limits.max_amount).toString() : '',
           max_uses: item.max_uses?.toString() || '',
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
+          vita_country: item.vita_country || DEFAULT_VITA_COUNTRY,
         });
         // Set merchant from existing item for editing
         if (typeof item.merchant_id === 'string') {
@@ -139,6 +149,7 @@ export function PaymentLinkDialog({
             : undefined,
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
+          vita_country: hasVitaWallet ? formData.vita_country : undefined,
         };
         await paymentLinksApi.update(item._id, updateData);
       } else {
@@ -160,6 +171,7 @@ export function PaymentLinkDialog({
             : undefined,
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
+          vita_country: hasVitaWallet ? formData.vita_country : undefined,
         };
         await paymentLinksApi.create(createData);
       }
@@ -377,6 +389,22 @@ export function PaymentLinkDialog({
                   className="h-10"
                 />
               </div>
+
+              {/* Vita Wallet Country - shown only if merchant has VITA_WALLET enabled */}
+              {hasVitaWallet && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="vita_country" className="text-sm">País destino (Vita Wallet)</Label>
+                  <VitaCountrySelector
+                    value={formData.vita_country}
+                    onChange={(code) => setFormData(prev => ({ ...prev, vita_country: code }))}
+                    countries={VITA_WALLET_COUNTRIES}
+                    placeholder="Seleccionar país"
+                  />
+                  <p className="text-xs text-zinc-500">
+                    País predeterminado para pagos con Vita Wallet
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
