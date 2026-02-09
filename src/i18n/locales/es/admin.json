@@ -113,7 +113,9 @@
     "deleteTitle": "Eliminar Link de Pago",
     "deleteMessage": "Estas seguro de eliminar el link \"{{name}}\"? Esta accion no se puede deshacer.",
     "noResults": "No hay links de pago",
-    "variable": "Variable"
+    "variable": "Variable",
+    "openLink": "Abrir link de pago",
+    "openQr": "Abrir pagina QR"
   },
   "transactions": {
     "title": "Transacciones ({{total}} total)",

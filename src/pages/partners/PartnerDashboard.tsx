@@ -79,6 +79,8 @@ import {
   Pencil,
   Trash2,
   Link2,
+  ExternalLink,
+  QrCode,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
 
@@ -719,6 +721,24 @@ export default function PartnerDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => window.open(link.checkout_url, '_blank')}
+                                  title={t('partner:paymentLinks.openLink')}
+                                  className="h-8 w-8 p-0 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(link.qr_url, '_blank')}
+                                  title={t('partner:paymentLinks.openQr')}
+                                  className="h-8 w-8 p-0 text-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                                >
+                                  <QrCode className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   onClick={() => setSelectedPaymentLink(link)}
                                   title={t('partner:merchants.viewDetails')}
                                   className="h-8 w-8 p-0"
@@ -735,13 +755,13 @@ export default function PartnerDashboard() {
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setDeletingPaymentLink(link)}
-                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDeletingPaymentLink(link)}
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>

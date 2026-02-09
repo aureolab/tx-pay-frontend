@@ -113,7 +113,9 @@
     "deleteTitle": "Delete Payment Link",
     "deleteMessage": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
     "noResults": "No payment links found",
-    "variable": "Variable"
+    "variable": "Variable",
+    "openLink": "Open payment link",
+    "openQr": "Open QR page"
   },
   "transactions": {
     "title": "Transactions ({{total}} total)",

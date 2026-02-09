@@ -82,6 +82,8 @@ import {
   Settings,
   KeyRound,
   Link2,
+  ExternalLink,
+  QrCode,
 } from 'lucide-react';
 import { downloadBlob } from '@/lib/downloadFile';
 import type { PaymentLink } from '@/types/payment-link.types';
@@ -901,7 +903,7 @@ export default function Dashboard() {
                                 {link.code}
                               </TableCell>
                               <TableCell className="hidden lg:table-cell">
-                                <Badge variant="outline" className="text-xs">{getLinkModeLabel(link.link_mode)}</Badge>
+                                <Badge variant="outline" className="text-xs">{getLinkModeLabel(link.link_mode, i18n.language as 'en' | 'es')}</Badge>
                               </TableCell>
                               <TableCell className="hidden sm:table-cell text-zinc-600 dark:text-zinc-400">
                                 {link.amount_mode === 'FIXED' && link.fixed_amount
@@ -918,6 +920,24 @@ export default function Dashboard() {
                               </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex gap-1 justify-end">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(link.checkout_url, '_blank')}
+                                    title={t('admin:paymentLinks.openLink')}
+                                    className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(link.qr_url, '_blank')}
+                                    title={t('admin:paymentLinks.openQr')}
+                                    className="h-8 w-8 p-0 text-purple-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                                  >
+                                    <QrCode className="h-4 w-4" />
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
