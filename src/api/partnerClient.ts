@@ -84,7 +84,7 @@ export const partnerMerchantsApi = {
 
 // Partner Transactions API
 export const partnerTransactionsApi = {
-  getMyTransactions: (params?: PaginationParams) =>
+  getMyTransactions: (params?: PaginationParams & { payment_link_id?: string; status?: string; payment_method?: string; dateFrom?: string; dateTo?: string }) =>
     partnerClient.get<PaginatedResponse<PartnerTransaction>>(
       '/transactions/my-transactions',
       { params }

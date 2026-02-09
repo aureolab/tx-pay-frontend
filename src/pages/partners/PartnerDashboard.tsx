@@ -217,13 +217,13 @@ export default function PartnerDashboard() {
   }, [t]);
 
   // Fetch transactions
-  const fetchTransactions = useCallback(async (pageNum: number = 1, merchantId?: string) => {
+  const fetchTransactions = useCallback(async (pageNum: number = 1, merchantId?: string, txFilters?: Record<string, string>) => {
     try {
       let res;
       if (merchantId && merchantId !== 'all') {
         res = await partnerTransactionsApi.getByMerchant(merchantId, { page: pageNum, limit: 10 });
       } else {
-        res = await partnerTransactionsApi.getMyTransactions({ page: pageNum, limit: 10 });
+        res = await partnerTransactionsApi.getMyTransactions({ page: pageNum, limit: 10, ...txFilters });
       }
       setTransactions(res.data.data);
       setMeta(res.data.meta);
@@ -274,7 +274,13 @@ export default function PartnerDashboard() {
           }).catch(() => {});
         }
         const merchantFilter = filters.merchant;
-        await fetchTransactions(page, merchantFilter);
+        const txFilters: Record<string, string> = {};
+        if (filters.payment_link_id) txFilters.payment_link_id = filters.payment_link_id as string;
+        if (filters.status) txFilters.status = filters.status as string;
+        if (filters.payment_method) txFilters.payment_method = filters.payment_method as string;
+        if (filters.dateFrom) txFilters.dateFrom = filters.dateFrom as string;
+        if (filters.dateTo) txFilters.dateTo = filters.dateTo as string;
+        await fetchTransactions(page, merchantFilter, txFilters);
       } else if (tab === 'users') {
         // Load merchants in background for user dialog if not yet loaded
         if (merchants.length === 0) {
