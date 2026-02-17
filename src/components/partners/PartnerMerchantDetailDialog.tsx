@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Store } from 'lucide-react';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
 import { getDecimalValue } from '@/lib/formatters';
@@ -69,7 +70,7 @@ export function PartnerMerchantDetailDialog({ merchant, open, onOpenChange }: Pr
             <span className="h-6 w-6 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
           </div>
         ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <ScrollArea className="max-h-[calc(90vh-100px)]">
             <div className="px-6 pb-6 grid gap-4">
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
@@ -166,7 +167,7 @@ export function PartnerMerchantDetailDialog({ merchant, open, onOpenChange }: Pr
                 </div>
               </div>
             </div>
-          </div>
+          </ScrollArea>
         )}
       </DialogContent>
     </Dialog>
