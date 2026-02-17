@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, EyeOff, Store } from 'lucide-react';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
 
@@ -88,7 +87,7 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-100px)]">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
           <div className="px-6 pb-6 grid gap-4">
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
@@ -279,7 +278,7 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
