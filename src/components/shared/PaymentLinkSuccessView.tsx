@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Copy, Check, Sparkles, Link2, QrCode } from 'lucide-react';
 import type { PaymentLink } from '@/types/payment-link.types';
-import { toNumber, formatCurrency } from '@/types/payment-link.types';
+import { formatCurrency } from '@/types/payment-link.types';
 
 interface PaymentLinkSuccessViewProps {
   result: PaymentLink;
