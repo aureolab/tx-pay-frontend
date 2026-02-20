@@ -18,6 +18,7 @@ import { getVitaCountryByCode } from '@/lib/vita-countries';
 
 export function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation('admin');
+  const [copiedId, setCopiedId] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedQr, setCopiedQr] = useState(false);
 
@@ -62,8 +63,27 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: an
               {t('dialogs.transactionDetail.title')}
             </span>
           </DialogTitle>
-          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400">
-            {t('dialogs.transactionDetail.description', { id: item._id })}
+          <DialogDescription className="mt-1.5 pl-12 text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+            <code className="text-xs font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 truncate max-w-[260px]">
+              {item._id}
+            </code>
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(item._id);
+                setCopiedId(true);
+                setTimeout(() => setCopiedId(false), 2000);
+              }}
+              className={`
+                p-1 rounded-md transition-all duration-200 flex-shrink-0
+                ${copiedId
+                  ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                  : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                }
+              `}
+            >
+              {copiedId ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </DialogDescription>
         </DialogHeader>
 

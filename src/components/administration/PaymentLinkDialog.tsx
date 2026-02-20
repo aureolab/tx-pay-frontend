@@ -28,6 +28,7 @@ import type {
 import { LinkMode, AmountMode, toNumber } from '@/types/payment-link.types';
 import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
 import { VITA_WALLET_COUNTRIES, DEFAULT_VITA_COUNTRY } from '@/lib/vita-countries';
+import { PaymentLinkSuccessView } from '@/components/shared/PaymentLinkSuccessView';
 
 interface Merchant {
   _id: string;
@@ -85,6 +86,7 @@ export function PaymentLinkDialog({
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
+  const [createdLink, setCreatedLink] = useState<PaymentLink | null>(null);
 
   // Determine the effective merchant ID
   const effectiveMerchantId = merchantId || selectedMerchantId;
@@ -119,6 +121,7 @@ export function PaymentLinkDialog({
         setSelectedMerchantId('');
       }
       setError('');
+      setCreatedLink(null);
     }
   }, [open, item]);
 
@@ -173,7 +176,10 @@ export function PaymentLinkDialog({
           expires_at: formData.expires_at || undefined,
           vita_country: hasVitaWallet ? formData.vita_country : undefined,
         };
-        await paymentLinksApi.create(createData);
+        const { data } = await paymentLinksApi.create(createData);
+        setCreatedLink(data);
+        onSuccess();
+        return;
       }
 
       onSuccess();
@@ -186,11 +192,31 @@ export function PaymentLinkDialog({
     }
   };
 
+  const handleSuccessClose = () => {
+    setCreatedLink(null);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        setCreatedLink(null);
+      }
+      onOpenChange(isOpen);
+    }}>
       <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800/80 shadow-xl p-0 gap-0 overflow-hidden flex flex-col">
         <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 flex-shrink-0" />
 
+        {createdLink ? (
+          <div className="px-4 sm:px-6 py-4">
+            <PaymentLinkSuccessView
+              result={createdLink}
+              gradientClass="from-blue-500 to-indigo-600"
+              onClose={handleSuccessClose}
+            />
+          </div>
+        ) : (
+        <>
         <DialogHeader className="px-4 sm:px-6 pt-4 pb-2 flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20 flex-shrink-0">
@@ -432,6 +458,8 @@ export function PaymentLinkDialog({
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   );
