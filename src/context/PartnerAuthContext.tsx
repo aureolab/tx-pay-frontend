@@ -28,6 +28,10 @@ export function PartnerAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (window.location.pathname.includes('/login')) {
+      setLoading(false);
+      return;
+    }
     partnerAuthApi
       .getProfile()
       .then((res) => {

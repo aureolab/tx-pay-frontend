@@ -22,6 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (window.location.pathname.includes('/login')) {
+      setLoading(false);
+      return;
+    }
     authApi.getProfile()
       .then((res) => setUser(res.data))
       .catch(() => { /* no valid session cookie */ })
