@@ -14,7 +14,11 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/administration/login';
+      const isLoginPage = window.location.pathname.includes('/login');
+      const isProfileCheck = error.config?.url?.includes('/auth/profile');
+      if (!isLoginPage && !isProfileCheck) {
+        window.location.href = '/administration/login';
+      }
     }
     return Promise.reject(error);
   }

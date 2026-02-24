@@ -31,7 +31,11 @@ partnerClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/partners/login';
+      const isLoginPage = window.location.pathname.includes('/login');
+      const isProfileCheck = error.config?.url?.includes('/auth/partner/profile');
+      if (!isLoginPage && !isProfileCheck) {
+        window.location.href = '/partners/login';
+      }
     }
     return Promise.reject(error);
   }
