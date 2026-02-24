@@ -18,23 +18,12 @@ import type { PaginatedResponse, PaginationParams } from './client';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-// Separate storage key for Partner token
-const PARTNER_TOKEN_KEY = 'partner_access_token';
-
 const partnerClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-});
-
-// Request interceptor: inject Partner token
-partnerClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(PARTNER_TOKEN_KEY);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+  withCredentials: true,
 });
 
 // Response interceptor: redirect to partner login on 401
@@ -42,7 +31,6 @@ partnerClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem(PARTNER_TOKEN_KEY);
       window.location.href = '/partners/login';
     }
     return Promise.reject(error);
@@ -50,13 +38,6 @@ partnerClient.interceptors.response.use(
 );
 
 export default partnerClient;
-
-// Token helper
-export const partnerTokenHelper = {
-  get: () => localStorage.getItem(PARTNER_TOKEN_KEY),
-  set: (token: string) => localStorage.setItem(PARTNER_TOKEN_KEY, token),
-  remove: () => localStorage.removeItem(PARTNER_TOKEN_KEY),
-};
 
 // Partner Auth API
 export const partnerAuthApi = {
@@ -67,6 +48,7 @@ export const partnerAuthApi = {
     }),
   getProfile: () =>
     partnerClient.get<PartnerProfileResponse>('/auth/partner/profile'),
+  logout: () => partnerClient.post('/auth/partner/logout'),
   changeMyPassword: (data: { current_password: string; new_password: string }) =>
     partnerClient.post('/auth/partner/change-my-password', data),
 };

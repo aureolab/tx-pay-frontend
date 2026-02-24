@@ -22,26 +22,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      authApi.getProfile()
-        .then((res) => setUser(res.data))
-        .catch(() => localStorage.removeItem('access_token'))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    authApi.getProfile()
+      .then((res) => setUser(res.data))
+      .catch(() => { /* no valid session cookie */ })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
-    localStorage.setItem('access_token', res.data.access_token);
+    await authApi.login(email, password);
     const profile = await authApi.getProfile();
     setUser(profile.data);
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
+  const logout = async () => {
+    try { await authApi.logout(); } catch { /* ignore */ }
     setUser(null);
   };
 

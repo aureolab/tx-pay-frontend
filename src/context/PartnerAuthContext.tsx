@@ -5,10 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import {
-  partnerAuthApi,
-  partnerTokenHelper,
-} from '../api/partnerClient';
+import { partnerAuthApi } from '../api/partnerClient';
 import { PartnerUserType } from '../types/partner.types';
 import type { PartnerUser } from '../types/partner.types';
 
@@ -31,30 +28,24 @@ export function PartnerAuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = partnerTokenHelper.get();
-    if (token) {
-      partnerAuthApi
-        .getProfile()
-        .then((res) => {
-          setPartnerUser({
-            userId: res.data.userId,
-            email: res.data.email,
-            name: res.data.name || res.data.email.split('@')[0],
-            partnerId: res.data.partnerId,
-            partnerUserType: res.data.partnerUserType,
-            assignedMerchants: res.data.assignedMerchants || [],
-          });
-        })
-        .catch(() => partnerTokenHelper.remove())
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    partnerAuthApi
+      .getProfile()
+      .then((res) => {
+        setPartnerUser({
+          userId: res.data.userId,
+          email: res.data.email,
+          name: res.data.name || res.data.email.split('@')[0],
+          partnerId: res.data.partnerId,
+          partnerUserType: res.data.partnerUserType,
+          assignedMerchants: res.data.assignedMerchants || [],
+        });
+      })
+      .catch(() => { /* no valid session cookie */ })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await partnerAuthApi.login(email, password);
-    partnerTokenHelper.set(res.data.access_token);
+    await partnerAuthApi.login(email, password);
     const profile = await partnerAuthApi.getProfile();
     setPartnerUser({
       userId: profile.data.userId,
@@ -66,8 +57,8 @@ export function PartnerAuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const logout = () => {
-    partnerTokenHelper.remove();
+  const logout = async () => {
+    try { await partnerAuthApi.logout(); } catch { /* ignore */ }
     setPartnerUser(null);
   };
 
