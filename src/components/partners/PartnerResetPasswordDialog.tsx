@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { getErrorMessage } from '@/types/api-error.types';
 import { PartnerCredentialsDialog, type CredentialsData } from './PartnerCredentialsDialog';
 
 interface PartnerResetPasswordDialogProps {
@@ -46,8 +47,8 @@ export function PartnerResetPasswordDialog({
       setShowCredentials(true);
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('dialogs.resetPassword.error'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('dialogs.resetPassword.error'));
     } finally {
       setLoading(false);
     }

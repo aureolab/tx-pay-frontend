@@ -22,15 +22,17 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, UserPlus, Eye, EyeOff } from 'lucide-react';
+import type { PartnerUser, Merchant, CreatePartnerUserRequest, UpdatePartnerUserRequest } from '@/types/admin.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { PartnerUserTypes, PartnerUserStatuses } from '@/lib/constants';
 
 interface PartnerUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  item?: any;
+  item?: PartnerUser | null;
   partnerId: string;
-  partnerMerchants?: any[];
+  partnerMerchants?: Merchant[];
 }
 
 export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partnerId, partnerMerchants = [] }: PartnerUserDialogProps) {
@@ -56,7 +58,7 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
         password: '',
         type: item.type || 'PARTNER',
         status: item.status || 'ACTIVE',
-        assigned_merchants: item.assigned_merchants?.map((m: any) => typeof m === 'string' ? m : m._id) || [],
+        assigned_merchants: item.assigned_merchants?.map((m: string | { _id: string }) => typeof m === 'string' ? m : m._id) || [],
       });
     } else {
       setFormData({
@@ -85,7 +87,7 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
     setLoading(true);
     setError('');
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         name: formData.name,
         type: formData.type,
       };
@@ -103,14 +105,14 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
       }
 
       if (isEdit) {
-        await partnerUsersApi.update(item._id, payload);
+        await partnerUsersApi.update(item._id, payload as unknown as UpdatePartnerUserRequest);
       } else {
-        await partnerUsersApi.create(payload);
+        await partnerUsersApi.create(payload as unknown as CreatePartnerUserRequest);
       }
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t(isEdit ? 'dialogs.partnerUser.updateError' : 'dialogs.partnerUser.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t(isEdit ? 'dialogs.partnerUser.updateError' : 'dialogs.partnerUser.createError'));
     } finally {
       setLoading(false);
     }
@@ -231,7 +233,7 @@ export function PartnerUserDialog({ open, onOpenChange, onSuccess, item, partner
                 {t('dialogs.partnerUser.assignedMerchants')}
               </Label>
               <div className="flex flex-wrap gap-1.5 p-3 bg-zinc-50/80 dark:bg-zinc-800/30 border border-zinc-200/80 dark:border-zinc-700/50 rounded-lg min-h-[44px]">
-                {partnerMerchants.map((m: any) => {
+                {partnerMerchants.map((m: Merchant) => {
                   const isSelected = formData.assigned_merchants.includes(m._id);
                   return (
                     <Badge

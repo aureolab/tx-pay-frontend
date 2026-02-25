@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { PartnerMerchant, CreateTransactionRequest } from '../../types/partner.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { partnerTransactionsApi } from '../../api/partnerClient';
 import { getPaymentMethodLabel } from '@/lib/constants';
 import { TransactionSuccessView } from '@/components/shared/TransactionSuccessView';
@@ -65,7 +66,7 @@ export function PartnerCreateTransactionDialog({
   });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
-  const [successResult, setSuccessResult] = useState<any>(null);
+  const [successResult, setSuccessResult] = useState<Record<string, unknown> | null>(null);
 
   // Determine if we should show the country selector
   // Show for VITA_WALLET only
@@ -136,8 +137,8 @@ export function PartnerCreateTransactionDialog({
       const res = await partnerTransactionsApi.create(payload, effectiveMerchant._id);
       setSuccessResult(res.data);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear transaccion');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Error al crear transaccion');
     } finally {
       setCreating(false);
     }

@@ -21,13 +21,15 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Handshake } from 'lucide-react';
+import type { Partner, CreatePartnerRequest, UpdatePartnerRequest } from '@/types/admin.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { PartnerStatuses } from '@/lib/constants';
 
 interface PartnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  item?: any;
+  item?: Partner | null;
 }
 
 export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDialogProps) {
@@ -75,7 +77,7 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
     setLoading(true);
     setError('');
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         fantasy_name: formData.fantasy_name,
         legal_name: formData.legal_name,
         tax_id: formData.tax_id,
@@ -86,14 +88,14 @@ export function PartnerDialog({ open, onOpenChange, onSuccess, item }: PartnerDi
 
       if (isEdit) {
         payload.status = formData.status;
-        await partnersApi.update(item._id, payload);
+        await partnersApi.update(item._id, payload as unknown as UpdatePartnerRequest);
       } else {
-        await partnersApi.create(payload);
+        await partnersApi.create(payload as unknown as CreatePartnerRequest);
       }
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t(isEdit ? 'dialogs.partner.updateError' : 'dialogs.partner.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t(isEdit ? 'dialogs.partner.updateError' : 'dialogs.partner.createError'));
     } finally {
       setLoading(false);
     }

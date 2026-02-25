@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
+import { getErrorMessage } from '@/types/api-error.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,8 +35,8 @@ export default function Login() {
     try {
       await login(email, password);
       navigate('/administration');
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('form.loginFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('form.loginFailed'));
     } finally {
       setLoading(false);
     }

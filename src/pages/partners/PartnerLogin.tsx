@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePartnerAuth } from '../../context/PartnerAuthContext';
+import { getErrorMessage } from '@/types/api-error.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,8 +35,8 @@ export default function PartnerLogin() {
     try {
       await login(email, password);
       navigate('/partners');
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('form.invalidCredentials'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('form.invalidCredentials'));
     } finally {
       setLoading(false);
     }

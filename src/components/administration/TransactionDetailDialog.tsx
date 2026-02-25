@@ -13,10 +13,18 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CreditCard, Link2, QrCode, Copy, Check, ExternalLink } from 'lucide-react';
+import type { Transaction } from '@/types/admin.types';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
 import { getVitaCountryByCode } from '@/lib/vita-countries';
 
-export function TransactionDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
+/** Safely extract a value from a MongoDecimal (number | { $numberDecimal: string }) */
+const getDecimal = (val: unknown): string | number => {
+  if (typeof val === 'object' && val !== null && '$numberDecimal' in val)
+    return (val as { $numberDecimal: string }).$numberDecimal;
+  return val as number;
+};
+
+export function TransactionDetailDialog({ item, open, onOpenChange }: { item: Transaction | null; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation('admin');
   const [copiedId, setCopiedId] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -184,21 +192,13 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: an
                 <div>
                   <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.transactionDetail.grossAmount')}</Label>
                   <p className="font-semibold text-lg text-zinc-900 dark:text-white">
-                    {item.financials?.currency} {
-                      item.financials?.amount_gross?.$numberDecimal ||
-                      item.financials?.amount_gross?.toLocaleString() ||
-                      item.financials?.amount_gross
-                    }
+                    {item.financials?.currency} {getDecimal(item.financials?.amount_gross)}
                   </p>
                 </div>
                 <div>
                   <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.transactionDetail.netAmount')}</Label>
                   <p className="font-medium text-zinc-900 dark:text-white">
-                    {item.financials?.currency} {
-                      item.financials?.amount_net?.$numberDecimal ||
-                      item.financials?.amount_net?.toLocaleString() ||
-                      item.financials?.amount_net || '-'
-                    }
+                    {item.financials?.currency} {item.financials?.amount_net ? getDecimal(item.financials.amount_net) : '-'}
                   </p>
                 </div>
                 <div>
@@ -208,15 +208,15 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: an
               </div>
               {item.financials?.fee_snapshot && (
                 <div className="mt-2 bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40 space-y-1">
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feeFixed')}:</span> {item.financials.fee_snapshot.fixed?.$numberDecimal || item.financials.fee_snapshot.fixed || 0}</p>
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feePercentage')}:</span> {item.financials.fee_snapshot.percentage?.$numberDecimal || item.financials.fee_snapshot.percentage || 0}%</p>
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaPercentage')}:</span> {item.financials.fee_snapshot.iva_percentage?.$numberDecimal || item.financials.fee_snapshot.iva_percentage || 0}%</p>
-                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaAmount')}:</span> {item.financials?.currency} {item.financials.fee_snapshot.iva_amount?.$numberDecimal || item.financials.fee_snapshot.iva_amount || 0}</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feeFixed')}:</span> {getDecimal(item.financials.fee_snapshot.fixed) || 0}</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.feePercentage')}:</span> {getDecimal(item.financials.fee_snapshot.percentage) || 0}%</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaPercentage')}:</span> {item.financials.fee_snapshot.iva_percentage ? getDecimal(item.financials.fee_snapshot.iva_percentage) : 0}%</p>
+                  <p><span className="text-zinc-500">{t('dialogs.transactionDetail.ivaAmount')}:</span> {item.financials?.currency} {item.financials.fee_snapshot.iva_amount ? getDecimal(item.financials.fee_snapshot.iva_amount) : 0}</p>
                   <div className="pt-1 mt-1 border-t border-zinc-200/60 dark:border-zinc-700/40">
                     <p className="font-medium"><span className="text-zinc-500">{t('dialogs.transactionDetail.totalFee')}:</span> {item.financials?.currency} {
                       (() => {
-                        const gross = parseFloat(item.financials?.amount_gross?.$numberDecimal || item.financials?.amount_gross || 0);
-                        const net = parseFloat(item.financials?.amount_net?.$numberDecimal || item.financials?.amount_net || 0);
+                        const gross = parseFloat(String(getDecimal(item.financials?.amount_gross) || 0));
+                        const net = parseFloat(String(getDecimal(item.financials?.amount_net) || 0));
                         return (gross - net).toFixed(2);
                       })()
                     }</p>

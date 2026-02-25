@@ -16,13 +16,15 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Shield, Users, Info, Eye, EyeOff } from 'lucide-react';
 import { AdminRoles } from '@/lib/constants';
+import type { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/types/admin.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { CredentialsDialog, type CredentialsData } from './CredentialsDialog';
 
 interface AdminDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  item?: any;
+  item?: AdminUser | null;
 }
 
 export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDialogProps) {
@@ -70,7 +72,7 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
     setLoading(true);
     setError('');
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         full_name: formData.full_name,
         roles: formData.roles,
         active: formData.active,
@@ -85,21 +87,27 @@ export function AdminUserDialog({ open, onOpenChange, onSuccess, item }: AdminDi
       }
 
       if (isEdit) {
-        await adminUsersApi.update(item._id, payload);
+        await adminUsersApi.update(item._id, payload as UpdateAdminUserRequest);
         onOpenChange(false);
         onSuccess();
       } else {
-        const response = await adminUsersApi.create(payload);
+        const response = await adminUsersApi.create(payload as unknown as CreateAdminUserRequest);
         // Check if response contains credentials (auto-generated password)
-        if (response.data?.password) {
-          setCredentials(response.data);
+        const responseData = response.data as unknown as Record<string, unknown>;
+        if (responseData?.password) {
+          setCredentials({
+            email: String(responseData.email || ''),
+            password: String(responseData.password),
+            login_url: String(responseData.login_url || ''),
+            name: String(responseData.full_name || responseData.name || ''),
+          });
           setShowCredentials(true);
         }
         onOpenChange(false);
         onSuccess();
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || t(isEdit ? 'dialogs.adminUser.updateError' : 'dialogs.adminUser.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t(isEdit ? 'dialogs.adminUser.updateError' : 'dialogs.adminUser.createError'));
     } finally {
       setLoading(false);
     }

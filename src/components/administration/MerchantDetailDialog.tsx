@@ -12,9 +12,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Eye, EyeOff, Store } from 'lucide-react';
+import type { Merchant } from '@/types/admin.types';
 import { getStatusConfig, getPaymentMethodLabel } from '@/lib/constants';
 
-export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function MerchantDetailDialog({ item, open, onOpenChange }: { item: Merchant | null; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation('admin');
   const [showSecret, setShowSecret] = useState(false);
   const [secretKey, setSecretKey] = useState<string | null>(null);
@@ -54,7 +55,7 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
 
     setLoadingSecret(true);
     try {
-      const res = await merchantsApi.getSecret(item._id);
+      const res = await merchantsApi.getSecret(item!._id);
       setSecretKey(res.data);
       setShowSecret(true);
     } catch (err) {
@@ -180,11 +181,11 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
             </div>
 
             {/* Bank Accounts */}
-            {item.bank_accounts?.length > 0 && (
+            {item.bank_accounts && item.bank_accounts.length > 0 && (
               <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                 <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.merchantDetail.bankAccounts')}</Label>
                 <div className="space-y-2 mt-2">
-                  {item.bank_accounts.map((account: any, idx: number) => (
+                  {item.bank_accounts.map((account: { bank_name: string; account_type: string; account_number_enc?: string; currency: string }, idx: number) => (
                     <div key={idx} className="bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40">
                       <p><span className="text-zinc-500">{t('dialogs.merchantDetail.bank')}</span> {account.bank_name}</p>
                       <p><span className="text-zinc-500">{t('dialogs.merchantDetail.accountType')}</span> {account.account_type}</p>
@@ -196,15 +197,15 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
             )}
 
             {/* Pricing Rules */}
-            {item.pricing_rules?.fees?.length > 0 && (
+            {item.pricing_rules?.fees && item.pricing_rules.fees.length > 0 && (
               <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                 <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.merchantDetail.pricingRules')}</Label>
                 <div className="space-y-2 mt-2">
-                  {item.pricing_rules.fees.map((fee: any, idx: number) => (
+                  {item.pricing_rules.fees.map((fee, idx: number) => (
                     <div key={idx} className="bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40">
                       <p><span className="text-zinc-500">{t('dialogs.merchantDetail.method')}</span> {getPaymentMethodLabel(fee.method)}</p>
-                      <p><span className="text-zinc-500">{t('dialogs.merchantDetail.fixed')}</span> {fee.fixed?.$numberDecimal || fee.fixed || 0}</p>
-                      <p><span className="text-zinc-500">{t('dialogs.merchantDetail.percentage')}</span> {fee.percentage?.$numberDecimal || fee.percentage || 0}%</p>
+                      <p><span className="text-zinc-500">{t('dialogs.merchantDetail.fixed')}</span> {typeof fee.fixed === 'object' && fee.fixed !== null && '$numberDecimal' in fee.fixed ? fee.fixed.$numberDecimal : fee.fixed || 0}</p>
+                      <p><span className="text-zinc-500">{t('dialogs.merchantDetail.percentage')}</span> {typeof fee.percentage === 'object' && fee.percentage !== null && '$numberDecimal' in fee.percentage ? fee.percentage.$numberDecimal : fee.percentage || 0}%</p>
                     </div>
                   ))}
                 </div>
@@ -212,11 +213,11 @@ export function MerchantDetailDialog({ item, open, onOpenChange }: { item: any; 
             )}
 
             {/* Acquirer Configs */}
-            {item.acquirer_configs?.length > 0 && (
+            {item.acquirer_configs && item.acquirer_configs.length > 0 && (
               <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                 <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('dialogs.merchantDetail.acquirerConfigs')}</Label>
                 <div className="space-y-3 mt-2">
-                  {item.acquirer_configs.map((config: any, idx: number) => (
+                  {item.acquirer_configs.map((config: { provider: string; config: Record<string, unknown> }, idx: number) => (
                     <div key={idx} className="bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40 space-y-2">
                       <p className="font-medium text-zinc-900 dark:text-white">{config.provider}</p>
                       {config.config && Object.keys(config.config).length > 0 && (

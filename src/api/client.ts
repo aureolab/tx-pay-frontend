@@ -1,4 +1,22 @@
 import axios from 'axios';
+import type {
+  AdminUser,
+  CreateAdminUserRequest,
+  UpdateAdminUserRequest,
+  Merchant,
+  CreateMerchantRequest,
+  UpdateMerchantRequest,
+  BankAccount,
+  Partner,
+  CreatePartnerRequest,
+  UpdatePartnerRequest,
+  PartnerUser,
+  CreatePartnerUserRequest,
+  UpdatePartnerUserRequest,
+  Transaction,
+  CreateTransactionRequest,
+  SystemConfig,
+} from '../types/admin.types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -61,10 +79,10 @@ export interface PaginatedResponse<T> {
 // Admin Users
 export const adminUsersApi = {
   list: (params?: ListParams) =>
-    client.get('/admin-users', { params }),
-  get: (id: string) => client.get(`/admin-users/${id}`),
-  create: (data: any) => client.post('/admin-users', data),
-  update: (id: string, data: any) => client.patch(`/admin-users/${id}`, data),
+    client.get<PaginatedResponse<AdminUser>>('/admin-users', { params }),
+  get: (id: string) => client.get<AdminUser>(`/admin-users/${id}`),
+  create: (data: CreateAdminUserRequest) => client.post<AdminUser>('/admin-users', data),
+  update: (id: string, data: UpdateAdminUserRequest) => client.patch<AdminUser>(`/admin-users/${id}`, data),
   delete: (id: string) => client.delete(`/admin-users/${id}`),
   resetPassword: (id: string) => client.post(`/admin-users/${id}/reset-password`),
 };
@@ -72,23 +90,23 @@ export const adminUsersApi = {
 // Merchants
 export const merchantsApi = {
   list: (params?: ListParams) =>
-    client.get('/merchants', { params }),
-  get: (id: string) => client.get(`/merchants/${id}`),
+    client.get<PaginatedResponse<Merchant>>('/merchants', { params }),
+  get: (id: string) => client.get<Merchant>(`/merchants/${id}`),
   getSecret: (id: string) => client.get<string>(`/merchants/${id}/secret`),
-  create: (data: any) => client.post('/merchants', data),
-  update: (id: string, data: any) => client.patch(`/merchants/${id}`, data),
+  create: (data: CreateMerchantRequest) => client.post<Merchant>('/merchants', data),
+  update: (id: string, data: UpdateMerchantRequest) => client.patch<Merchant>(`/merchants/${id}`, data),
   delete: (id: string) => client.delete(`/merchants/${id}`),
-  addBankAccount: (id: string, data: any) =>
+  addBankAccount: (id: string, data: BankAccount) =>
     client.post(`/merchants/${id}/bank-accounts`, data),
 };
 
 // Transactions
 export const transactionsApi = {
   list: (params?: ListParams) =>
-    client.get('/transactions', { params }),
-  get: (id: string) => client.get(`/transactions/${id}`),
-  create: (data: any, merchantId?: string) =>
-    client.post('/transactions', data, {
+    client.get<PaginatedResponse<Transaction>>('/transactions', { params }),
+  get: (id: string) => client.get<Transaction>(`/transactions/${id}`),
+  create: (data: CreateTransactionRequest, merchantId?: string) =>
+    client.post<Transaction>('/transactions', data, {
       headers: merchantId ? { 'X-Merchant-Id': merchantId } : {},
     }),
   capture: (id: string) => client.post(`/transactions/${id}/capture`),
@@ -106,22 +124,22 @@ export const transactionsApi = {
 // Partners
 export const partnersApi = {
   list: (params?: ListParams) =>
-    client.get('/partners', { params }),
-  get: (id: string) => client.get(`/partners/${id}`),
-  create: (data: any) => client.post('/partners', data),
-  update: (id: string, data: any) => client.patch(`/partners/${id}`, data),
+    client.get<PaginatedResponse<Partner>>('/partners', { params }),
+  get: (id: string) => client.get<Partner>(`/partners/${id}`),
+  create: (data: CreatePartnerRequest) => client.post<Partner>('/partners', data),
+  update: (id: string, data: UpdatePartnerRequest) => client.patch<Partner>(`/partners/${id}`, data),
   delete: (id: string) => client.delete(`/partners/${id}`),
 };
 
 // Partner Users
 export const partnerUsersApi = {
   list: (params?: ListParams) =>
-    client.get('/partner-users', { params }),
+    client.get<PaginatedResponse<PartnerUser>>('/partner-users', { params }),
   listByPartner: (partnerId: string, params?: ListParams) =>
-    client.get(`/partner-users/by-partner/${partnerId}`, { params }),
-  get: (id: string) => client.get(`/partner-users/${id}`),
-  create: (data: any) => client.post('/partner-users', data),
-  update: (id: string, data: any) => client.patch(`/partner-users/${id}`, data),
+    client.get<PaginatedResponse<PartnerUser>>(`/partner-users/by-partner/${partnerId}`, { params }),
+  get: (id: string) => client.get<PartnerUser>(`/partner-users/${id}`),
+  create: (data: CreatePartnerUserRequest) => client.post<PartnerUser>('/partner-users', data),
+  update: (id: string, data: UpdatePartnerUserRequest) => client.patch<PartnerUser>(`/partner-users/${id}`, data),
   changePassword: (id: string, data: { new_password: string }) =>
     client.patch(`/partner-users/${id}/password`, data),
   resetPassword: (id: string) => client.post(`/partner-users/${id}/reset-password`),
@@ -135,8 +153,8 @@ export const healthApi = {
 
 // System Configuration
 export const systemConfigApi = {
-  get: () => client.get('/system-config'),
-  update: (data: any) => client.patch('/system-config', data),
+  get: () => client.get<SystemConfig>('/system-config'),
+  update: (data: Partial<SystemConfig>) => client.patch<SystemConfig>('/system-config', data),
   getDefaultExportColumns: () => client.get('/system-config/default-export-columns'),
 };
 

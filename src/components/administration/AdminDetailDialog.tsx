@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import type { AdminUser } from '@/types/admin.types';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
@@ -11,7 +12,7 @@ import {
 import { Users } from 'lucide-react';
 import { getStatusConfig } from '@/lib/constants';
 
-export function AdminDetailDialog({ item, open, onOpenChange }: { item: any; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function AdminDetailDialog({ item, open, onOpenChange }: { item: AdminUser | null; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useTranslation('admin');
   if (!item) return null;
 

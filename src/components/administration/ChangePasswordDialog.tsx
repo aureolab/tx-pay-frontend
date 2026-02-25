@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { getErrorMessage } from '@/types/api-error.types';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -55,8 +56,8 @@ export function ChangePasswordDialog({ open, onOpenChange, onSuccess, userId, us
       await partnerUsersApi.changePassword(userId, { new_password: newPassword });
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('dialogs.changePassword.changeError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('dialogs.changePassword.changeError'));
     } finally {
       setLoading(false);
     }

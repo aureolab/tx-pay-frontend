@@ -127,7 +127,7 @@ export interface PartnerClientUser {
 export interface CreatePartnerClientUserRequest {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   assigned_merchants: string[];
 }
 

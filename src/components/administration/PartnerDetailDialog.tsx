@@ -50,9 +50,10 @@ import {
   Trash2,
   Users,
 } from 'lucide-react';
+import type { Partner, PartnerUser, Merchant } from '@/types/admin.types';
 
 interface PartnerDetailDialogProps {
-  item: any;
+  item: Partner | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -62,21 +63,21 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
   const [innerTab, setInnerTab] = useState('users');
 
   // Users state
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<PartnerUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersPagination, setUsersPagination] = useState<PaginationState>(defaultPagination);
 
   // Merchants state
-  const [merchants, setMerchants] = useState<any[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [merchantsLoading, setMerchantsLoading] = useState(false);
   const [merchantsPagination, setMerchantsPagination] = useState<PaginationState>(defaultPagination);
 
   // Sub-dialog states
   const [userDialogOpen, setUserDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
-  const [changePasswordUser, setChangePasswordUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<PartnerUser | null>(null);
+  const [changePasswordUser, setChangePasswordUser] = useState<PartnerUser | null>(null);
   const [merchantDialogOpen, setMerchantDialogOpen] = useState(false);
-  const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
+  const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
 
   const loadUsers = useCallback(async () => {
     if (!item?._id) return;
@@ -86,7 +87,7 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
         page: usersPagination.page,
         limit: usersPagination.limit,
       });
-      const data = res.data as PaginatedResponse<any>;
+      const data = res.data as PaginatedResponse<PartnerUser>;
       setUsers(data.data);
       setUsersPagination(prev => ({ ...prev, ...data.meta }));
     } catch {
@@ -104,8 +105,8 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
         page: merchantsPagination.page,
         limit: merchantsPagination.limit,
       });
-      const data = res.data as PaginatedResponse<any>;
-      const filtered = data.data.filter((m: any) => m.owner === item._id);
+      const data = res.data as PaginatedResponse<Merchant>;
+      const filtered = data.data.filter((m: Merchant) => m.owner === item._id);
       setMerchants(filtered);
       setMerchantsPagination(prev => ({ ...prev, total: filtered.length, totalPages: 1 }));
     } catch {
@@ -149,7 +150,7 @@ export function PartnerDetailDialog({ item, open, onOpenChange }: PartnerDetailD
     setUserDialogOpen(true);
   };
 
-  const openEditUser = (user: any) => {
+  const openEditUser = (user: PartnerUser) => {
     setEditingUser(user);
     setUserDialogOpen(true);
   };

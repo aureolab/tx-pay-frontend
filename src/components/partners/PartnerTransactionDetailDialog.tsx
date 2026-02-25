@@ -37,12 +37,14 @@ export function PartnerTransactionDetailDialog({ transaction, merchantName, open
   const item = transaction;
 
   // Extract payment URLs
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gr = (item as Record<string, any>).gateway_result as Record<string, any> | undefined;
   const isPaymentLink = item.payment_method === 'PAYMENT_LINK' ||
-    (item as any).gateway_result?.original_payment_method === 'PAYMENT_LINK';
+    gr?.original_payment_method === 'PAYMENT_LINK';
 
-  const checkoutUrl = (item as any).gateway_result?.checkout_url;
-  const qrUrl = (item as any).gateway_result?.qr_url;
-  const redirectUrl = (item as any).gateway_result?.authorization_payload_result?.started_transaction?.redirect_endpoint;
+  const checkoutUrl = gr?.checkout_url;
+  const qrUrl = gr?.qr_url;
+  const redirectUrl = gr?.authorization_payload_result?.started_transaction?.redirect_endpoint;
 
   // Determine which URL to show for non-PAYMENT_LINK methods
   const directUrl = isPaymentLink ? checkoutUrl : redirectUrl;

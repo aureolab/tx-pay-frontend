@@ -13,6 +13,7 @@ import type {
   PartnerClientUser,
 } from '../../types/partner.types';
 import type { PaymentLink } from '@/types/payment-link.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
   getStatusConfig,
@@ -154,11 +155,11 @@ export default function PartnerDashboard() {
           merchants: merchantsData.length,
           activeMerchants: activeMerch,
           transactions: mRes.data.meta ? mRes.data.meta.total : merchantsData.length,
-          paymentLinks: (plRes.data as any).meta.total,
+          paymentLinks: plRes.data.meta.total,
         }));
         setCounts(prev => ({
           ...prev,
-          transactions: (tRes.data as any).meta.total,
+          transactions: tRes.data.meta.total,
         }));
         // Also populate merchants array for filter dropdown
         setMerchants(merchantsData);
@@ -166,7 +167,7 @@ export default function PartnerDashboard() {
       if (isPartnerType) {
         try {
           const uRes = await partnerPortalUsersApi.list({ page: 1, limit: 1 });
-          setCounts(prev => ({ ...prev, users: (uRes.data as any).meta.total }));
+          setCounts(prev => ({ ...prev, users: uRes.data.meta.total }));
         } catch { /* ignore */ }
       }
     };
@@ -211,8 +212,8 @@ export default function PartnerDashboard() {
         merchants: res.data.meta.total,
         activeMerchants: allData.filter((m) => m.status === 'ACTIVE').length,
       }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.loadMerchants'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.loadMerchants'));
     }
   }, [t]);
 
@@ -228,8 +229,8 @@ export default function PartnerDashboard() {
       setTransactions(res.data.data);
       setMeta(res.data.meta);
       setCounts(prev => ({ ...prev, transactions: res.data.meta.total }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.loadTransactions'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.loadTransactions'));
     }
   }, [t]);
 
@@ -241,8 +242,8 @@ export default function PartnerDashboard() {
       setClientUsers(res.data.data);
       setUsersMeta(res.data.meta);
       setCounts(prev => ({ ...prev, users: res.data.meta.total }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.loadUsers'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.loadUsers'));
     }
   }, [isPartnerType, t]);
 
@@ -253,8 +254,8 @@ export default function PartnerDashboard() {
       setPaymentLinks(res.data.data);
       setMeta(res.data.meta);
       setCounts(prev => ({ ...prev, paymentLinks: res.data.meta.total }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.loadPaymentLinks'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.loadPaymentLinks'));
     }
   }, [t]);
 
@@ -339,8 +340,8 @@ export default function PartnerDashboard() {
       const res = await partnerTransactionsApi.exportMyTransactions(exportFilters);
       const filename = `transactions_${new Date().toISOString().slice(0, 10)}.xlsx`;
       downloadBlob(new Blob([res.data]), filename);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.exportFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.exportFailed'));
     } finally {
       setExporting(false);
     }
@@ -351,8 +352,8 @@ export default function PartnerDashboard() {
     try {
       await partnerPortalUsersApi.delete(userId);
       fetchClientUsers(page);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:dialogs.deleteUser.error'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:dialogs.deleteUser.error'));
     }
   };
 
@@ -370,8 +371,8 @@ export default function PartnerDashboard() {
       await partnerPaymentLinksApi.delete(deletingPaymentLink._id);
       setDeletingPaymentLink(null);
       fetchPaymentLinks(page, filters as Record<string, string>);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('partner:errors.deleteFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('partner:errors.deleteFailed'));
       setDeletingPaymentLink(null);
     } finally {
       setDeletingLoading(false);
@@ -722,7 +723,7 @@ export default function PartnerDashboard() {
                               {link.amount_mode === 'FIXED' && link.fixed_amount
                                 ? formatCurrency(
                                     typeof link.fixed_amount === 'object' && '$numberDecimal' in link.fixed_amount
-                                      ? parseFloat((link.fixed_amount as any).$numberDecimal)
+                                      ? parseFloat((link.fixed_amount as { $numberDecimal: string }).$numberDecimal)
                                       : Number(link.fixed_amount),
                                     link.currency
                                   )

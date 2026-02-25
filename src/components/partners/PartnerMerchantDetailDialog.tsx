@@ -133,7 +133,7 @@ export function PartnerMerchantDetailDialog({ merchant, open, onOpenChange }: Pr
                 <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
                   <Label className="text-zinc-500 dark:text-zinc-400 text-xs">{t('partner:dialogs.merchantDetail.pricingRules')}</Label>
                   <div className="space-y-2 mt-2">
-                    {item.pricing_rules.fees.map((fee: { method: string; fixed: any; percentage: any }, idx: number) => (
+                    {item.pricing_rules.fees.map((fee, idx: number) => (
                       <div key={idx} className="bg-zinc-50/80 dark:bg-zinc-800/30 p-3 rounded-lg text-sm border border-zinc-200/60 dark:border-zinc-700/40">
                         <p><span className="text-zinc-500">{t('partner:dialogs.merchantDetail.method')}</span> {getPaymentMethodLabel(fee.method)}</p>
                         <p><span className="text-zinc-500">{t('partner:dialogs.merchantDetail.fixed')}</span> {getDecimalValue(fee.fixed)}</p>

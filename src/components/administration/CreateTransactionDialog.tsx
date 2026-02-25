@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, CreditCard } from 'lucide-react';
+import { getErrorMessage } from '@/types/api-error.types';
+import type { CreateTransactionRequest } from '@/types/admin.types';
 import { getPaymentMethodLabel } from '@/lib/constants';
 import { TransactionSuccessView } from '@/components/shared/TransactionSuccessView';
 import { VitaCountrySelector } from '@/components/shared/VitaCountrySelector';
@@ -45,7 +47,7 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
   const { t, i18n } = useTranslation('admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [vitaCountries, setVitaCountries] = useState<VitaCountry[]>([]);
   const [defaultCountry, setDefaultCountry] = useState(DEFAULT_VITA_COUNTRY);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
@@ -129,7 +131,7 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
     setError('');
     setResult(null);
     try {
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         user_context: {
           is_guest: true,
         },
@@ -146,11 +148,11 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
         payload.vita_country = formData.vita_country;
       }
 
-      const res = await transactionsApi.create(payload, effectiveMerchant._id);
-      setResult(res.data);
+      const res = await transactionsApi.create(payload as unknown as CreateTransactionRequest, effectiveMerchant._id);
+      setResult(res.data as unknown as Record<string, unknown>);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('dialogs.createTransaction.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('dialogs.createTransaction.createError'));
     } finally {
       setLoading(false);
     }

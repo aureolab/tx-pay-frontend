@@ -23,13 +23,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, Plus, Store, Trash2 } from 'lucide-react';
+import type { Merchant, Partner, PricingRule as AdminPricingRule, AcquirerConfig as AdminAcquirerConfig, CreateMerchantRequest, UpdateMerchantRequest } from '@/types/admin.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { MerchantStatuses, PaymentMethods, getPaymentMethodLabel } from '@/lib/constants';
 
 interface MerchantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  item?: any;
+  item?: Merchant | null;
   defaultOwner?: string;
 }
 
@@ -49,7 +51,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
   const isEdit = !!item;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [partners, setPartners] = useState<any[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const [loadingPartners, setLoadingPartners] = useState(false);
   const [formData, setFormData] = useState({
     owner: '',
@@ -88,17 +90,17 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
         enabled_payment_methods: item.enabled_payment_methods || [],
         payment_link_timeout_minutes: item.payment_link_timeout_minutes ?? 15,
       });
-      if (item.pricing_rules?.fees?.length > 0) {
-        setPricingRules(item.pricing_rules.fees.map((f: any) => ({
+      if (item.pricing_rules?.fees && item.pricing_rules.fees.length > 0) {
+        setPricingRules(item.pricing_rules.fees.map((f: AdminPricingRule) => ({
           method: f.method || '',
-          fixed: f.fixed?.$numberDecimal || String(f.fixed || 0),
-          percentage: f.percentage?.$numberDecimal || String(f.percentage || 0),
+          fixed: typeof f.fixed === 'object' && f.fixed !== null && '$numberDecimal' in f.fixed ? f.fixed.$numberDecimal : String(f.fixed || 0),
+          percentage: typeof f.percentage === 'object' && f.percentage !== null && '$numberDecimal' in f.percentage ? f.percentage.$numberDecimal : String(f.percentage || 0),
         })));
       } else {
         setPricingRules([]);
       }
-      if (item.acquirer_configs?.length > 0) {
-        setAcquirerConfigs(item.acquirer_configs.map((c: any) => ({
+      if (item.acquirer_configs && item.acquirer_configs.length > 0) {
+        setAcquirerConfigs(item.acquirer_configs.map((c: AdminAcquirerConfig) => ({
           provider: c.provider || '',
           config: JSON.stringify(c.config || {}, null, 2),
         })));
@@ -208,7 +210,7 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
           };
         });
 
-      const payload: any = {
+      const payload: Record<string, unknown> = {
         profile: {
           fantasy_name: formData.fantasy_name,
           legal_name: formData.legal_name,
@@ -229,14 +231,14 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
       }
 
       if (isEdit) {
-        await merchantsApi.update(item._id, payload);
+        await merchantsApi.update(item._id, payload as unknown as UpdateMerchantRequest);
       } else {
-        await merchantsApi.create(payload);
+        await merchantsApi.create(payload as unknown as CreateMerchantRequest);
       }
       onOpenChange(false);
       onSuccess();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t(isEdit ? 'dialogs.merchant.updateError' : 'dialogs.merchant.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t(isEdit ? 'dialogs.merchant.updateError' : 'dialogs.merchant.createError'));
     } finally {
       setLoading(false);
     }

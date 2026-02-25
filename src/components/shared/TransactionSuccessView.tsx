@@ -5,7 +5,7 @@ import { CheckCircle2, Copy, Check, Clock, Sparkles, Link2, QrCode } from 'lucid
 import { getStatusConfig } from '@/lib/constants';
 
 interface TransactionSuccessViewProps {
-  result: any;
+  result: Record<string, unknown>;
   gradientClass: string;
   locale?: 'en' | 'es';
   onClose: () => void;
@@ -42,13 +42,15 @@ export function TransactionSuccessView({ result, gradientClass, locale = 'en', o
 
   const t = labels[locale];
 
-  const checkoutUrl = result?.gateway_result?.checkout_url
-    || result?.gateway_result?.authorization_payload_result?.started_transaction?.redirect_endpoint;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gr = result?.gateway_result as Record<string, any> | undefined;
+  const checkoutUrl = gr?.checkout_url
+    || gr?.authorization_payload_result?.started_transaction?.redirect_endpoint;
 
-  const qrUrl = result?.gateway_result?.qr_url;
-  const timeoutMinutes = result?.gateway_result?.timeout_minutes;
+  const qrUrl = gr?.qr_url;
+  const timeoutMinutes = gr?.timeout_minutes;
 
-  const statusConfig = getStatusConfig(result.status, locale);
+  const statusConfig = getStatusConfig(result.status as string, locale);
 
   const handleCopy = async (url: string, type: 'direct' | 'qr') => {
     await navigator.clipboard.writeText(url);
@@ -113,7 +115,7 @@ export function TransactionSuccessView({ result, gradientClass, locale = 'en', o
               {t.transactionId}
             </span>
             <code className="text-xs font-mono text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900/50 px-2 py-1 rounded border border-zinc-200 dark:border-zinc-700 truncate max-w-[180px]">
-              {result._id}
+              {String(result._id)}
             </code>
           </div>
         </div>

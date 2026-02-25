@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
-import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, paymentLinksApi, type PaginatedResponse } from '../../api/client';
+import { merchantsApi, transactionsApi, adminUsersApi, partnersApi, paymentLinksApi } from '../../api/client';
+import type { AdminUser, Merchant, Partner, Transaction } from '@/types/admin.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { type PaginationState } from '@/types/dashboard.types';
 import {
   getStatusConfig,
@@ -102,12 +104,12 @@ export default function Dashboard() {
     }
   }, [i18n]);
 
-  const [merchants, setMerchants] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [admins, setAdmins] = useState<any[]>([]);
-  const [partners, setPartners] = useState<any[]>([]);
-  const [allPartners, setAllPartners] = useState<any[]>([]);
-  const [allMerchants, setAllMerchants] = useState<any[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [allPartners, setAllPartners] = useState<Partner[]>([]);
+  const [allMerchants, setAllMerchants] = useState<Merchant[]>([]);
   const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
 
   const [counts, setCounts] = useState({ partners: 0, merchants: 0, transactions: 0, admins: 0, paymentLinks: 0 });
@@ -119,20 +121,20 @@ export default function Dashboard() {
 
   // Dialog states
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<any>(null);
-  const [selectedAdmin, setSelectedAdmin] = useState<any>(null);
+  const [editingAdmin, setEditingAdmin] = useState<AdminUser | null>(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
 
   const [partnerDialogOpen, setPartnerDialogOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<any>(null);
-  const [selectedPartner, setSelectedPartner] = useState<any>(null);
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
   const [merchantDialogOpen, setMerchantDialogOpen] = useState(false);
-  const [editingMerchant, setEditingMerchant] = useState<any>(null);
-  const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
-  const [createTxMerchant, setCreateTxMerchant] = useState<any>(null);
+  const [editingMerchant, setEditingMerchant] = useState<Merchant | null>(null);
+  const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
+  const [createTxMerchant, setCreateTxMerchant] = useState<Merchant | null>(null);
   const [txDialogOpen, setTxDialogOpen] = useState(false);
 
-  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [exporting, setExporting] = useState(false);
   const [deletingLoading, setDeletingLoading] = useState(false);
 
@@ -144,7 +146,7 @@ export default function Dashboard() {
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   // Password dialogs
-  const [resetPasswordAdmin, setResetPasswordAdmin] = useState<any>(null);
+  const [resetPasswordAdmin, setResetPasswordAdmin] = useState<AdminUser | null>(null);
   const [changeMyPasswordOpen, setChangeMyPasswordOpen] = useState(false);
 
   const partnerMap = useMemo(() => {
@@ -206,11 +208,11 @@ export default function Dashboard() {
       paymentLinksApi.list({ page: 1, limit: 1 }),
     ]).then(([pRes, mRes, tRes, aRes, plRes]) => {
       setCounts({
-        partners: (pRes.data as PaginatedResponse<any>).meta.total,
-        merchants: (mRes.data as PaginatedResponse<any>).meta.total,
-        transactions: (tRes.data as PaginatedResponse<any>).meta.total,
-        admins: (aRes.data as PaginatedResponse<any>).meta.total,
-        paymentLinks: (plRes.data as PaginatedResponse<any>).meta.total,
+        partners: pRes.data.meta.total,
+        merchants: mRes.data.meta.total,
+        transactions: tRes.data.meta.total,
+        admins: aRes.data.meta.total,
+        paymentLinks: plRes.data.meta.total,
       });
     }).catch(() => {});
   }, []);
@@ -225,8 +227,7 @@ export default function Dashboard() {
     const params = { page, limit: 10, ...filters };
     try {
       if (tab === 'partners') {
-        const res = await partnersApi.list(params);
-        const data = res.data as PaginatedResponse<any>;
+        const { data } = await partnersApi.list(params);
         setPartners(data.data);
         setMeta(data.meta);
         setCounts(prev => ({ ...prev, partners: data.meta.total }));
@@ -235,24 +236,21 @@ export default function Dashboard() {
           merchantsApi.list(params),
           partnersApi.list({ limit: 100 }),
         ]);
-        const data = merchRes.data as PaginatedResponse<any>;
-        setMerchants(data.data);
-        setMeta(data.meta);
-        setCounts(prev => ({ ...prev, merchants: data.meta.total }));
-        setAllPartners((partnersRes.data as PaginatedResponse<any>).data);
+        setMerchants(merchRes.data.data);
+        setMeta(merchRes.data.meta);
+        setCounts(prev => ({ ...prev, merchants: merchRes.data.meta.total }));
+        setAllPartners(partnersRes.data.data);
       } else if (tab === 'transactions') {
         const [txRes, merchRes] = await Promise.all([
           transactionsApi.list(params),
           allMerchants.length === 0 ? merchantsApi.list({ limit: 100 }) : Promise.resolve(null),
         ]);
-        const data = txRes.data as PaginatedResponse<any>;
-        setTransactions(data.data);
-        setMeta(data.meta);
-        setCounts(prev => ({ ...prev, transactions: data.meta.total }));
-        if (merchRes) setAllMerchants((merchRes.data as PaginatedResponse<any>).data);
+        setTransactions(txRes.data.data);
+        setMeta(txRes.data.meta);
+        setCounts(prev => ({ ...prev, transactions: txRes.data.meta.total }));
+        if (merchRes) setAllMerchants(merchRes.data.data);
       } else if (tab === 'admins') {
-        const res = await adminUsersApi.list(params);
-        const data = res.data as PaginatedResponse<any>;
+        const { data } = await adminUsersApi.list(params);
         setAdmins(data.data);
         setMeta(data.meta);
         setCounts(prev => ({ ...prev, admins: data.meta.total }));
@@ -261,14 +259,13 @@ export default function Dashboard() {
           paymentLinksApi.list(params),
           allMerchants.length === 0 ? merchantsApi.list({ limit: 100 }) : Promise.resolve(null),
         ]);
-        const data = linksRes.data as PaginatedResponse<PaymentLink>;
-        setPaymentLinks(data.data);
-        setMeta(data.meta);
-        setCounts(prev => ({ ...prev, paymentLinks: data.meta.total }));
-        if (merchRes) setAllMerchants((merchRes.data as PaginatedResponse<any>).data);
+        setPaymentLinks(linksRes.data.data);
+        setMeta(linksRes.data.meta);
+        setCounts(prev => ({ ...prev, paymentLinks: linksRes.data.meta.total }));
+        if (merchRes) setAllMerchants(merchRes.data.data);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.loadFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.loadFailed'));
     } finally {
       setLoading(false);
       setInitialLoading(false);
@@ -279,13 +276,13 @@ export default function Dashboard() {
   useEffect(() => {
     if (tab === 'merchants' && allPartners.length === 0) {
       partnersApi.list({ limit: 100 }).then((res) => {
-        setAllPartners((res.data as PaginatedResponse<any>).data);
+        setAllPartners(res.data.data);
       }).catch(() => {});
     }
     // Load allMerchants for paymentLinks filter dropdown
     if (tab === 'paymentLinks' && allMerchants.length === 0) {
       merchantsApi.list({ limit: 100 }).then((res) => {
-        setAllMerchants((res.data as PaginatedResponse<any>).data);
+        setAllMerchants(res.data.data);
       }).catch(() => {});
     }
   }, [tab]);
@@ -303,8 +300,8 @@ export default function Dashboard() {
     try {
       await merchantsApi.delete(id);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -312,8 +309,8 @@ export default function Dashboard() {
     try {
       await adminUsersApi.delete(id);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -323,8 +320,8 @@ export default function Dashboard() {
       else if (action === 'refund') await transactionsApi.refund(id);
       else if (action === 'void') await transactionsApi.void(id);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.actionFailed', { action }));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.actionFailed', { action }));
     }
   };
 
@@ -333,7 +330,7 @@ export default function Dashboard() {
     setAdminDialogOpen(true);
   };
 
-  const openEditAdmin = (admin: any) => {
+  const openEditAdmin = (admin: AdminUser) => {
     setEditingAdmin(admin);
     setAdminDialogOpen(true);
   };
@@ -342,8 +339,8 @@ export default function Dashboard() {
     try {
       await partnersApi.delete(id);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.deleteFailed'));
     }
   };
 
@@ -352,7 +349,7 @@ export default function Dashboard() {
     setPartnerDialogOpen(true);
   };
 
-  const openEditPartner = (partner: any) => {
+  const openEditPartner = (partner: Partner) => {
     setEditingPartner(partner);
     setPartnerDialogOpen(true);
   };
@@ -370,8 +367,8 @@ export default function Dashboard() {
       const res = await transactionsApi.export(exportFilters);
       const filename = `transactions_${new Date().toISOString().slice(0, 10)}.xlsx`;
       downloadBlob(new Blob([res.data]), filename);
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.exportFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.exportFailed'));
     } finally {
       setExporting(false);
     }
@@ -382,7 +379,7 @@ export default function Dashboard() {
     setMerchantDialogOpen(true);
   };
 
-  const openEditMerchant = (merchant: any) => {
+  const openEditMerchant = (merchant: Merchant) => {
     setEditingMerchant(merchant);
     setMerchantDialogOpen(true);
   };
@@ -395,8 +392,8 @@ export default function Dashboard() {
       await paymentLinksApi.delete(deletingPaymentLink._id);
       setDeletingPaymentLink(null);
       loadData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:errors.deleteFailed'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:errors.deleteFailed'));
       setDeletingPaymentLink(null);
     } finally {
       setDeletingLoading(false);
@@ -1068,7 +1065,7 @@ export default function Dashboard() {
                               {tx._id?.slice(-8)}
                             </TableCell>
                             <TableCell className="font-semibold text-zinc-900 dark:text-white">
-                              {tx.financials?.amount_gross?.$numberDecimal || tx.financials?.amount_gross?.toLocaleString() || tx.financials?.amount_gross}
+                              {typeof tx.financials?.amount_gross === 'object' && tx.financials.amount_gross !== null && '$numberDecimal' in tx.financials.amount_gross ? tx.financials.amount_gross.$numberDecimal : tx.financials?.amount_gross}
                             </TableCell>
                             <TableCell className="text-zinc-600 dark:text-zinc-400">{tx.financials?.currency}</TableCell>
                             <TableCell>

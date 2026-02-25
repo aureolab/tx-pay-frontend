@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { partnerPortalUsersApi } from '../../api/partnerClient';
-import type { PartnerClientUser, PartnerMerchant } from '../../types/partner.types';
+import type { PartnerClientUser, PartnerMerchant, CreatePartnerClientUserRequest } from '../../types/partner.types';
+import { getErrorMessage } from '@/types/api-error.types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -93,7 +94,7 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
         onOpenChange(false);
         onSuccess();
       } else {
-        const payload: any = {
+        const payload: Record<string, unknown> = {
           name: formData.name,
           email: formData.email,
           assigned_merchants: formData.assigned_merchants,
@@ -102,17 +103,18 @@ export function PartnerClientUserDialog({ open, onOpenChange, onSuccess, item, m
         if (formData.password) {
           payload.password = formData.password;
         }
-        const response = await partnerPortalUsersApi.create(payload);
+        const response = await partnerPortalUsersApi.create(payload as unknown as CreatePartnerClientUserRequest);
         // Check if response contains credentials (auto-generated password)
-        if (response.data?.password) {
-          setCredentials(response.data);
+        const responseData = response.data as Record<string, unknown>;
+        if (responseData?.password) {
+          setCredentials(responseData as unknown as CredentialsData);
           setShowCredentials(true);
         }
         onOpenChange(false);
         onSuccess();
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || t(isEdit ? 'partner:dialogs.editUser.updateError' : 'partner:dialogs.createUser.createError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t(isEdit ? 'partner:dialogs.editUser.updateError' : 'partner:dialogs.createUser.createError'));
     } finally {
       setLoading(false);
     }

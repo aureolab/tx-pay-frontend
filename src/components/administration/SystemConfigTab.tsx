@@ -14,12 +14,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, Check, Plus, Trash2, Settings, Shield, FileSpreadsheet, RotateCcw, DollarSign, Globe } from 'lucide-react';
+import { getErrorMessage } from '@/types/api-error.types';
 import { PaymentMethods } from '@/lib/constants';
 import { VITA_WALLET_COUNTRIES } from '@/lib/vita-countries';
 
 interface AcquirerDefault {
   provider: string;
-  config: any;
+  config: string | Record<string, unknown>;
 }
 
 interface PricingRuleDefault {
@@ -70,11 +71,15 @@ export function SystemConfigTab() {
       setConfig({
         iva_percentage: res.data.iva_percentage ?? 19,
         acquirer_defaults: res.data.acquirer_defaults ?? [],
-        pricing_rules_defaults: res.data.pricing_rules_defaults ?? [],
+        pricing_rules_defaults: (res.data.pricing_rules_defaults ?? []).map(r => ({
+          method: r.method,
+          fixed: typeof r.fixed === 'object' && r.fixed !== null && '$numberDecimal' in r.fixed ? parseFloat(r.fixed.$numberDecimal) : Number(r.fixed),
+          percentage: typeof r.percentage === 'object' && r.percentage !== null && '$numberDecimal' in r.percentage ? parseFloat(r.percentage.$numberDecimal) : Number(r.percentage),
+        })),
         export_columns: res.data.export_columns ?? [],
       });
-    } catch (err: any) {
-      setError(err.response?.data?.message || t('admin:configuration.loadError'));
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || t('admin:configuration.loadError'));
     } finally {
       setLoading(false);
     }
@@ -98,11 +103,11 @@ export function SystemConfigTab() {
       });
       setSuccess(t('admin:configuration.saved'));
       setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof SyntaxError) {
         setError('Invalid JSON in acquirer configuration');
       } else {
-        setError(err.response?.data?.message || t('admin:configuration.error'));
+        setError(getErrorMessage(err) || t('admin:configuration.error'));
       }
     } finally {
       setSaving(false);
@@ -210,8 +215,8 @@ export function SystemConfigTab() {
         ...prev,
         export_columns: res.data,
       }));
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error loading default columns');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err) || 'Error loading default columns');
     }
   };
 
