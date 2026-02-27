@@ -259,7 +259,6 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="CLP">CLP</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

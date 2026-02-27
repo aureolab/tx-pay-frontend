@@ -9,7 +9,7 @@ export const PartnerStatuses = ['ACTIVE', 'INACTIVE', 'SUSPENDED'] as const;
 export const PartnerUserTypes = ['PARTNER', 'CLIENT'] as const;
 export const PartnerUserStatuses = ['ACTIVE', 'INACTIVE'] as const;
 export const TransactionStatuses = ['CREATED', 'PENDING', 'APPROVED', 'REJECTED', 'VOIDED', 'REFUNDED', 'EXPIRED'] as const;
-export const TransactionCurrencies = ['CLP', 'USD'] as const;
+export const TransactionCurrencies = ['CLP'] as const;
 
 // Payment Link constants
 export const PaymentLinkStatuses = ['ACTIVE', 'INACTIVE', 'EXPIRED', 'EXHAUSTED'] as const;
