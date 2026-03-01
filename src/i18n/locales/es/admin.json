@@ -55,6 +55,16 @@
       "noDefaults": "Sin reglas de fee base configuradas.",
       "selectMethod": "Seleccionar metodo..."
     },
+    "providerFees": {
+      "title": "Comisiones del Proveedor",
+      "description": "Porcentaje de comision que cada proveedor de pago cobra a TX Pay. Se usa para validar los fees del comercio y calcular margen.",
+      "provider": "Proveedor",
+      "percentage": "Comision Proveedor (%)",
+      "add": "Agregar Comision",
+      "remove": "Eliminar",
+      "noFees": "Sin comisiones de proveedor configuradas.",
+      "selectProvider": "Seleccionar proveedor..."
+    },
     "exportColumns": {
       "title": "Configuracion de Columnas de Exportacion",
       "description": "Configura que columnas aparecen en el archivo Excel exportado.",
@@ -304,7 +314,11 @@
       "placeholderAmount": "10000",
       "placeholderCallback": "https://tu-sitio.com/callback",
       "vitaCountry": "Pais destino (Vita Wallet)",
-      "selectCountry": "Seleccionar pais"
+      "selectCountry": "Seleccionar pais",
+      "useNetAmount": "Monto neto deseado",
+      "useNetAmountHint": "Ingresa el monto que el comercio desea recibir. El sistema calculara el monto bruto.",
+      "amountGross": "Monto bruto",
+      "amountNetDesired": "Monto neto deseado"
     },
     "merchant": {
       "createTitle": "Crear Comercio",
@@ -342,7 +356,8 @@
       "placeholderEmail": "contacto@tienda.com",
       "placeholderProvider": "ej., transbank, vita",
       "paymentLinkTimeout": "Timeout Link de Pago",
-      "minutes": "minutos"
+      "minutes": "minutos",
+      "providerFeeWarning": "Menor a comision del proveedor ({{percentage}}%)"
     },
     "partnerUser": {
       "createTitle": "Crear Usuario",
@@ -382,6 +397,9 @@
       "ivaPercentage": "Porcentaje IVA",
       "ivaAmount": "Monto IVA",
       "totalFee": "Comisión Total",
+      "feeBreakdown": "Desglose de Comision",
+      "providerFee": "Comision Proveedor",
+      "txPayMargin": "Margen TX Pay",
       "references": "Referencias",
       "merchantId": "ID de Comercio",
       "terminalId": "ID de Terminal",

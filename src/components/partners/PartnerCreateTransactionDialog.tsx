@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { CreditCard, AlertCircle } from 'lucide-react';
 
 interface PartnerCreateTransactionDialogProps {
@@ -64,6 +65,7 @@ export function PartnerCreateTransactionDialog({
     payment_method: getDefaultPaymentMethod(),
     vita_country: DEFAULT_VITA_COUNTRY,
   });
+  const [useNetAmount, setUseNetAmount] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState<Record<string, unknown> | null>(null);
@@ -98,6 +100,7 @@ export function PartnerCreateTransactionDialog({
       });
       setError('');
       setSuccessResult(null);
+      setUseNetAmount(false);
       if (!merchant) {
         setSelectedMerchantId('');
       }
@@ -125,7 +128,8 @@ export function PartnerCreateTransactionDialog({
     setError('');
     try {
       const payload: CreateTransactionRequest = {
-        amount: formData.amount,
+        amount: useNetAmount ? 0 : formData.amount,
+        amount_net_desired: useNetAmount ? formData.amount : undefined,
         currency: formData.currency,
         payment_method: formData.payment_method,
         callback_url: formData.callback_url,
@@ -218,10 +222,18 @@ export function PartnerCreateTransactionDialog({
                 </div>
               )}
 
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5">
+                  <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">Monto neto deseado</Label>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Ingresa el monto que el comercio desea recibir</p>
+                </div>
+                <Switch checked={useNetAmount} onCheckedChange={setUseNetAmount} />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="partner-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                    Monto <span className="text-red-500">*</span>
+                    {useNetAmount ? 'Monto neto deseado' : 'Monto bruto'} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="partner-amount"

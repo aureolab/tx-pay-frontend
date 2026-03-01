@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Link2 } from 'lucide-react';
 import type {
   PaymentLink,
@@ -87,6 +88,7 @@ export function PaymentLinkDialog({
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
   const [createdLink, setCreatedLink] = useState<PaymentLink | null>(null);
+  const [useNetAmount, setUseNetAmount] = useState(false);
 
   // Determine the effective merchant ID
   const effectiveMerchantId = merchantId || selectedMerchantId;
@@ -112,6 +114,7 @@ export function PaymentLinkDialog({
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
           vita_country: item.vita_country || DEFAULT_VITA_COUNTRY,
         });
+        setUseNetAmount(item.use_net_amount || false);
         // Set merchant from existing item for editing
         if (typeof item.merchant_id === 'string') {
           setSelectedMerchantId(item.merchant_id);
@@ -119,6 +122,7 @@ export function PaymentLinkDialog({
       } else {
         setFormData(initialFormData);
         setSelectedMerchantId('');
+        setUseNetAmount(false);
       }
       setError('');
       setCreatedLink(null);
@@ -153,6 +157,7 @@ export function PaymentLinkDialog({
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
           vita_country: hasVitaWallet ? formData.vita_country : undefined,
+          use_net_amount: formData.amount_mode === AmountMode.FIXED ? useNetAmount : undefined,
         };
         await paymentLinksApi.update(item._id, updateData);
       } else {
@@ -175,6 +180,7 @@ export function PaymentLinkDialog({
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
           vita_country: hasVitaWallet ? formData.vita_country : undefined,
+          use_net_amount: formData.amount_mode === AmountMode.FIXED ? useNetAmount : undefined,
         };
         const { data } = await paymentLinksApi.create(createData);
         setCreatedLink(data);
@@ -328,33 +334,42 @@ export function PaymentLinkDialog({
 
               {/* Monto Fijo */}
               {formData.amount_mode === AmountMode.FIXED && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="fixed_amount" className="text-sm">Monto *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="fixed_amount"
-                      type="number"
-                      value={formData.fixed_amount}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fixed_amount: e.target.value }))}
-                      placeholder="10000"
-                      min="1"
-                      required
-                      className="flex-1 h-10"
-                    />
-                    <Select
-                      value={formData.currency}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
-                      disabled={isEditing}
-                    >
-                      <SelectTrigger className="w-20 h-10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="CLP">CLP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="fixed_amount" className="text-sm">{useNetAmount ? 'Monto neto deseado' : 'Monto'} *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="fixed_amount"
+                        type="number"
+                        value={formData.fixed_amount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, fixed_amount: e.target.value }))}
+                        placeholder="10000"
+                        min="1"
+                        required
+                        className="flex-1 h-10"
+                      />
+                      <Select
+                        value={formData.currency}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, currency: value }))}
+                        disabled={isEditing}
+                      >
+                        <SelectTrigger className="w-20 h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CLP">CLP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                </div>
+                  <div className="flex items-center justify-between py-1">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Monto neto deseado</Label>
+                      <p className="text-xs text-zinc-500">El monto ingresado es lo que el comercio desea recibir. El monto final puede variar segun el metodo de pago.</p>
+                    </div>
+                    <Switch checked={useNetAmount} onCheckedChange={setUseNetAmount} />
+                  </div>
+                </>
               )}
 
               {/* Límites de Monto Variable */}

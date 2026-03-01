@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AlertCircle, CreditCard } from 'lucide-react';
 import { getErrorMessage } from '@/types/api-error.types';
 import type { CreateTransactionRequest } from '@/types/admin.types';
@@ -64,6 +65,7 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
     return validMethods?.[0] || 'WEBPAY';
   };
 
+  const [useNetAmount, setUseNetAmount] = useState(false);
   const [formData, setFormData] = useState({
     amount: '',
     currency: 'CLP',
@@ -103,6 +105,7 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
       });
       setError('');
       setResult(null);
+      setUseNetAmount(false);
       if (!merchant) {
         setSelectedMerchantId('');
       }
@@ -131,14 +134,18 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
     setError('');
     setResult(null);
     try {
+      const financials: Record<string, unknown> = { currency: formData.currency };
+      if (useNetAmount) {
+        financials.amount_net_desired = parseFloat(formData.amount);
+      } else {
+        financials.amount_gross = parseFloat(formData.amount);
+      }
+
       const payload: Record<string, unknown> = {
         user_context: {
           is_guest: true,
         },
-        financials: {
-          amount_gross: parseFloat(formData.amount),
-          currency: formData.currency,
-        },
+        financials,
         payment_method: formData.payment_method,
         callback_url: formData.callback_url || undefined,
       };
@@ -231,10 +238,20 @@ export function CreateTransactionDialog({ merchant, merchants, open, onOpenChang
                 </div>
               )}
 
+              <div className="flex items-center justify-between py-1">
+                <div className="space-y-0.5">
+                  <Label className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
+                    {t('dialogs.createTransaction.useNetAmount')}
+                  </Label>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('dialogs.createTransaction.useNetAmountHint')}</p>
+                </div>
+                <Switch checked={useNetAmount} onCheckedChange={setUseNetAmount} />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="tx-amount" className="text-zinc-700 dark:text-zinc-300 text-sm font-medium">
-                    {t('dialogs.createTransaction.amount')} {t('dialogs.common.required')}
+                    {useNetAmount ? t('dialogs.createTransaction.amountNetDesired') : t('dialogs.createTransaction.amountGross')} {t('dialogs.common.required')}
                   </Label>
                   <Input
                     id="tx-amount"

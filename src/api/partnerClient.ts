@@ -85,15 +85,18 @@ export const partnerTransactionsApi = {
       `/transactions/by-merchant/${merchantId}`,
       { params }
     ),
-  create: (data: CreateTransactionRequest, merchantId: string) =>
-    partnerClient.post(
+  create: (data: CreateTransactionRequest, merchantId: string) => {
+    const financials: Record<string, unknown> = { currency: data.currency };
+    if (data.amount_net_desired) {
+      financials.amount_net_desired = data.amount_net_desired;
+    } else {
+      financials.amount_gross = data.amount;
+    }
+    return partnerClient.post(
       '/transactions',
       {
         user_context: { is_guest: true },
-        financials: {
-          amount_gross: data.amount,
-          currency: data.currency,
-        },
+        financials,
         payment_method: data.payment_method,
         callback_url: data.callback_url,
         vita_country: data.vita_country,
@@ -101,7 +104,8 @@ export const partnerTransactionsApi = {
       {
         headers: { 'X-Merchant-Id': merchantId },
       },
-    ),
+    );
+  },
   getVitaCountries: (merchantId: string) =>
     partnerClient.get<{ countries: Array<{ code: string; name: string; flag: string }>; default_country: string }>(
       '/transactions/vita-countries',

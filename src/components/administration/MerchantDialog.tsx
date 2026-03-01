@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { merchantsApi, partnersApi } from '../../api/client';
+import { merchantsApi, partnersApi, systemConfigApi } from '../../api/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertCircle, Plus, Store, Trash2 } from 'lucide-react';
-import type { Merchant, Partner, PricingRule as AdminPricingRule, AcquirerConfig as AdminAcquirerConfig, CreateMerchantRequest, UpdateMerchantRequest } from '@/types/admin.types';
+import type { Merchant, Partner, PricingRule as AdminPricingRule, AcquirerConfig as AdminAcquirerConfig, CreateMerchantRequest, UpdateMerchantRequest, ProviderFee } from '@/types/admin.types';
 import { getErrorMessage } from '@/types/api-error.types';
 import { MerchantStatuses, PaymentMethods, getPaymentMethodLabel } from '@/lib/constants';
 
@@ -66,6 +66,15 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
   });
   const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
   const [acquirerConfigs, setAcquirerConfigs] = useState<AcquirerConfig[]>([]);
+  const [providerFees, setProviderFees] = useState<ProviderFee[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      systemConfigApi.get()
+        .then((res) => setProviderFees(res.data.provider_fees || []))
+        .catch(() => setProviderFees([]));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && !isEdit && !defaultOwner) {
@@ -496,8 +505,20 @@ export function MerchantDialog({ open, onOpenChange, onSuccess, item, defaultOwn
                           step="0.01"
                           value={rule.percentage}
                           onChange={(e) => updatePricingRule(index, 'percentage', e.target.value)}
-                          className="h-8 text-sm bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700"
+                          className={`h-8 text-sm bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 ${
+                            (() => {
+                              const pf = providerFees.find(p => p.provider === rule.method);
+                              return pf && parseFloat(rule.percentage || '0') < pf.percentage ? 'border-amber-400 dark:border-amber-500' : '';
+                            })()
+                          }`}
                         />
+                        {(() => {
+                          const pf = providerFees.find(p => p.provider === rule.method);
+                          if (pf && parseFloat(rule.percentage || '0') < pf.percentage) {
+                            return <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">{t('dialogs.merchant.providerFeeWarning', { percentage: pf.percentage })}</p>;
+                          }
+                          return null;
+                        })()}
                       </div>
                       <Button
                         type="button"

@@ -55,6 +55,16 @@
       "noDefaults": "No default pricing rules configured.",
       "selectMethod": "Select method..."
     },
+    "providerFees": {
+      "title": "Provider Fees",
+      "description": "Percentage fees charged by each payment provider to TX Pay. Used to validate merchant fees and calculate margin.",
+      "provider": "Provider",
+      "percentage": "Provider Fee (%)",
+      "add": "Add Provider Fee",
+      "remove": "Remove",
+      "noFees": "No provider fees configured.",
+      "selectProvider": "Select provider..."
+    },
     "exportColumns": {
       "title": "Export Columns Configuration",
       "description": "Configure which columns appear in the exported Excel file.",
@@ -304,7 +314,11 @@
       "placeholderAmount": "10000",
       "placeholderCallback": "https://your-site.com/callback",
       "vitaCountry": "Destination country (Vita Wallet)",
-      "selectCountry": "Select country"
+      "selectCountry": "Select country",
+      "useNetAmount": "Desired net amount",
+      "useNetAmountHint": "Enter the amount the merchant wants to receive. The system will calculate the gross amount.",
+      "amountGross": "Gross amount",
+      "amountNetDesired": "Desired net amount"
     },
     "merchant": {
       "createTitle": "Create Merchant",
@@ -342,7 +356,8 @@
       "placeholderEmail": "contact@store.com",
       "placeholderProvider": "e.g., transbank, vita",
       "paymentLinkTimeout": "Payment Link Timeout",
-      "minutes": "minutes"
+      "minutes": "minutes",
+      "providerFeeWarning": "Below provider fee ({{percentage}}%)"
     },
     "partnerUser": {
       "createTitle": "Create User",
@@ -382,6 +397,9 @@
       "ivaPercentage": "IVA Percentage",
       "ivaAmount": "IVA Amount",
       "totalFee": "Total Fee",
+      "feeBreakdown": "Fee Breakdown",
+      "providerFee": "Provider Fee",
+      "txPayMargin": "TX Pay Margin",
       "references": "References",
       "merchantId": "Merchant ID",
       "terminalId": "Terminal ID",

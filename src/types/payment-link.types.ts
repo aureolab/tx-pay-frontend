@@ -58,6 +58,7 @@ export interface PaymentLink {
   callback_url?: string;
   success_message?: string;
   vita_country?: string;
+  use_net_amount?: boolean;
   stats: PaymentLinkStats;
   createdAt: string;
   updatedAt: string;
@@ -82,6 +83,7 @@ export interface CreatePaymentLinkRequest {
   callback_url?: string;
   success_message?: string;
   vita_country?: string;
+  use_net_amount?: boolean;
 }
 
 // Update payment link request
@@ -99,6 +101,7 @@ export interface UpdatePaymentLinkRequest {
   callback_url?: string;
   success_message?: string;
   vita_country?: string;
+  use_net_amount?: boolean;
 }
 
 // Query parameters for listing

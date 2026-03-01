@@ -221,6 +221,19 @@ export function TransactionDetailDialog({ item, open, onOpenChange }: { item: Tr
                       })()
                     }</p>
                   </div>
+                  {item.financials?.fee_snapshot?.provider_fee_amount && (
+                    <div className="pt-1 mt-1 border-t border-zinc-200/60 dark:border-zinc-700/40 space-y-1">
+                      <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider">{t('dialogs.transactionDetail.feeBreakdown')}</p>
+                      <p><span className="text-zinc-500">{t('dialogs.transactionDetail.providerFee')}:</span> {item.financials?.currency} {getDecimal(item.financials.fee_snapshot.provider_fee_amount)} ({getDecimal(item.financials.fee_snapshot.provider_fee_percentage)}%)</p>
+                      <p><span className="text-zinc-500">{t('dialogs.transactionDetail.txPayMargin')}:</span> {item.financials?.currency} {
+                        (() => {
+                          const totalFee = parseFloat(String(getDecimal(item.financials?.amount_gross) || 0)) - parseFloat(String(getDecimal(item.financials?.amount_net) || 0));
+                          const providerFee = parseFloat(String(getDecimal(item.financials?.fee_snapshot?.provider_fee_amount) || 0));
+                          return (totalFee - providerFee).toFixed(2);
+                        })()
+                      }</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

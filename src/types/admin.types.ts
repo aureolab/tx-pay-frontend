@@ -252,6 +252,8 @@ export interface Transaction {
       percentage: MongoDecimal;
       iva_percentage?: MongoDecimal;
       iva_amount?: MongoDecimal;
+      provider_fee_percentage?: MongoDecimal;
+      provider_fee_amount?: MongoDecimal;
     };
   };
   user_context?: {
@@ -271,7 +273,8 @@ export interface Transaction {
 export interface CreateTransactionRequest {
   payment_method: string;
   financials: {
-    amount_gross: number;
+    amount_gross?: number;
+    amount_net_desired?: number;
     currency: string;
   };
   user_context: {
@@ -284,6 +287,11 @@ export interface CreateTransactionRequest {
 
 // ── System Config ────────────────────────────────────────
 
+export interface ProviderFee {
+  provider: string;
+  percentage: number;
+}
+
 export interface SystemConfig {
   _id: string;
   iva_percentage: number;
@@ -292,6 +300,7 @@ export interface SystemConfig {
     config: Record<string, unknown>;
   }>;
   pricing_rules_defaults: PricingRule[];
+  provider_fees: ProviderFee[];
   export_columns: Array<{
     key: string;
     label: string;

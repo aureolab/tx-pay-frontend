@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Link2 } from 'lucide-react';
 import type {
   PaymentLink,
@@ -86,6 +87,7 @@ export function PartnerPaymentLinkDialog({
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string>('');
   const [createdLink, setCreatedLink] = useState<PaymentLink | null>(null);
+  const [useNetAmount, setUseNetAmount] = useState(false);
 
   // Determine the effective merchant ID
   const effectiveMerchantId = merchantId || selectedMerchantId;
@@ -111,6 +113,7 @@ export function PartnerPaymentLinkDialog({
           expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
           vita_country: item.vita_country || DEFAULT_VITA_COUNTRY,
         });
+        setUseNetAmount(item.use_net_amount ?? false);
         // Set merchant from existing item for editing
         if (typeof item.merchant_id === 'string') {
           setSelectedMerchantId(item.merchant_id);
@@ -118,6 +121,7 @@ export function PartnerPaymentLinkDialog({
       } else {
         setFormData(initialFormData);
         setSelectedMerchantId('');
+        setUseNetAmount(false);
       }
       setError('');
       setCreatedLink(null);
@@ -152,6 +156,7 @@ export function PartnerPaymentLinkDialog({
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
           vita_country: hasVitaWallet ? formData.vita_country : undefined,
+          use_net_amount: formData.amount_mode === AmountMode.FIXED ? useNetAmount : undefined,
         };
         await partnerPaymentLinksApi.update(item._id, updateData);
       } else {
@@ -173,6 +178,7 @@ export function PartnerPaymentLinkDialog({
           max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
           expires_at: formData.expires_at || undefined,
           vita_country: hasVitaWallet ? formData.vita_country : undefined,
+          use_net_amount: formData.amount_mode === AmountMode.FIXED ? useNetAmount : undefined,
         };
         const { data } = await partnerPaymentLinksApi.create(createData, effectiveMerchantId);
         setCreatedLink(data);
@@ -352,6 +358,19 @@ export function PartnerPaymentLinkDialog({
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+              )}
+
+              {/* Net Amount Toggle (only for FIXED) */}
+              {formData.amount_mode === AmountMode.FIXED && (
+                <div className="flex items-center justify-between py-1">
+                  <div className="space-y-0.5">
+                    <Label className="text-sm font-medium">Monto neto deseado</Label>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Este monto es lo que el comercio desea recibir (neto)
+                    </p>
+                  </div>
+                  <Switch checked={useNetAmount} onCheckedChange={setUseNetAmount} />
                 </div>
               )}
 

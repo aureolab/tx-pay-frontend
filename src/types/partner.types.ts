@@ -104,6 +104,7 @@ export interface PartnerTransaction {
 // Create transaction request
 export interface CreateTransactionRequest {
   amount: number;
+  amount_net_desired?: number;
   currency: string;
   payment_method: string;
   callback_url?: string;

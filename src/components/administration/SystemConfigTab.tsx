@@ -36,10 +36,16 @@ interface ExportColumn {
   type: string;
 }
 
+interface ProviderFeeDefault {
+  provider: string;
+  percentage: number;
+}
+
 interface SystemConfig {
   iva_percentage: number;
   acquirer_defaults: AcquirerDefault[];
   pricing_rules_defaults: PricingRuleDefault[];
+  provider_fees: ProviderFeeDefault[];
   export_columns: ExportColumn[];
 }
 
@@ -52,6 +58,7 @@ export function SystemConfigTab() {
     iva_percentage: 19,
     acquirer_defaults: [],
     pricing_rules_defaults: [],
+    provider_fees: [],
     export_columns: [],
   });
   const [loading, setLoading] = useState(true);
@@ -76,6 +83,7 @@ export function SystemConfigTab() {
           fixed: typeof r.fixed === 'object' && r.fixed !== null && '$numberDecimal' in r.fixed ? parseFloat(r.fixed.$numberDecimal) : Number(r.fixed),
           percentage: typeof r.percentage === 'object' && r.percentage !== null && '$numberDecimal' in r.percentage ? parseFloat(r.percentage.$numberDecimal) : Number(r.percentage),
         })),
+        provider_fees: res.data.provider_fees ?? [],
         export_columns: res.data.export_columns ?? [],
       });
     } catch (err: unknown) {
@@ -99,6 +107,7 @@ export function SystemConfigTab() {
         iva_percentage: config.iva_percentage,
         acquirer_defaults: parsedDefaults,
         pricing_rules_defaults: config.pricing_rules_defaults,
+        provider_fees: config.provider_fees,
         export_columns: config.export_columns,
       });
       setSuccess(t('admin:configuration.saved'));
@@ -177,6 +186,32 @@ export function SystemConfigTab() {
   };
 
   const usedMethods = config.pricing_rules_defaults.map((d) => d.method);
+
+  // Provider Fees Management
+  const addProviderFee = () => {
+    setConfig((prev) => ({
+      ...prev,
+      provider_fees: [...prev.provider_fees, { provider: '', percentage: 0 }],
+    }));
+  };
+
+  const removeProviderFee = (index: number) => {
+    setConfig((prev) => ({
+      ...prev,
+      provider_fees: prev.provider_fees.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateProviderFee = (index: number, field: keyof ProviderFeeDefault, value: string | number) => {
+    setConfig((prev) => ({
+      ...prev,
+      provider_fees: prev.provider_fees.map((d, i) =>
+        i === index ? { ...d, [field]: value } : d,
+      ),
+    }));
+  };
+
+  const usedProviderFeeProviders = config.provider_fees.map((d) => d.provider);
 
   const addExportColumn = () => {
     setConfig((prev) => ({
@@ -554,6 +589,91 @@ export function SystemConfigTab() {
                       size="sm"
                       onClick={() => removePricingDefault(index)}
                       className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0 self-end"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Provider Fees */}
+      <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-2xl border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg shadow-zinc-900/5 overflow-hidden">
+        <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-zinc-900 dark:text-white">{t('admin:configuration.providerFees.title')}</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('admin:configuration.providerFees.description')}</p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={addProviderFee}
+            disabled={usedProviderFeeProviders.length >= AVAILABLE_PROVIDERS.length}
+            className="gap-2 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {t('admin:configuration.providerFees.add')}
+          </Button>
+        </div>
+        <div className="p-4">
+          {config.provider_fees.length === 0 ? (
+            <p className="text-sm text-zinc-400 dark:text-zinc-500 text-center py-4">
+              {t('admin:configuration.providerFees.noFees')}
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {config.provider_fees.map((pf, index) => (
+                <div key={index} className="bg-zinc-50/80 dark:bg-zinc-800/50 rounded-xl p-3 border border-zinc-200/50 dark:border-zinc-700/50">
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 min-w-0 sm:max-w-[200px]">
+                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {t('admin:configuration.providerFees.provider')}
+                      </Label>
+                      <Select
+                        value={pf.provider}
+                        onValueChange={(value) => updateProviderFee(index, 'provider', value)}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder={t('admin:configuration.providerFees.selectProvider')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AVAILABLE_PROVIDERS.filter(
+                            (p) => !usedProviderFeeProviders.includes(p) || p === pf.provider,
+                          ).map((provider) => (
+                            <SelectItem key={provider} value={provider}>
+                              {provider}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="sm:w-32">
+                      <Label className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {t('admin:configuration.providerFees.percentage')}
+                      </Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.01}
+                        value={pf.percentage}
+                        onChange={(e) => updateProviderFee(index, 'percentage', parseFloat(e.target.value) || 0)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeProviderFee(index)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
